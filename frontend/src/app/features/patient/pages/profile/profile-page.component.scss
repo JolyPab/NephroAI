@@ -1,0 +1,107 @@
+:host {
+  display: block;
+}
+
+.profile-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-grid dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.profile-grid dd {
+  font-size: 1rem;
+  margin: 0.25rem 0 0;
+  color: var(--text);
+}
+
+.theme-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border-radius: var(--r-xl);
+}
+
+.theme-toggle__text h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.theme-toggle__text p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  max-width: 32rem;
+}
+
+.theme-toggle__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.theme-toggle__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 12rem;
+}
+
+.theme-toggle__button .material-symbols-rounded {
+  font-size: 1.25rem;
+}
+
+.theme-toggle__chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.theme-chip {
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.theme-chip.active {
+  background: rgba(118, 168, 255, 0.14);
+  border-color: rgba(118, 168, 255, 0.45);
+  color: var(--accent);
+  box-shadow: 0 14px 30px -20px rgba(118, 168, 255, 0.55);
+}
+
+@media (min-width: 640px) {
+  .theme-toggle {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .theme-toggle__controls {
+    align-items: flex-end;
+  }
+}
+
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.name-form__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}

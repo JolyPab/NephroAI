@@ -1,0 +1,106 @@
+<div class="space-y-6">
+  <app-glass-card [extraClass]="'glass-strong space-y-5'">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-semibold text-[var(--text)]">{{ patientName || (('doctor.detailTitle' | translate) + ' ' + patientId) }}</h2>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'doctor.detailSubtitle' | translate }}</p>
+        <p class="text-xs text-[var(--text-dim)]" *ngIf="patientName">{{ 'doctor.detailId' | translate }} {{ patientId }}</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs uppercase tracking-[0.2em] text-[var(--text-dim)]">{{ 'doctor.metric' | translate }}</span>
+        <div class="metric-select" [class.metric-select--open]="showMetricList">
+          <button type="button" class="metric-select__button" (click)="toggleMetricList()">
+            <span class="metric-select__label">{{ selectedMetric || ('doctor.selectMetric' | translate) }}</span>
+            <span class="material-symbols-rounded metric-select__chevron">{{ showMetricList ? 'expand_less' : 'expand_more' }}</span>
+          </button>
+          <div class="metric-select__panel" *ngIf="showMetricList">
+            <div class="metric-select__search">
+              <span class="material-symbols-rounded">search</span>
+              <input
+                id="metric-filter"
+                type="text"
+                [value]="metricFilter"
+                (input)="filterMetrics($any($event.target).value)"
+                placeholder="Filter metrics"
+              />
+            </div>
+            <div class="metric-select__list">
+              <button
+                type="button"
+                class="metric-select__option"
+                *ngFor="let option of filteredMetrics"
+                (click)="selectMetric(option)"
+                [class.active]="option === selectedMetric"
+              >
+                {{ option }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="flex flex-col items-center justify-center gap-3 py-10 text-[var(--text-dim)]">
+      <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
+      {{ 'doctor.loading' | translate }}
+    </div>
+
+    <div *ngIf="!loading && errorMessage" class="glass glass-strong text-[var(--danger)] p-4">
+      {{ errorMessage }}
+    </div>
+
+    <div class="h-[260px] sm:h-[340px]" *ngIf="!loading && !errorMessage">
+      <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'scatter'"></canvas>
+    </div>
+  </app-glass-card>
+
+  <app-glass-card [extraClass]="'glass-strong space-y-4'">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h3 class="text-lg font-semibold text-[var(--text)]">Doctor notes</h3>
+        <p class="text-sm text-[var(--text-dim)]">Internal notes for this patient</p>
+      </div>
+    </div>
+
+    <div class="notes__input">
+      <textarea
+        class="input-glass"
+        rows="3"
+        placeholder="Add a note (visible only to you)"
+        [(ngModel)]="newNote"
+      ></textarea>
+      <div class="notes__controls">
+        <select class="input-glass" [(ngModel)]="selectedPoint" [disabled]="!pointOptions.length">
+          <option *ngFor="let point of pointOptions" [ngValue]="point.value">{{ point.label }}</option>
+        </select>
+        <button type="button" appGlassButton [glassBlock]="true" (click)="addNote()" [disabled]="!newNote.trim() || !selectedPoint">
+          Save note
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="noteError" class="toast-glass error" role="alert">
+      <span class="material-symbols-rounded">error</span>
+      <span>{{ noteError }}</span>
+    </div>
+
+    <div *ngIf="notesLoading" class="text-sm text-[var(--text-dim)]">Loading notes...</div>
+
+    <div class="notes__list" *ngIf="!notesLoading && notesForMetric.length; else emptyNotes">
+      <div class="notes__item glass glass-strong" *ngFor="let note of notesForMetric">
+        <div class="notes__meta">
+          <span class="text-xs text-[var(--text-dim)]">
+            {{ note.created_at | date: 'd MMM yyyy, HH:mm' }}
+            <ng-container *ngIf="note.doctor_email"> • {{ note.doctor_email }}</ng-container>
+            <ng-container *ngIf="note.metric_time"> • {{ note.metric_time | date: 'd MMM yyyy, HH:mm' }}</ng-container>
+          </span>
+        </div>
+        <p class="notes__text">{{ note.text }}</p>
+      </div>
+    </div>
+
+    <ng-template #emptyNotes>
+      <p class="text-sm text-[var(--text-dim)]">No notes yet.</p>
+    </ng-template>
+  </app-glass-card>
+</div>

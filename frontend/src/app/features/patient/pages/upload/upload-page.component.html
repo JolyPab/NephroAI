@@ -1,0 +1,72 @@
+<div class="space-y-6">
+  <app-glass-card [extraClass]="'glass-strong flex flex-col items-center justify-center gap-6 min-h-[320px] text-center transition-all duration-200'">
+    <div
+      class="w-full relative"
+      [class.is-dragging]="isDragging"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+    >
+      <label class="upload-dropzone" [class.upload-dropzone--active]="isDragging">
+        <span class="material-symbols-rounded text-4xl sm:text-5xl text-[var(--accent)]">upload</span>
+        <span class="text-lg font-semibold text-[var(--text)]">{{ 'upload.dropTitle' | translate }}</span>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'upload.dropHint' | translate }}</p>
+        <button type="button" appGlassButton (click)="fileInput.click()">{{ 'upload.chooseFile' | translate }}</button>
+        <input
+          #fileInput
+          type="file"
+          accept="application/pdf"
+          class="hidden"
+          (change)="onFileSelected($event)"
+        />
+      </label>
+    </div>
+
+    <div *ngIf="selectedFile" class="glass chip justify-center">
+      <span class="material-symbols-rounded">description</span>
+      {{ selectedFile.name }}
+      <button type="button" class="ml-2 text-[var(--danger)]" (click)="clearSelection()">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+
+    <div *ngIf="uploadMessage" class="toast-glass success" role="status">
+      <span class="material-symbols-rounded">check_circle</span>
+      <span>{{ uploadMessage }}</span>
+    </div>
+    <div *ngIf="errorMessage" class="toast-glass error" role="alert">
+      <span class="material-symbols-rounded">error</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <button type="button" appGlassButton (click)="submit()" [glassBlock]="true" [disabled]="isUploading">
+      <span *ngIf="isUploading" class="loader-dot"></span>
+      <span>{{ isUploading ? ('upload.processing' | translate) : ('upload.uploadParse' | translate) }}</span>
+    </button>
+  </app-glass-card>
+
+  <app-glass-card *ngIf="uploadedAnalysis as analysis" [extraClass]="'glass-strong space-y-4'">
+    <div class="flex flex-wrap justify-between gap-3 items-start">
+      <div>
+        <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'upload.recognized' | translate }}</h3>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'upload.date' | translate }} {{ analysis.taken_at | date: 'd MMMM yyyy' }}</p>
+      </div>
+      <span class="badge-glass badge-accent">{{ analysis.metrics.length }} {{ 'upload.metricsCount' | translate }}</span>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <app-glass-card
+        *ngFor="let metric of analysis.metrics"
+        [extraClass]="'glass-strong h-full'">
+        <p class="text-xs text-[var(--text-dim)] uppercase tracking-[0.2em] mb-1">{{ metric.name }}</p>
+        <div class="flex items-baseline gap-2">
+          <span class="text-3xl font-semibold text-[var(--text)]">{{ metric.value }}</span>
+          <span class="text-sm text-[var(--text-dim)]" *ngIf="metric.unit">{{ metric.unit }}</span>
+        </div>
+        <p class="text-xs text-[var(--text-dim)] mt-3" *ngIf="metric.ref_min || metric.ref_max">
+          {{ 'upload.range' | translate }} {{ metric.ref_min ?? '-' }} - {{ metric.ref_max ?? '-' }}
+        </p>
+      </app-glass-card>
+    </div>
+  </app-glass-card>
+</div>

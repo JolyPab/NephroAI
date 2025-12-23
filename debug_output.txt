@@ -1,0 +1,120 @@
+Total rows extracted: 630
+Pages: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
+
+First 30 rows from page 0:
+================================================================================
+
+Row 0 (y=29.8):
+  Cell 0: x=422.4-562.2, text='013241970006*013241970006*'
+
+Row 1 (y=36.6):
+  Cell 0: x=320.3-410.0, text='NUMERODESERVICIO:'
+
+Row 2 (y=48.6):
+  Cell 0: x=320.3-362.3, text='PACIENTE:'
+  Cell 1: x=422.4-529.4, text='YAMIDENRIQUEPICOLOPEZ'
+
+Row 3 (y=57.6):
+  Cell 0: x=320.3-371.4, text='GENERALES:'
+  Cell 1: x=422.4-502.8, text='47AÑOS,MASCULINO'
+
+Row 4 (y=66.5):
+  Cell 0: x=320.3-354.1, text='MEDICO:'
+  Cell 1: x=422.4-535.3, text='SARABIAMARTINEZVICTORU.'
+
+Row 5 (y=75.5):
+  Cell 0: x=320.3-405.6, text='FECHADEREGISTRO:'
+  Cell 1: x=422.4-459.9, text='15/07/2024'
+
+Row 6 (y=84.5):
+  Cell 0: x=320.3-459.9, text='FECHADELIBERACION: 17/07/2024'
+
+Row 7 (y=93.4):
+  Cell 0: x=320.3-407.8, text='IMP.DERESULTADOS:'
+  Cell 1: x=422.4-502.8, text='17/07/2024,15:25HRS.'
+  Cell 2: x=521.6-566.5, text='NUM.IMP:3'
+
+Row 8 (y=113.8):
+  Cell 0: x=280.4-325.1, text='RESULTADOS'
+  Cell 1: x=345.3-379.2, text='UNIDADES'
+  Cell 2: x=404.9-447.2, text='VALORESDE'
+  Cell 3: x=462.0-480.4, text='NOTA'
+
+Row 9 (y=121.2):
+  Cell 0: x=404.9-447.1, text='REFERENCIA'
+
+Row 10 (y=142.9):
+  Cell 0: x=36.9-75.8, text='GLUCOSA'
+
+Row 11 (y=154.1):
+  Cell 0: x=51.0-152.9, text='METODO:ESPECTROFOTOMETRIA'
+
+Row 12 (y=165.6):
+  Cell 0: x=51.0-122.0, text='MuestraAnalítica:SUERO'
+
+Row 13 (y=176.8):
+  Cell 0: x=36.9-38.0, text='.'
+
+Row 14 (y=185.9):
+  Cell 0: x=72.3-108.9, text='GLUCOSA'
+  Cell 1: x=293.4-312.1, text='94.20'
+  Cell 2: x=351.8-372.7, text='mg/dL'
+  Cell 3: x=411.5-440.6, text='70a100'
+
+Row 15 (y=196.8):
+  Cell 0: x=72.3-361.4, text='_______________________________________________________________________________________'
+
+Row 16 (y=202.0):
+  Cell 0: x=36.8-117.4, text='EVALUACIONRENAL'
+
+Row 17 (y=213.2):
+  Cell 0: x=51.0-79.0, text='METODO:'
+
+Row 18 (y=224.7):
+  Cell 0: x=51.0-99.0, text='MuestraAnalítica:'
+
+Row 19 (y=235.9):
+  Cell 0: x=36.8-38.0, text='.'
+
+Row 20 (y=245.0):
+  Cell 0: x=36.8-117.4, text='EVALUACIONRENAL'
+
+Row 21 (y=256.5):
+  Cell 0: x=36.8-58.9, text='UREA'
+
+Row 22 (y=267.7):
+  Cell 0: x=51.0-168.6, text='METODO:FOTOMETRIAAUTOMATIZADA'
+
+Row 23 (y=279.2):
+  Cell 0: x=51.0-122.0, text='MuestraAnalítica:SUERO'
+
+Row 24 (y=290.4):
+  Cell 0: x=36.8-38.0, text='.'
+
+Row 25 (y=299.5):
+  Cell 0: x=72.3-93.1, text='UREA'
+  Cell 1: x=293.4-312.1, text='74.80'
+  Cell 2: x=351.8-372.7, text='mg/dL'
+  Cell 3: x=413.5-438.6, text='19a44'
+
+Row 26 (y=310.4):
+  Cell 0: x=72.3-361.4, text='_______________________________________________________________________________________'
+
+Row 27 (y=315.6):
+  Cell 0: x=72.3-148.9, text='NITROGENOUREICO'
+  Cell 1: x=293.3-312.1, text='34.95'
+  Cell 2: x=351.8-372.7, text='mg/dL'
+  Cell 3: x=415.6-436.5, text='9a21'
+
+Row 28 (y=326.5):
+  Cell 0: x=72.3-361.4, text='_______________________________________________________________________________________'
+
+Row 29 (y=331.7):
+  Cell 0: x=36.8-84.9, text='CREATININA'
+
+================================================================================
+Column positions for page 0:
+  analyte: 32.3 - 222.3
+  value: 273.4 - 333.4
+  unit: 331.8 - 391.8
+  ref_range: 393.5 - 1000.0

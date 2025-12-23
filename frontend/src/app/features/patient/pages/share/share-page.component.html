@@ -1,0 +1,49 @@
+<div class="space-y-6">
+  <app-glass-card [extraClass]="'glass-strong space-y-5'">
+    <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'share.title' | translate }}</h3>
+    <form class="flex flex-col md:flex-row gap-4" [formGroup]="shareForm" (ngSubmit)="submit()">
+      <div class="flex-1 min-w-[220px]">
+        <app-glass-input
+          [label]="'share.doctorEmail' | translate"
+          placeholder="doctor@example.com"
+          formControlName="doctor_email"
+        ></app-glass-input>
+      </div>
+      <div class="md:w-auto flex items-end">
+        <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
+          <span *ngIf="isSubmitting" class="loader-dot"></span>
+          <span>{{ isSubmitting ? ('share.sending' | translate) : ('share.grant' | translate) }}</span>
+        </button>
+      </div>
+    </form>
+    <div *ngIf="toastMessage" class="toast-glass" [ngClass]="toastTone" role="status">
+      <span class="material-symbols-rounded">{{ toastTone === 'success' ? 'check_circle' : toastTone === 'danger' ? 'error' : 'info' }}</span>
+      <span>{{ toastMessage }}</span>
+    </div>
+  </app-glass-card>
+
+  <app-glass-card [extraClass]="'glass-strong space-y-4'">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'share.grantedTitle' | translate }}</h3>
+      <span class="badge-glass badge-accent">{{ grants.length }} {{ 'share.grantedCount' | translate }}</span>
+    </div>
+
+    <div *ngIf="grants.length; else noGrants" class="flex flex-col gap-3">
+      <div class="glass glass-strong flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-[var(--r-lg)]" *ngFor="let grant of grants">
+        <div>
+          <p class="text-sm font-semibold text-[var(--text)]">{{ grant.doctor_name || grant.doctor_email }}</p>
+          <p class="text-xs text-[var(--text-dim)]">{{ grant.doctor_email }}</p>
+          <p class="text-xs text-[var(--text-dim)]">{{ 'share.grantedAt' | translate }} {{ grant.granted_at | date: 'd MMMM yyyy, HH:mm' }}</p>
+        </div>
+        <span class="badge-glass badge-accent">
+          <span class="material-symbols-rounded text-base">verified</span>
+          {{ 'share.active' | translate }}
+        </span>
+      </div>
+    </div>
+
+    <ng-template #noGrants>
+      <p class="text-sm text-[var(--text-dim)]">{{ 'share.noGrants' | translate }}</p>
+    </ng-template>
+  </app-glass-card>
+</div>

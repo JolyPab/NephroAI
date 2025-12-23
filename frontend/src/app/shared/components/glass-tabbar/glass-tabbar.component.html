@@ -1,0 +1,13 @@
+﻿<nav class="glass glass-tabbar">
+  <a
+    *ngFor="let item of items; trackBy: trackByLabel"
+    class="glass-tabbar__link"
+    [routerLink]="fullRoute(item)"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+    [attr.aria-label]="item.label | translate"
+  >
+    <span class="glass-tabbar__icon material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
+    <span class="glass-tabbar__label">{{ item.label | translate }}</span>
+  </a>
+</nav>

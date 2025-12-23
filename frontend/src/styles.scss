@@ -1,0 +1,81 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap&subset=latin,cyrillic');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import 'material-symbols/rounded.css';
+@import 'bootstrap/scss/bootstrap';
+@import './styles/glass.css';
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+  body {
+    background:
+      var(--bg-noise),
+      var(--bg);
+    background-attachment: fixed;
+    background-color: var(--color-surface);
+    color: var(--text);
+    font-family: inherit;
+    min-height: 100vh;
+    transition:
+      background-color var(--transition-base),
+      color var(--transition-fast),
+      background-image var(--transition-base);
+  }
+
+  a {
+    @apply text-primary transition-colors duration-150;
+  }
+
+  a:hover {
+    @apply text-secondary;
+  }
+
+  .material-symbols-rounded {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 500,
+      'GRAD' 0,
+      'opsz' 24;
+  }
+}
+
+@layer components {
+  .card {
+    border-radius: var(--radius-brand);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .alert-warning {
+    background: rgba(252, 211, 77, 0.2);
+    border-color: rgba(252, 211, 77, 0.3);
+  }
+
+  .toast-glass {
+    background: rgba(12, 16, 30, 0.65);
+    backdrop-filter: blur(var(--blur-md));
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--r-lg);
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    box-shadow: var(--shadow-soft);
+    transition: opacity var(--transition-base), transform var(--transition-base);
+  }
+
+  .toast-glass.success {
+    border-color: rgba(118, 168, 255, 0.45);
+  }
+
+  .toast-glass.error {
+    border-color: rgba(255, 107, 107, 0.45);
+  }
+}

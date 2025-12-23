@@ -1,0 +1,132 @@
+{
+  "app": {
+    "logout": "Logout"
+  },
+  "nav": {
+    "home": "Home",
+    "upload": "Upload",
+    "charts": "Charts",
+    "chat": "Assistant",
+    "profile": "Profile"
+  },
+  "auth": {
+    "welcomeLogin": "Welcome back! Sign in to continue.",
+    "welcomeRegister": "Create an account to share your analyses and trends.",
+    "register": "Register",
+    "fullName": "Full name",
+    "signIn": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "role": "Role",
+    "patient": "Patient",
+    "doctor": "Doctor",
+    "signingIn": "Signing in…",
+    "creating": "Creating account…",
+    "signInBtn": "Sign in",
+    "createBtn": "Create account",
+    "errorLogin": "Unable to sign in. Check your email and password.",
+    "errorRegister": "Registration failed. Please try again.",
+    "errorPasswords": "Passwords must match."
+  },
+  "dashboard": {
+    "title": "Welcome!",
+    "subtitle": "Track your latest lab results, spot trends, and share them with your doctor.",
+    "loading": "Loading your latest data…",
+    "errorLoad": "Failed to load analyses.",
+    "empty": "Upload your first PDF lab report to see trends and insights.",
+    "latest": "Latest analysis",
+    "date": "Date:",
+    "goCharts": "Go to charts",
+    "charts": "Charts",
+    "range": "Range:",
+    "status": {
+      "noRef": "No reference",
+      "below": "Below range",
+      "above": "Above range",
+      "in": "In range"
+    }
+  },
+  "charts": {
+    "title": "Metric trends",
+    "subtitle": "Pick a metric to see its trend and compare it with the allowed normal range.",
+    "search": "Search metric...",
+    "loading": "Building your chart…",
+    "noData": "No data for the selected metric yet."
+  },
+  "upload": {
+    "dropTitle": "Upload a PDF or drag & drop",
+    "dropHint": "Up to 10 MB. Lab reports only.",
+    "chooseFile": "Choose file",
+    "processing": "Processing…",
+    "uploadParse": "Upload and parse",
+    "recognized": "Recognized analysis",
+    "date": "Date:",
+    "metricsCount": "metrics",
+    "range": "Range:"
+  },
+  "share": {
+    "title": "Share with doctor",
+    "doctorEmail": "Doctor email",
+    "sending": "Sending…",
+    "grant": "Grant access",
+    "grantedTitle": "Granted accesses",
+    "grantedCount": "doctor(s)",
+    "grantedAt": "Granted:",
+    "active": "Active",
+    "noGrants": "You have not granted access yet."
+  },
+  "profile": {
+    "title": "Profile",
+    "role": "Role",
+    "registered": "Registered",
+    "fullName": "Full name",
+    "nameTitle": "Display name",
+    "nameSubtitle": "Shown to your doctor and on shared access lists.",
+    "saveName": "Save name",
+    "nameSaved": "Name updated.",
+    "themeTitle": "Interface theme",
+    "themeText": "Switch Liquid Glass between dark and light to find a comfortable contrast.",
+    "themeLight": "Light theme",
+    "themeDark": "Dark theme",
+    "signInToView": "Sign in to view your profile and adjust theme."
+  },
+  "chat": {
+    "title": "Assistant advice",
+    "subtitle": "Ask the AI assistant using your latest labs.",
+    "secure": "Data is protected and visible only to you",
+    "you": "You",
+    "ai": "AI",
+    "disclaimer": "This is not a medical diagnosis. Always discuss with your doctor.",
+    "empty": "Ask about trends in your analyses — the assistant will suggest topics to discuss with your doctor.",
+    "questionLabel": "Your question",
+    "questionPh": "For example: how did glucose change in the last 3 months?",
+    "period": "Period",
+    "metrics": "Metrics",
+    "metricsHint": "Mark key metrics to include in the answer.",
+    "minChars": "Minimum 10 characters.",
+    "btn": "Get AI advice",
+    "btnLoading": "Generating answer…"
+  },
+  "doctor": {
+    "profileTitle": "Your profile",
+    "profileSubtitle": "Update the name patients will see.",
+    "patientsTitle": "My patients",
+    "patientsSubtitle": "Patients who have shared their data with you.",
+    "patientsLoading": "Loading list…",
+    "patientsError": "Failed to load patients list.",
+    "patientsEmpty": "No patients with active access yet.",
+    "unknownPatient": "Unnamed patient",
+    "grantedAt": "Granted at:",
+    "latestAnalysis": "Latest analysis:",
+    "nameSaved": "Name updated.",
+    "detailTitle": "Patient",
+    "detailSubtitle": "Tracking key metrics over the selected period.",
+    "detailId": "Patient ID:",
+    "metric": "Metric",
+    "selectMetric": "Select metric",
+    "loading": "Loading data…",
+    "seriesError": "Failed to load time series.",
+    "date": "Date"
+  }
+}

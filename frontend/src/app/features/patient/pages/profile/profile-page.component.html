@@ -1,0 +1,77 @@
+<app-glass-card [extraClass]="'glass-strong space-y-5'">
+  <div class="flex items-center justify-between gap-3 flex-wrap">
+    <h2 class="text-xl font-semibold text-[var(--text)]">{{ 'profile.title' | translate }}</h2>
+    <span class="badge-glass badge-accent" *ngIf="user()">{{ user()?.role === 'PATIENT' ? ('auth.patient' | translate) : ('auth.doctor' | translate) }}</span>
+  </div>
+
+  <div *ngIf="user(); else guest" class="space-y-5">
+    <dl class="profile-grid">
+      <div>
+        <dt>Email</dt>
+        <dd>{{ user()?.email }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'profile.role' | translate }}</dt>
+        <dd>{{ user()?.role === 'PATIENT' ? ('auth.patient' | translate) : ('auth.doctor' | translate) }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'profile.registered' | translate }}</dt>
+        <dd>{{ user()?.created_at | date: 'd MMMM yyyy, HH:mm' }}</dd>
+      </div>
+    </dl>
+
+    <app-glass-card [extraClass]="'glass-strong space-y-3'">
+      <div>
+        <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'profile.nameTitle' | translate }}</h3>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'profile.nameSubtitle' | translate }}</p>
+      </div>
+      <form class="name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
+        <app-glass-input [label]="'profile.fullName' | translate" formControlName="full_name" placeholder="Jane Doe"></app-glass-input>
+        <div class="name-form__actions">
+          <button type="submit" appGlassButton [disabled]="savingName">
+            <span *ngIf="savingName" class="loader-dot"></span>
+            <span>{{ 'profile.saveName' | translate }}</span>
+          </button>
+          <span class="text-xs text-[var(--text-dim)]" *ngIf="nameMessage && !nameError">{{ nameMessage | translate }}</span>
+          <span class="text-xs text-[var(--danger)]" *ngIf="nameError">{{ nameError }}</span>
+        </div>
+      </form>
+    </app-glass-card>
+
+    <app-glass-card [extraClass]="'glass-strong space-y-3'">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div>
+          <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'share.title' | translate }}</h3>
+          <p class="text-sm text-[var(--text-dim)]">{{ 'share.doctorEmail' | translate }}</p>
+        </div>
+        <a routerLink="/patient/share" appGlassButton>{{ 'share.grant' | translate }}</a>
+      </div>
+      <p class="text-sm text-[var(--text-dim)]">{{ 'share.noGrants' | translate }}</p>
+    </app-glass-card>
+
+    <div class="theme-toggle glass glass-strong">
+      <div class="theme-toggle__text">
+        <h3>{{ 'profile.themeTitle' | translate }}</h3>
+        <p>{{ 'profile.themeText' | translate }}</p>
+      </div>
+      <div class="theme-toggle__controls">
+        <button
+          type="button"
+          appGlassButton
+          class="theme-toggle__button"
+          (click)="toggleTheme()"
+          [attr.aria-label]="theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate)"
+        >
+          <span class="material-symbols-rounded">
+            {{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
+          </span>
+          <span>{{ theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate) }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <ng-template #guest>
+    <p class="text-sm text-[var(--text-dim)]">Sign in to view your profile and adjust theme.</p>
+    <p class="text-sm text-[var(--text-dim)]">{{ 'profile.signInToView' | translate }}</p>
+  </ng-template>
+</app-glass-card>

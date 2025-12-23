@@ -1,0 +1,15 @@
+<nav class="patient-tab-bar d-lg-none">
+  <ul class="nav nav-pills nav-fill">
+    <li class="nav-item" *ngFor="let tab of tabs">
+      <a
+        class="nav-link"
+        [routerLink]="[baseRoute, tab.route]"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: tab.route === '' }"
+      >
+        <i class="bi {{ tab.icon }} d-block fs-5"></i>
+        <span class="small">{{ tab.label }}</span>
+      </a>
+    </li>
+  </ul>
+</nav>

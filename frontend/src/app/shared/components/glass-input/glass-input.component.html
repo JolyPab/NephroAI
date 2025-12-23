@@ -1,0 +1,17 @@
+<div class="glass glass-input-wrapper">
+  <label class="glass-input__label" *ngIf="label">{{ label }}</label>
+  <input
+    class="input-glass"
+    [attr.type]="type"
+    [attr.name]="name"
+    [attr.autocomplete]="autocomplete"
+    [attr.placeholder]="placeholder"
+    [disabled]="disabled"
+    [value]="value"
+    (input)="handleInput($event)"
+    (blur)="handleBlur()"
+    (keydown)="handleKeydown($event)"
+  />
+</div>
+<small *ngIf="hint" class="glass-input__hint">{{ hint }}</small>
+<ng-content></ng-content>

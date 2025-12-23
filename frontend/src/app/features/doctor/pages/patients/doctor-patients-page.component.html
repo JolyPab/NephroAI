@@ -1,0 +1,62 @@
+<div class="space-y-6">
+  <app-glass-card [extraClass]="'glass-strong space-y-4'">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h2 class="text-xl font-semibold text-[var(--text)]">{{ 'doctor.profileTitle' | translate }}</h2>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'doctor.profileSubtitle' | translate }}</p>
+      </div>
+    </div>
+    <form class="name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
+      <app-glass-input [label]="'profile.fullName' | translate" formControlName="full_name" placeholder="Dr. Smith"></app-glass-input>
+      <div class="name-form__actions">
+        <button type="submit" appGlassButton [disabled]="savingName">
+          <span *ngIf="savingName" class="loader-dot"></span>
+          <span>{{ 'profile.saveName' | translate }}</span>
+        </button>
+        <span class="text-xs text-[var(--text-dim)]" *ngIf="nameMessage && !nameError">{{ nameMessage | translate }}</span>
+        <span class="text-xs text-[var(--danger)]" *ngIf="nameError">{{ nameError }}</span>
+      </div>
+    </form>
+  </app-glass-card>
+
+  <app-glass-card [extraClass]="'glass-strong space-y-4'">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h2 class="text-2xl font-semibold text-[var(--text)]">{{ 'doctor.patientsTitle' | translate }}</h2>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'doctor.patientsSubtitle' | translate }}</p>
+      </div>
+      <span class="badge-glass">{{ patients.length }} {{ 'doctor.patientsTitle' | translate }}</span>
+    </div>
+
+    <div *ngIf="loading" class="flex flex-col items-center justify-center gap-3 py-10 text-[var(--text-dim)]">
+      <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
+      {{ 'doctor.patientsLoading' | translate }}
+    </div>
+
+    <div *ngIf="!loading && errorMessage" class="glass glass-strong text-[var(--danger)] p-4">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="!loading && !errorMessage && patients.length === 0" class="text-sm text-[var(--text-dim)]">
+      {{ 'doctor.patientsEmpty' | translate }}
+    </div>
+
+    <div class="flex flex-col gap-3" *ngIf="!loading && patients.length">
+      <button
+        type="button"
+        class="glass glass-strong flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 text-left rounded-[var(--r-lg)] transition-transform"
+        *ngFor="let patient of patients"
+        (click)="openPatient(patient)"
+      >
+        <div>
+          <p class="text-sm font-semibold text-[var(--text)]">{{ patient.full_name || patient.email || ('doctor.unknownPatient' | translate) }}</p>
+          <p class="text-xs text-[var(--text-dim)]" *ngIf="patient.email">{{ patient.email }}</p>
+          <p class="text-xs text-[var(--text-dim)]">{{ 'doctor.grantedAt' | translate }} {{ patient.granted_at | date: 'd MMMM yyyy, HH:mm' }}</p>
+        </div>
+        <span class="badge-glass badge-accent">
+          {{ 'doctor.latestAnalysis' | translate }} {{ patient.latest_taken_at ? (patient.latest_taken_at | date: 'd MMM yyyy') : '-' }}
+        </span>
+      </button>
+    </div>
+  </app-glass-card>
+</div>

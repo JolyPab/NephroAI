@@ -1,0 +1,77 @@
+<div class="chat-shell">
+  <app-glass-card [extraClass]="'chat-frame glass-strong'">
+    <header class="chat-header">
+      <div>
+        <h3 class="title">{{ 'chat.title' | translate }}</h3>
+        <p class="subtitle">{{ 'chat.subtitle' | translate }}</p>
+      </div>
+      <div class="chip-secure">
+        <i class="bi bi-shield-check"></i>
+        <span>{{ 'chat.secure' | translate }}</span>
+      </div>
+    </header>
+
+    <section class="chat-window" *ngIf="history.length; else emptyState">
+      <div class="message" *ngFor="let message of history">
+        <div class="bubble bubble-user">
+          <div class="bubble-meta">
+            <div class="avatar">🙋‍♂️</div>
+            <div>
+              <span class="who">{{ 'chat.you' | translate }}</span>
+              <span class="time">{{ message.timestamp | date: 'd MMM HH:mm' }}</span>
+            </div>
+          </div>
+          <p class="bubble-text">{{ message.question }}</p>
+        </div>
+
+        <div class="bubble bubble-ai">
+          <div class="bubble-meta">
+            <div class="avatar avatar-ai">🤖</div>
+            <div>
+              <span class="who">{{ 'chat.ai' | translate }}</span>
+              <span class="time">{{ message.timestamp | date: 'd MMM HH:mm' }}</span>
+            </div>
+          </div>
+          <p class="bubble-text">{{ message.answer }}</p>
+
+          <p class="disclaimer" *ngIf="message.disclaimer">
+            {{ 'chat.disclaimer' | translate }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <i class="bi bi-robot"></i>
+        <p>{{ 'chat.empty' | translate }}</p>
+      </div>
+    </ng-template>
+
+    <form class="composer" [formGroup]="chatForm" (ngSubmit)="submit()">
+      <div class="composer-bar">
+        <textarea
+          class="chat-textarea"
+          rows="2"
+          formControlName="question"
+          [placeholder]="'chat.questionPh' | translate"
+        ></textarea>
+        <button type="submit" class="send-btn" [disabled]="isLoading || chatForm.invalid">
+          <span *ngIf="isLoading" class="loader-dot"></span>
+          <span *ngIf="!isLoading" class="bi bi-send"></span>
+        </button>
+      </div>
+
+      <div class="composer-foot">
+        <span class="hint" *ngIf="chatForm.controls.question.invalid && chatForm.controls.question.touched">
+          {{ 'chat.minChars' | translate }}
+        </span>
+        <div class="quick-prompts" *ngIf="quickPrompts.length">
+          <button type="button" class="prompt" *ngFor="let prompt of quickPrompts" (click)="setPrompt(prompt)">
+            {{ prompt }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </app-glass-card>
+</div>

@@ -1,0 +1,100 @@
+Total items: 406
+
+First 10 analytes:
+================================================================================
+
+Name: METODO:ESPECTROFOTOMETRIA
+Value: None
+Value Text: None
+Unit: None
+Ref Range: None
+
+Name: MUESTRAANALÍTICA:SUERO
+Value: None
+Value Text: None
+Unit: None
+Ref Range: None
+
+Name: GLUCOSA
+Value: 94.2
+Value Text: None
+Unit: mg/dL
+Ref Range: 70a100
+
+Name: _______________________________________________________________________________________
+Value: None
+Value Text: None
+Unit: None
+Ref Range: None
+
+Name: METODO:
+Value: None
+Value Text: None
+Unit: None
+Ref Range: None
+
+Name: MUESTRAANALÍTICA:
+Value: None
+Value Text: None
+Unit: None
+Ref Range: None
+
+Name: METODO:FOTOMETRIAAUTOMATIZADA
+Value: None
+Value Text: None
+Unit: None
+Ref Range: None
+
+Name: MUESTRAANALÍTICA:SUERO
+Value: None
+Value Text: None
+Unit: None
+Ref Range: None
+
+Name: UREA
+Value: 74.8
+Value Text: None
+Unit: mg/dL
+Ref Range: 19a44
+
+Name: _______________________________________________________________________________________
+Value: None
+Value Text: None
+Unit: None
+Ref Range: None
+
+
+================================================================================
+Key test analytes:
+================================================================================
+
+GLUCOSA:
+  Name: GLUCOSA
+  Value: 94.2
+  Unit: mg/dL
+  Ref Range: 70a100
+
+UREA:
+  Name: UREA
+  Value: 74.8
+  Unit: mg/dL
+  Ref Range: 19a44
+
+CREATININA:
+  Name: CREATININA
+  Value: 2.37
+  Unit: mg/dL
+  Ref Range: 0.7a1.3
+
+BUN:
+  Name: RELACIÓNBUN/CRE
+  Value: None
+  Unit: None
+  Ref Range: None
+
+DENSIDAD:
+  Name: COLESTEROL DE ALTA DENSIDAD
+  Value: None
+  Unit: None
+  Ref Range: None
+

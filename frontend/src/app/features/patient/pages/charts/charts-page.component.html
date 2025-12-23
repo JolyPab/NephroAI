@@ -1,0 +1,52 @@
+﻿<div class="space-y-6">
+  <app-glass-card [extraClass]="'glass-strong flex flex-wrap gap-4 items-center justify-between'">
+    <div class="space-y-1">
+        <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'charts.title' | translate }}</h3>
+      <p class="text-sm text-[var(--text-dim)] max-w-xl">
+        {{ 'charts.subtitle' | translate }}
+      </p>
+    </div>
+    <div class="w-full flex flex-col gap-3">
+      <div class="relative w-full max-w-md">
+        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]"></i>
+        <input
+          type="text"
+          class="w-full rounded-full bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.12)] px-10 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent)]/60 transition"
+          [placeholder]="'charts.search' | translate"
+          [(ngModel)]="metricFilter"
+        />
+      </div>
+      <div class="metric-list glass glass-soft">
+        <button
+          *ngFor="let name of filteredMetrics; trackBy: trackByName"
+          type="button"
+          class="chip w-full justify-between"
+          [class.badge-accent]="selectedMetric === name"
+          (click)="onMetricChange(name)"
+        >
+          <span class="flex items-center gap-2">
+            <i class="bi" [ngClass]="selectedMetric === name ? 'bi-activity' : 'bi-dot'"></i>
+            {{ name }}
+          </span>
+          <i *ngIf="selectedMetric === name" class="bi bi-check2 text-[var(--accent)]"></i>
+        </button>
+      </div>
+    </div>
+  </app-glass-card>
+
+  <div *ngIf="isLoading" class="glass glass-strong flex flex-col items-center justify-center gap-3 min-h-[280px]">
+    <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
+    <p class="text-sm text-[var(--text-dim)]">{{ 'charts.loading' | translate }}</p>
+  </div>
+
+  <div *ngIf="!isLoading && errorMessage" class="glass glass-strong p-4 text-[var(--danger)] border border-[var(--danger)]/40">
+    {{ errorMessage }}
+  </div>
+
+  <app-glass-card *ngIf="!isLoading && !errorMessage" [extraClass]="'glass-strong min-h-[320px]'">
+    <div class="h-[260px] sm:h-[320px]">
+      <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'scatter'"></canvas>
+    </div>
+    <p *ngIf="!series.length" class="text-sm text-[var(--text-dim)] text-center">{{ 'charts.noData' | translate }}</p>
+  </app-glass-card>
+</div>

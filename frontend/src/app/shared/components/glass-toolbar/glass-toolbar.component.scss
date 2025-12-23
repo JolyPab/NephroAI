@@ -1,0 +1,61 @@
+:host {
+  display: block;
+  position: relative;
+}
+
+:host(.glass-toolbar--accent-doctor) .glass-toolbar__title {
+  color: var(--accent);
+}
+
+:host(.glass-toolbar--accent-doctor) .glass-toolbar__subtitle {
+  color: rgba(118, 168, 255, 0.75);
+}
+
+.glass-toolbar {
+  gap: 1.25rem;
+  position: relative;
+}
+
+.glass-toolbar--compact {
+  min-height: 56px;
+  padding: 0.6rem 1.1rem;
+}
+
+.glass-toolbar__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.glass-toolbar__title {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.glass-toolbar__subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.glass-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.glass-toolbar__back {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .glass-toolbar {
+    padding: 0.75rem 1rem;
+  }
+}

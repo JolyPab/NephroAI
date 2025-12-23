@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+.glass-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.25rem;
+}
+
+.glass-input__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.glass-input__hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+:host(.has-error) .input-glass {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35);
+}

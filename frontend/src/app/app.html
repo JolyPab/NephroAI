@@ -1,0 +1,32 @@
+<div class="min-h-[100svh] flex flex-col items-center px-4 sm:px-6 pb-8">
+  <app-glass-toolbar
+    *ngIf="showToolbar"
+    [title]="toolbarTitle"
+    [subtitle]="toolbarSubtitle"
+    [showBack]="showBack"
+    [accent]="toolbarAccent"
+    (back)="handleBack()"
+    class="w-full max-w-6xl mt-6"
+  >
+    <div class="flex items-center gap-3" *ngIf="isAuthenticated()">
+      <span class="hidden sm:inline text-sm text-[var(--text-dim)]">{{ userEmail() }}</span>
+      <button type="button" appGlassButton (click)="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        <span class="hidden sm:inline">{{ 'app.logout' | translate }}</span>
+      </button>
+    </div>
+  </app-glass-toolbar>
+
+  <main
+    class="flex-1 w-full max-w-6xl py-8 sm:py-12 transition-padding"
+    [class.pb-28]="showTabbar && isAuthenticated()"
+  >
+    <router-outlet></router-outlet>
+  </main>
+
+  <app-glass-tabbar
+    *ngIf="showTabbar && isAuthenticated()"
+    class="w-full"
+    [baseRoute]="tabbarBase"
+  ></app-glass-tabbar>
+</div>

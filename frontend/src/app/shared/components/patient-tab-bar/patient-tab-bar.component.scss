@@ -1,0 +1,24 @@
+.patient-tab-bar {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 1px solid rgba(12, 68, 130, 0.1);
+  padding: 0.35rem 0.75rem;
+  z-index: 1030;
+
+  .nav-link {
+    border-radius: 1rem;
+    color: #5a6a85;
+
+    &.active {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: #ffffff;
+    }
+  }
+}
+
+@media (min-width: 992px) {
+  .patient-tab-bar {
+    display: none;
+  }
+}

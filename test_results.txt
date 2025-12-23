@@ -1,0 +1,37 @@
+Total items: 406
+
+GLUCOSA:
+  Name: GLUCOSA
+  Value: 94.2
+  Value Text: None
+  Unit: mg/dL
+  Ref Range: 70a100
+
+UREA:
+  Name: UREA
+  Value: 74.8
+  Value Text: None
+  Unit: mg/dL
+  Ref Range: 19a44
+
+CREATININA:
+  Name: CREATININA
+  Value: 2.37
+  Value Text: None
+  Unit: mg/dL
+  Ref Range: 0.7a1.3
+
+BUN:
+  Name: RELACIÓNBUN/CRE
+  Value: None
+  Value Text: None
+  Unit: None
+  Ref Range: None
+
+DENSIDAD:
+  Name: DENSIDAD
+  Value: 1.008
+  Value Text: None
+  Unit: None
+  Ref Range: 1.005a1.035
+

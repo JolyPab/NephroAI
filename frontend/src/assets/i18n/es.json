@@ -1,0 +1,120 @@
+{
+  "app": {
+    "logout": "Salir"
+  },
+  "nav": {
+    "home": "Inicio",
+    "upload": "Subir",
+    "charts": "Gráficas",
+    "chat": "Chat",
+    "profile": "Perfil"
+  },
+  "auth": {
+    "welcomeLogin": "¡Bienvenido! Ingresa para continuar.",
+    "welcomeRegister": "Crea una cuenta para compartir tus análisis y tendencias.",
+    "register": "Registrarse",
+    "signIn": "Ingresar",
+    "email": "Email",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "role": "Rol",
+    "patient": "Paciente",
+    "doctor": "Médico",
+    "signingIn": "Ingresando…",
+    "creating": "Creando cuenta…",
+    "signInBtn": "Ingresar",
+    "createBtn": "Crear cuenta",
+    "errorLogin": "No se pudo iniciar sesión. Verifica email y contraseña.",
+    "errorRegister": "No se pudo registrar. Intenta de nuevo.",
+    "errorPasswords": "Las contraseñas deben coincidir."
+  },
+  "dashboard": {
+    "title": "¡Bienvenido!",
+    "subtitle": "Sigue tus últimos resultados, detecta tendencias y compártelos con tu médico.",
+    "loading": "Cargando tus últimos datos…",
+    "errorLoad": "No se pudieron cargar los análisis.",
+    "empty": "Sube tu primer PDF de laboratorio para ver tendencias y hallazgos.",
+    "latest": "Último análisis",
+    "date": "Fecha:",
+    "goCharts": "Ir a gráficas",
+    "charts": "Gráficas",
+    "range": "Rango:",
+    "status": {
+      "noRef": "Sin referencia",
+      "below": "Bajo del rango",
+      "above": "Sobre el rango",
+      "in": "En rango"
+    }
+  },
+  "charts": {
+    "title": "Tendencias de métricas",
+    "subtitle": "Elige una métrica para ver su tendencia y compararla con el rango normal.",
+    "search": "Buscar métrica...",
+    "loading": "Construyendo tu gráfica…",
+    "noData": "Aún no hay datos para la métrica seleccionada."
+  },
+  "upload": {
+    "dropTitle": "Sube un PDF o arrastra y suelta",
+    "dropHint": "Hasta 10 MB. Solo reportes de laboratorio.",
+    "chooseFile": "Elegir archivo",
+    "processing": "Procesando…",
+    "uploadParse": "Subir y procesar",
+    "recognized": "Análisis reconocido",
+    "date": "Fecha:",
+    "metricsCount": "métricas",
+    "range": "Rango:"
+  },
+  "share": {
+    "title": "Compartir con el médico",
+    "doctorEmail": "Email del médico",
+    "sending": "Enviando…",
+    "grant": "Dar acceso",
+    "grantedTitle": "Accesos otorgados",
+    "grantedCount": "médico(s)",
+    "grantedAt": "Otorgado:",
+    "active": "Activo",
+    "noGrants": "Aún no has otorgado accesos."
+  },
+  "profile": {
+    "title": "Perfil",
+    "role": "Rol",
+    "registered": "Registro",
+    "themeTitle": "Tema de la interfaz",
+    "themeText": "Alterna entre modo oscuro y claro para un contraste cómodo.",
+    "themeLight": "Tema claro",
+    "themeDark": "Tema oscuro",
+    "signInToView": "Ingresa para ver tu perfil y ajustar el tema."
+  },
+  "chat": {
+    "title": "Consejo del asistente",
+    "subtitle": "Pregunta al asistente usando tus últimos análisis.",
+    "secure": "Los datos están protegidos y solo tú los ves",
+    "you": "Tú",
+    "ai": "IA",
+    "disclaimer": "No es un diagnóstico médico. Consulta siempre a tu médico.",
+    "empty": "Pregunta sobre tendencias — el asistente sugerirá qué comentar con tu médico.",
+    "questionLabel": "Tu pregunta",
+    "questionPh": "Por ejemplo: ¿cómo cambió la glucosa en los últimos 3 meses?",
+    "period": "Período",
+    "metrics": "Métricas",
+    "metricsHint": "Marca las métricas clave para incluir en la respuesta.",
+    "minChars": "Mínimo 10 caracteres.",
+    "btn": "Obtener consejo de IA",
+    "btnLoading": "Generando respuesta…"
+  },
+  "doctor": {
+    "patientsTitle": "Mis pacientes",
+    "patientsSubtitle": "Pacientes que compartieron sus datos contigo.",
+    "patientsLoading": "Cargando lista…",
+    "patientsError": "No se pudo cargar la lista de pacientes.",
+    "patientsEmpty": "Aún no hay pacientes con acceso activo.",
+    "grantedAt": "Otorgado:",
+    "latestAnalysis": "Último análisis:",
+    "detailTitle": "Paciente",
+    "detailSubtitle": "Seguimiento de métricas clave en el período seleccionado.",
+    "metric": "Métrica",
+    "loading": "Cargando datos…",
+    "seriesError": "No se pudo cargar la serie temporal.",
+    "date": "Fecha"
+  }
+}

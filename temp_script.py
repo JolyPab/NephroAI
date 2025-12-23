@@ -1,0 +1,1 @@
+import linecache\nfrom pathlib import Path\npath=Path('backend/database.py')\nfor i,line in enumerate(path.read_text().splitlines(),1):\n    if 'get_database_url' in line or 'os.getenv' in line: print(i, line)\n    if 'create_engine' in line and 'def create_db_engine' in line: print(i, line)\n

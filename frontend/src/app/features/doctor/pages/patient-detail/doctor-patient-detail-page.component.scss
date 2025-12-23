@@ -1,0 +1,142 @@
+:host {
+  display: block;
+}
+
+.metric-select {
+  position: relative;
+  min-width: 240px;
+}
+
+.metric-select__button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--r-lg);
+  background: var(--glass);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-weight: 600;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.metric-select__button:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.metric-select__label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.metric-select__chevron {
+  font-size: 1.25rem;
+  color: var(--text-dim);
+}
+
+.metric-select__panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 20;
+  width: min(520px, 80vw);
+  background: var(--glass-strong);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-lg);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  backdrop-filter: blur(18px);
+}
+
+.metric-select__search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.metric-select__search input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  outline: none;
+}
+
+.metric-select__search input::placeholder {
+  color: var(--text-dim);
+}
+
+.metric-select__list {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.metric-select__option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.metric-select__option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.metric-select__option.active {
+  background: rgba(118, 168, 255, 0.12);
+  color: var(--accent);
+}
+
+.notes__input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notes__input textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.notes__controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.notes__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notes__item {
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.notes__text {
+  margin: 0.25rem 0 0;
+  color: var(--text);
+  white-space: pre-line;
+}
+
+select {
+  min-width: 200px;
+}

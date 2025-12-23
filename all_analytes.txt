@@ -1,0 +1,82 @@
+Total items: 406
+
+
+================================================================================
+Analytes containing 'BUN':
+================================================================================
+
+Name: RELACIÓNBUN/CRE
+Value: None
+Unit: None
+Ref Range: None
+
+Name: RELACION BUN/CRE
+Value: 14.75
+Unit: None
+Ref Range: 10a20
+
+
+================================================================================
+Analytes containing 'CREATININA':
+================================================================================
+
+Name: CREATININA
+Value: 2.37
+Unit: mg/dL
+Ref Range: 0.7a1.3
+
+Name: CREATININA
+Value: 50.0
+Unit: mg/dL
+Ref Range: 30a250
+
+Name: COEFICIENTEPROTEINAS/CREATININA
+Value: None
+Unit: g/gCr
+Ref Range: 0a0.15 Normal; 0.16a0.50 ProteinuriaModerada; 0.51a100 ProteinuriaSignificativa
+
+Name: COEFICIENTE ALBUMINA/CREATININA
+Value: 80.0
+Unit: mg/gCr
+Ref Range: 0a30 Normal; 31a300 Microalbuminuria
+
+
+================================================================================
+Analytes containing 'DENSIDAD':
+================================================================================
+
+Name: COLESTEROL DE ALTA DENSIDAD
+Value: None
+Unit: None
+Ref Range: None
+
+Name: COLESTEROL DE ALTA DENSIDAD
+Value: 36.0
+Unit: mg/dL
+Ref Range: 40a60
+
+Name: COLESTEROL DE BAJA DENSIDAD
+Value: None
+Unit: None
+Ref Range: None
+
+Name: COLESTEROL DE BAJA DENSIDAD
+Value: 122.4
+Unit: mg/dL
+Ref Range: 0a100 Optimo; 101a159 LímiteAlto; >160a Alto
+
+Name: DENSIDAD
+Value: 1.008
+Unit: None
+Ref Range: 1.005a1.035
+
+
+================================================================================
+Analytes containing 'UREA':
+================================================================================
+
+Name: UREA
+Value: 74.8
+Unit: mg/dL
+Ref Range: 19a44
+

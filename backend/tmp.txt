@@ -1,0 +1,81 @@
+>     def is_junk_lab_result(result: "LabResult") -> bool:
+          """Эвристика, чтобы отсеять шапку/футер и прочий текст, который не является анализом."""
+          name_raw = (result.analyte_name or "").strip()
+          name = name_raw.upper()
+  
+          if not name:
+              return True
+  
+          # Линии типа "_____", "-----" и т.п.
+          if re.fullmatch(r"[_\-\.\s]{5,}", name):
+              return True
+  
+          # Сплошные номера услуги со звёздочками, без пробелов
+          compact = name.replace(" ", "")
+          if "*" in compact and re.fullmatch(r"\*?\d{6,}\*?\d*\*?", compact):
+              return True
+  
+          # Явные заголовки с двоеточием или без
+          for kw in header_keywords:
+              if name.startswith(kw):
+                  return True
+  
+          # ФИО ответственного (Q.F.B.XXX, без цифр, без единиц/референсов)
+          if name.startswith("Q.F.B") or "Q.F.B." in name:
+              return True
+  
+          # Длинные текстовые фразы без цифр, единиц и референсов (имена/комментарии)
+          if (
+              len(name) > 25
+              and not any(ch.isdigit() for ch in name)
+              and not result.unit
+              and not result.ref_range
+          ):
+              return True
+  
+          # Очень длинные "юридические" тексты без цифр и без единиц измерения
+          if len(name) > 80 and not any(ch.isdigit() for ch in name):
+              return True
+  
+          # Метаданные вида "XXX:" без единиц и референсов
+          if name.endswith(":") and not result.unit and not result.ref_range:
+              return True
+  
+          return False
+  
+      # Get current user
+      current_user = db.query(User).filter(User.id == user_id).first()
+      if not current_user:
+          raise HTTPException(status_code=404, detail="User not found")
+  
+      # Get patient for current user
+      patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
+      if not patient:
+          return []
+  
+      # Get all lab results for this patient
+      results = db.query(LabResult).filter(LabResult.patient_id == patient.id).all()
+  
+      if not results:
+          return []
+  
+      # Group by source_pdf to create analyses
+      analyses_by_source = {}
+      metrics_by_source = {}
+  
+      for result in results:
+          # Отбрасываем очевидный мусор из шапки/футера PDF
+          if not result.analyte_name or is_junk_lab_result(result):
+              continue
+  
+          source = result.source_pdf or "unknown"
+          if source not in analyses_by_source:
+              analyses_by_source[source] = {
+                  "id": f"{patient.id}_{abs(hash(source)) % 10000}",
+                  "date": (result.taken_at or result.created_at).isoformat(),
+                  "source": source,
+              }
+              metrics_by_source[source] = []
+  
+          # Add metric for this result
+          metrics_by_source[source].append(
