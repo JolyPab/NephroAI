@@ -20,9 +20,7 @@ services:
       - "6379:6379"
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
     environment:
       DATABASE_URL: postgres://medic:medic@db:5432/medic
@@ -37,12 +35,10 @@ services:
       - redis
     ports:
       - "8000:8000"
-    restart: unless-stopped
+    restart: always
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     command: celery -A tasks worker --loglevel=info
     environment:
       DATABASE_URL: postgres://medic:medic@db:5432/medic
@@ -55,7 +51,7 @@ services:
     depends_on:
       - db
       - redis
-    restart: unless-stopped
+    restart: always
 
 volumes:
   db_data:
