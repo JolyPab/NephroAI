@@ -1,23 +1,30 @@
-"""Background-like tasks for PDF processing."""
+"""Celery tasks for PDF processing."""
 
 import os
 from typing import Optional
+
+from celery import Celery
 
 from database import SessionLocal, UploadStatus, save_import_to_db
 from vision_parser import parse_pdf_vision
 
 
-class _TaskWrapper:
-    """Lightweight stub to mimic Celery-style .delay interface."""
-
-    def __init__(self, func):
-        self.func = func
-
-    def delay(self, *args, **kwargs):
-        return self.func(*args, **kwargs)
+def _get_redis_url() -> str:
+    return os.getenv("REDIS_URL", "redis://redis:6379/0")
 
 
-def _process_pdf_task(file_id: int):
+celery = Celery("medic", broker=_get_redis_url(), backend=_get_redis_url())
+celery.conf.update(
+    task_serializer="json",
+    result_serializer="json",
+    accept_content=["json"],
+    timezone="UTC",
+    enable_utc=True,
+)
+
+
+@celery.task(name="process_pdf_task")
+def process_pdf_task(file_id: int):
     """Process a saved PDF by UploadStatus id."""
     session = SessionLocal()
     try:
@@ -53,6 +60,3 @@ def _process_pdf_task(file_id: int):
             session.commit()
     finally:
         session.close()
-
-
-process_pdf_task = _TaskWrapper(_process_pdf_task)
