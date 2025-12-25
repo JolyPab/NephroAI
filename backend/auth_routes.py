@@ -1,7 +1,7 @@
 """Authentication routes."""
 
 from fastapi import APIRouter, HTTPException, Depends, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.orm import Session
 from typing import Optional
 from database import User, SessionLocal
@@ -17,10 +17,25 @@ class UserRegister(BaseModel):
     full_name: Optional[str] = None
     is_doctor: bool = False
 
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        # bcrypt limits inputs to 72 bytes; enforce to avoid server error.
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Password must be at most 72 bytes.")
+        return value
+
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Password must be at most 72 bytes.")
+        return value
 
 
 class Token(BaseModel):
