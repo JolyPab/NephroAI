@@ -8,7 +8,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use pbkdf2_sha256 to avoid bcrypt backend issues in slim containers.
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # JWT settings
 SECRET_KEY = "your-secret-key-change-this-in-production"  # TODO: move to .env
@@ -92,4 +93,3 @@ async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depend
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Authorization error: {str(e)}",
         )
-

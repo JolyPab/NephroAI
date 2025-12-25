@@ -20,9 +20,9 @@ class UserRegister(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        # bcrypt limits inputs to 72 bytes; enforce to avoid server error.
-        if len(value.encode("utf-8")) > 72:
-            raise ValueError("Password must be at most 72 bytes.")
+        # Keep a sane upper bound to avoid abuse.
+        if len(value.encode("utf-8")) > 1024:
+            raise ValueError("Password must be at most 1024 bytes.")
         return value
 
 
@@ -33,8 +33,8 @@ class UserLogin(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        if len(value.encode("utf-8")) > 72:
-            raise ValueError("Password must be at most 72 bytes.")
+        if len(value.encode("utf-8")) > 1024:
+            raise ValueError("Password must be at most 1024 bytes.")
         return value
 
 
