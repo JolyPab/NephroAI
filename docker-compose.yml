@@ -18,7 +18,7 @@ services:
     command: gunicorn -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:8000 main:app
     working_dir: /app/backend
     environment:
-      DATABASE_URL: postgres://medic:medic@db:5432/medic
+      DATABASE_URL: postgresql://medic:medic@db:5432/medic
       REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       UPLOAD_DIR: /app/uploads
@@ -37,7 +37,7 @@ services:
     command: celery -A tasks worker --loglevel=info
     working_dir: /app/backend
     environment:
-      DATABASE_URL: postgres://medic:medic@db:5432/medic
+      DATABASE_URL: postgresql://medic:medic@db:5432/medic
       REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       UPLOAD_DIR: /app/uploads
