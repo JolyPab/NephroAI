@@ -14,8 +14,8 @@ const routes: Routes = [
     path: '',
     component: PatientShellComponent,
     data: {
-      title: 'Patient workspace',
-      subtitle: 'All analyses, charts, and sharing in one place',
+      title: 'PATIENT.WORKSPACE.TITLE',
+      subtitle: 'PATIENT.WORKSPACE.SUBTITLE',
       tabbar: true,
     },
     children: [
@@ -23,8 +23,8 @@ const routes: Routes = [
         path: '',
         component: PatientDashboardPageComponent,
         data: {
-          title: 'Home',
-          subtitle: 'Recent analyses and key trends',
+          title: 'PATIENT.DASHBOARD.TITLE',
+          subtitle: 'PATIENT.DASHBOARD.SUBTITLE',
           tabbar: true,
         },
       },
@@ -32,8 +32,8 @@ const routes: Routes = [
         path: 'upload',
         component: PatientUploadPageComponent,
         data: {
-          title: 'Upload analyses',
-          subtitle: 'PDF → OCR → structured data',
+          title: 'UPLOAD.TITLE',
+          subtitle: 'UPLOAD.SUBTITLE',
           tabbar: true,
         },
       },
@@ -41,8 +41,8 @@ const routes: Routes = [
         path: 'charts',
         component: PatientChartsPageComponent,
         data: {
-          title: 'Charts',
-          subtitle: 'Compare with normal ranges and trends over time',
+          title: 'CHARTS.TITLE',
+          subtitle: 'CHARTS.SUBTITLE',
           tabbar: true,
         },
       },
@@ -50,8 +50,8 @@ const routes: Routes = [
         path: 'share',
         component: PatientSharePageComponent,
         data: {
-          title: 'Doctor access',
-          subtitle: 'Manage granting and revoking permissions',
+          title: 'PATIENT.SHARE.TITLE',
+          subtitle: 'PATIENT.SHARE.SUBTITLE',
           tabbar: true,
         },
       },
@@ -59,8 +59,8 @@ const routes: Routes = [
         path: 'chat',
         component: PatientChatPageComponent,
         data: {
-          title: 'AI advice',
-          subtitle: 'Ask about your labs with safe hints',
+          title: 'PATIENT.CHAT.TITLE',
+          subtitle: 'PATIENT.CHAT.SUBTITLE',
           tabbar: true,
         },
       },
@@ -68,8 +68,8 @@ const routes: Routes = [
         path: 'profile',
         component: PatientProfilePageComponent,
         data: {
-          title: 'Profile',
-          subtitle: 'Account and theme settings',
+          title: 'PATIENT.PROFILE.TITLE',
+          subtitle: 'PATIENT.PROFILE.SUBTITLE',
           tabbar: true,
         },
       },

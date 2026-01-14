@@ -8,8 +8,8 @@ const routes: Routes = [
     path: '',
     component: AuthPageComponent,
     data: {
-      title: 'Sign in or sign up',
-      subtitle: 'Secure access to your lab data',
+      title: 'AUTH.TITLE',
+      subtitle: 'AUTH.SUBTITLE',
       hideToolbar: true,
     },
   },

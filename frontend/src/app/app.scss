@@ -2,6 +2,47 @@
   display: block;
 }
 
+.app-shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2rem;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.toolbar-section {
+  margin-top: 1.5rem;
+}
+
+.page-content {
+  flex: 1;
+  width: 100%;
+  padding: 2rem 0 3rem;
+}
+
 .transition-padding {
   transition: padding-bottom 200ms ease;
+}
+
+@media (max-width: 640px) {
+  .page-container {
+    padding: 0 1rem;
+  }
+
+  .toolbar-section {
+    margin-top: 1.25rem;
+  }
+
+  .page-content {
+    padding: 1.5rem 0 2.5rem;
+  }
 }

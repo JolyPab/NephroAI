@@ -3,8 +3,8 @@
 import re
 from typing import List, Optional
 from datetime import datetime
-from pdf_structures import RawAnalyte
-from models import ImportedLabItem
+from backend.pdf_structures import RawAnalyte
+from backend.models import ImportedLabItem
 
 
 def normalize_analytes(raw_analytes: List[RawAnalyte], extracted_date: Optional[datetime] = None) -> List[ImportedLabItem]:

@@ -4,7 +4,7 @@ import { catchError, map } from 'rxjs/operators';
 
 import { ApiService } from './api.service';
 import { DoctorNote, DoctorPatientSummary } from '../models/doctor.model';
-import { MetricSeriesPoint } from '../models/analysis.model';
+import { MetricSeriesResponse } from '../models/analysis.model';
 
 @Injectable({ providedIn: 'root' })
 export class DoctorService {
@@ -22,8 +22,8 @@ export class DoctorService {
     return this.api.get<any[]>(`/doctor/patient/${patientId}/analyses`);
   }
 
-  getSeries(patientId: string, metricName: string): Observable<MetricSeriesPoint[]> {
-    return this.api.get<MetricSeriesPoint[]>(`/doctor/patient/${patientId}/series`, { name: metricName });
+  getSeries(patientId: string, metricName: string): Observable<MetricSeriesResponse> {
+    return this.api.get<MetricSeriesResponse>(`/doctor/patient/${patientId}/series`, { name: metricName });
   }
 
   getNotes(patientId: string): Observable<DoctorNote[]> {

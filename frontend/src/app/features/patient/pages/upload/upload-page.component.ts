@@ -1,4 +1,5 @@
-﻿import { Component, inject } from "@angular/core";
+import { Component, inject } from "@angular/core";
+import { TranslateService } from "@ngx-translate/core";
 
 import { PatientService } from "../../../../core/services/patient.service";
 import { AnalysisSummary } from "../../../../core/models/analysis.model";
@@ -11,6 +12,7 @@ import { AnalysisSummary } from "../../../../core/models/analysis.model";
 })
 export class PatientUploadPageComponent {
   private readonly patientService = inject(PatientService);
+  private readonly translate = inject(TranslateService);
 
   selectedFile: File | null = null;
   isUploading = false;
@@ -44,7 +46,7 @@ export class PatientUploadPageComponent {
       if (file) {
         this.setFile(file);
       } else {
-        this.errorMessage = "Please drop PDF files only.";
+        this.errorMessage = this.translate.instant("ERRORS.UPLOAD_ONLY_PDF");
       }
     }
   }
@@ -58,22 +60,22 @@ export class PatientUploadPageComponent {
 
   submit(): void {
     if (!this.selectedFile) {
-      this.errorMessage = "Select a PDF file to upload.";
+      this.errorMessage = this.translate.instant("ERRORS.UPLOAD_FILE_REQUIRED");
       return;
     }
 
     this.isUploading = true;
-    this.uploadMessage = "Uploading and parsing...";
+    this.uploadMessage = this.translate.instant("UPLOAD.STATUS_UPLOADING");
     this.errorMessage = "";
 
     this.patientService.uploadPdf(this.selectedFile).subscribe({
       next: ({ analysis_id }) => {
-        this.uploadMessage = "File uploaded. Fetching analysis...";
+        this.uploadMessage = this.translate.instant("UPLOAD.STATUS_FETCHING");
         this.fetchAnalysis(analysis_id);
       },
       error: (err) => {
         this.isUploading = false;
-        this.errorMessage = err?.error?.detail ?? "Unable to upload file. Please try again.";
+        this.errorMessage = err?.error?.detail ?? this.translate.instant("ERRORS.UPLOAD_FAILED");
       },
     });
   }
@@ -90,12 +92,12 @@ export class PatientUploadPageComponent {
         this.isUploading = false;
         this.uploadedAnalysis = analyses.find((analysis) => analysis.id === analysisId) ?? null;
         if (!this.uploadedAnalysis) {
-          this.uploadMessage = "Analysis saved.";
+          this.uploadMessage = this.translate.instant("UPLOAD.STATUS_SAVED");
         }
       },
       error: () => {
         this.isUploading = false;
-        this.uploadMessage = "Analysis saved.";
+        this.uploadMessage = this.translate.instant("UPLOAD.STATUS_SAVED");
       },
     });
   }

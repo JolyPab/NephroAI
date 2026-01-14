@@ -1,7 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 
 @Component({
@@ -14,8 +16,11 @@ export class PatientProfilePageComponent {
   private readonly auth = inject(AuthService);
   private readonly themeService = inject(ThemeService);
   private readonly fb = inject(FormBuilder);
+  private readonly languageService = inject(LanguageService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly user = this.auth.user;
   readonly theme = this.themeService.theme;
+  currentLang = this.languageService.currentLang;
 
   readonly nameForm = this.fb.nonNullable.group({
     full_name: [this.user()?.full_name ?? '', [Validators.required, Validators.minLength(2)]],
@@ -24,12 +29,26 @@ export class PatientProfilePageComponent {
   nameMessage = '';
   nameError = '';
 
+  constructor() {
+    this.languageService
+      .onLangChange()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((lang) => {
+        this.currentLang = lang;
+      });
+  }
+
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }
 
   setTheme(theme: 'dark' | 'light'): void {
     this.themeService.setTheme(theme);
+  }
+
+  setLanguage(lang: string): void {
+    this.languageService.setLanguage(lang);
+    this.currentLang = this.languageService.currentLang;
   }
 
   saveName(): void {

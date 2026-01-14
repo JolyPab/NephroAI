@@ -21,11 +21,11 @@ export class GlassTabbarComponent {
   @Input() baseRoute = '/patient';
 
   readonly items: TabItem[] = [
-    { label: 'nav.home', icon: 'home', route: '', exact: true },
-    { label: 'nav.upload', icon: 'upload', route: 'upload' },
-    { label: 'nav.charts', icon: 'monitoring', route: 'charts' },
-    { label: 'nav.chat', icon: 'forum', route: 'chat' },
-    { label: 'nav.profile', icon: 'person', route: 'profile' },
+    { label: 'COMMON.NAV.HOME', icon: 'home', route: '', exact: true },
+    { label: 'COMMON.NAV.UPLOAD', icon: 'upload', route: 'upload' },
+    { label: 'COMMON.NAV.CHARTS', icon: 'monitoring', route: 'charts' },
+    { label: 'COMMON.NAV.CHAT', icon: 'forum', route: 'chat' },
+    { label: 'COMMON.NAV.PROFILE', icon: 'person', route: 'profile' },
   ];
 
   fullRoute(item: TabItem): string {

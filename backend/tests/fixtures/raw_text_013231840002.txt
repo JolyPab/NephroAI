@@ -1,0 +1,70 @@
+NUMERO DE SERVICIO:
+013231840002*013231840002*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+46 AÑOS, MASCULINO
+MEDICO:
+A QUIEN CORRESPONDA
+FECHA DE REGISTRO:
+03/07/2023
+FECHA DE LIBERACION:
+06/07/2023
+IMP. DE RESULTADOS:
+06/07/2023, 18:13 HRS.
+NUM. IMP: 3
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 1 de 2
+ANTIGENO PROSTATICO ESPECIFICO
+METODO: QUIMIOLUMINISCENCIA
+Muestra Analítica: SUERO
+Analitos acreditados por ema
+.
+ANTIGENO PROSTATICO ESPECIFICO
+0.65
+ng/mL
+0.0 a 2.5
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.
+CISTATINA C SERICA
+PROCESO EN LAB. DE REFERENCIA
+METODO: NEFELOMETRIA
+Muestra Analítica: SUERO
+.
+
+NUMERO DE SERVICIO:
+013231840002*013231840002*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+46 AÑOS, MASCULINO
+MEDICO:
+A QUIEN CORRESPONDA
+FECHA DE REGISTRO:
+03/07/2023
+FECHA DE LIBERACION:
+06/07/2023
+IMP. DE RESULTADOS:
+06/07/2023, 18:13 HRS.
+NUM. IMP: 3
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 2 de 2
+.
+_________________________________________________________________________________________________________________________________________________________________________
+Este informe de resultados solo afecta a los objetos sometidos a prueba y no podra ser reproducido en forma total o parcial, sin la aprobacion por escrito de Red de Laboratorios Nacionales S.R.L. de C.V.
+RESPONSABLE DE SUCURSAL
+RESPONSABLE DE LABORATORIO
+________________________________
+________________________________
+Q.F.B. Isaac Quiroga Vaca
+Q.F.B. Javier Lopez Gutierrez
+Ced. Prof. 8554332
+Ced. Prof. 4165797

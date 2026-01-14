@@ -1,31 +1,31 @@
-=== Page 1 ===
 NUMERO DE SERVICIO:
-013241970006*013241970006*
+013250270001*013250270001*
 PACIENTE:
 YAMID ENRIQUE PICO LOPEZ
 GENERALES:
-47 AÑOS, MASCULINO
+48 AÑOS, MASCULINO
 MEDICO:
 SARABIA MARTINEZ VICTOR U.
 FECHA DE REGISTRO:
-15/07/2024
+27/01/2025
 FECHA DE LIBERACION:
-17/07/2024
+27/01/2025
 IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
 RESULTADOS
 UNIDADES
 VALORES DE
 REFERENCIA
 NOTA
-Pag. 1 de 12
+Pag. 1 de 10
 GLUCOSA
 METODO: ESPECTROFOTOMETRIA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 GLUCOSA
-94.20
+91.80
 mg/dL
 70 a 100
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -37,32 +37,35 @@ EVALUACION RENAL
 UREA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 UREA
-74.80
+72.40
 mg/dL
-19 a 44
+13 a 43
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 NITROGENO UREICO
-34.95
+33.83
 mg/dL
-9 a 21
+6 a 20
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CREATININA
 METODO: FOTOMETRIA AUTOMATIZADA (PICRATO ALCALINO)
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 CREATININA
-2.37
+2.46
 mg/dL
 0.7 a 1.3
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 RELACIÓN BUN/CRE
 METODO:
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 Relacion BUN/CRE
-14.75
+13.75
 10 a 20
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 TASA DE FILTRACIÓN GLOMERULAR
@@ -70,9 +73,9 @@ METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
 .
 TASA DE FILTRACION GLOMERULAR
-31
+29.84
 mL/min/1.73m2
-> 90 a
+90 a 300
 Estadio 1, TFG Normal
 60 a 89
 Estadio 2, TFG Levemente
@@ -81,104 +84,132 @@ Disminuida
 Estadio 3A, TFG Moderadamente
 Disminuida
 30 a 44
-Estadio 3B, TFG Moderadamente
-a Severamente Disminuida
-< 15 a
+Estadio 3B, TFG Moderadamente a
+Severamente Disminuida
+0 a 15
 Estadio 5, TFG Fallo Renal
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ELECTROLITOS SERICOS
 METODO: ION SELECTIVO
 Muestra Analítica:
 .
-ELECTROLITOS SERICOS
-SODIO SERICO
-METODO: POTENCIOMETRIA AUTOMATIZADA (ION SELECTIVO)
-Muestra Analítica: SUERO
 
-=== Page 2 ===
 NUMERO DE SERVICIO:
-013241970006*013241970006*
+013250270001*013250270001*
 PACIENTE:
 YAMID ENRIQUE PICO LOPEZ
 GENERALES:
-47 AÑOS, MASCULINO
+48 AÑOS, MASCULINO
 MEDICO:
 SARABIA MARTINEZ VICTOR U.
 FECHA DE REGISTRO:
-15/07/2024
+27/01/2025
 FECHA DE LIBERACION:
-17/07/2024
+27/01/2025
 IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
 RESULTADOS
 UNIDADES
 VALORES DE
 REFERENCIA
 NOTA
-Pag. 2 de 12
+Pag. 2 de 10
+ELECTROLITOS SERICOS
+SODIO SERICO
+METODO: POTENCIOMETRIA AUTOMATIZADA (ION SELECTIVO)
+Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 SODIO SERICO
-137.80
+138.00
 mmol/L
 136 a 145
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 POTASIO SERICO
 METODO: POTENCIOMETRIA AUTOMATIZADA (ION SELECTIVO)
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 POTASIO SERICO
-4.78
+4.66
 mmol/L
 3.5 a 5.1
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CLORO SERICO
 METODO: POTENCIOMETRIA AUTOMATIZADA (ION SELECTIVO)
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 CLORO SERICO
-103.40
+101.20
 mmol/L
 98 a 110
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 FOSFORO SERICO
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 FOSFORO SERICO
-3.94
+3.62
 mg/dL
-2.5 a 4.5
+2.7 a 4.9
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CALCIO SERICO
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 CALCIO SERICO
-9.14
+9.50
 mg/dL
 8.4 a 10.2
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 MAGNESIO SERICO
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 MAGNESIO
-1.92
+1.97
 mg/dl
-1.6 a 2.6
+1.7 a 2.3
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-PERFIL LIPIDOS / RIESGO CARDIOVASCULAR
+PERFIL LIPIDOS
 METODO:
 Muestra Analítica:
 .
 PERFIL LIPIDOS / RIESGO CARDIOVASCULAR
 COLESTEROL TOTAL
 METODO: FOTOMETRIA AUTOMATIZADA
+
+NUMERO DE SERVICIO:
+013250270001*013250270001*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+48 AÑOS, MASCULINO
+MEDICO:
+SARABIA MARTINEZ VICTOR U.
+FECHA DE REGISTRO:
+27/01/2025
+FECHA DE LIBERACION:
+27/01/2025
+IMP. DE RESULTADOS:
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 3 de 10
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 COLESTEROL TOTAL
-196.00
+287.00
 mg/dL
 100 a 200
 Bajo Riesgo
@@ -192,81 +223,60 @@ METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
 .
 COLESTEROL DE ALTA DENSIDAD
-36.00
+47.40
 mg/dL
-40 a 60
+45 a 65
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-
-=== Page 3 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 3 de 12
 COLESTEROL DE BAJA DENSIDAD
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 COLESTEROL DE BAJA DENSIDAD
-122.40
+213.00
 mg/dL
 0 a 100
-Optimo
+OPTIMO
 101 a 159
-Límite Alto
-> 160 a
-Alto
+LIMITE ALTO
+160 a 1000
+ALTO
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 VLDL LIPOPROTEINAS
 METODO: CALCULO
 Muestra Analítica: SUERO
 .
 VLDL LIPOPROTEINAS
-37.60
+26.60
 mg/dL
-5 a 60
+6 a 30
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 INDICE ATEROGENICO
 METODO: CALCULO
 Muestra Analítica: SUERO
 .
 INDICE ATEROGENICO
-5.44
+6.05
 4 a 7
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 RELACION LDL / HDL
 METODO: CALCULO
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 RELACION LDL / HDL
-3.40
+4.49
 mg/dL
-0.5 a 3.0
+0.5 a 3
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 COLESTEROL NO HDL
 METODO:
 Muestra Analítica: SUERO
 .
 COLESTEROL NO HDL
-160.00
+239.60
 mg/dL
-< 130 a
+0 a 130
 Optimo
 130 a 189
 Limítrofe
@@ -275,75 +285,77 @@ Alto
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 SD LDL
 METODO:
+
+NUMERO DE SERVICIO:
+013250270001*013250270001*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+48 AÑOS, MASCULINO
+MEDICO:
+SARABIA MARTINEZ VICTOR U.
+FECHA DE REGISTRO:
+27/01/2025
+FECHA DE LIBERACION:
+27/01/2025
+IMP. DE RESULTADOS:
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 4 de 10
 Muestra Analítica: SUERO
 .
 sd LDL
-5.22
-0.0 a 3.5
+2.81
+0 a 3.5
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 LIPIDOS TOTALES
 METODO: CALCULO
 Muestra Analítica: SUERO
 .
 LIPIDOS TOTALES
-542.40
+680.40
 mg/dL
-400 a 1,000
+400 a 1000
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 TRIGLICERIDOS
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 TRIGLICERIDOS
-188.00
+133.00
 mg/dL
 30 a 150
 Normal
-
-=== Page 4 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 4 de 12
 151 a 199
 Límite Alto
 200 a 499
 Alto
-500 a 2,000
+500 a 2000
 Muy Alto
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 DESHIDROGENASA LACTICA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 DESHIDROGENASA LACTICA
-146.00
+162.00
 U/L
-135 a 225
+135 a 214
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CREATINCINASA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 CREATINCINASA
-103.00
+177.00
 UI/L
 30 a 200
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -355,18 +367,42 @@ PERFIL HEPATICO
 ASPARTATO AMINOTRANSFERASA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 ASPARTATO AMINOTRANSFERASA
-22.90
+27.90
 UI/L
 10 a 50
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ALANINA AMINOTRANSFERASA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
+
+NUMERO DE SERVICIO:
+013250270001*013250270001*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+48 AÑOS, MASCULINO
+MEDICO:
+SARABIA MARTINEZ VICTOR U.
+FECHA DE REGISTRO:
+27/01/2025
+FECHA DE LIBERACION:
+27/01/2025
+IMP. DE RESULTADOS:
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 5 de 10
 .
 ALANINA AMINOTRANSFERASA
-18.30
+25.90
 U/l
 10 a 50
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -375,98 +411,100 @@ METODO: CALCULO
 Muestra Analítica: SUERO
 .
 INDICE AST/ALT
-1.25
-0 a 2.0
+1.08
+0 a 2
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 FOSFATASA ALCALINA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 FOSFATASA ALCALINA
-61.50
+69.10
 UI/L
 40 a 129
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 GAMMA GLUTAMIL TRANSFERASA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 GAMMA GLUTAMIL TRANSFERASA
-21.50
+25.30
 U/L
-5 a 73
+10 a 71
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-
-=== Page 5 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 5 de 12
 BILIRRUBINA TOTAL
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
 .
 BILIRRUBINA TOTAL
-0.43
+0.65
 mg/dL
-0.2 a 1.2
+0 a 1.2
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 BILIRRUBINA DIRECTA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
 .
 BILIRRUBINA DIRECTA
-0.18
+0.23
 mg/dL
-0.0 a 0.35
+0 a 0.2
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 BILIRRUBINA INDIRECTA
 METODO: FOTOMETRIA AUTOMATIZADA (CALCULO)
 Muestra Analítica: SUERO
 .
 BILIRRUBINA INDIRECTA
-0.25
+0.42
 mg/dL
 0 a 0.9
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 PROTEINAS TOTALES
 METODO: ESPECTROFOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 PROTEINAS TOTALES
-7.23
+7.19
 g/dL
 6.3 a 8.2
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ALBUMINA
-4.35
+4.21
 g/dL
-3.5 a 5.0
+3.5 a 5
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 GLOBULINAS
-2.88
+2.98
 g/dL
-2.0 a 3.5
+2 a 3.5
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+NUMERO DE SERVICIO:
+013250270001*013250270001*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+48 AÑOS, MASCULINO
+MEDICO:
+SARABIA MARTINEZ VICTOR U.
+FECHA DE REGISTRO:
+27/01/2025
+FECHA DE LIBERACION:
+27/01/2025
+IMP. DE RESULTADOS:
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 6 de 10
 RELACION A/G
-1.51
+1.41
 1.1 a 2.5
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 FUNCION EXOCRINA DE PANCREAS
@@ -477,18 +515,20 @@ FUNCION EXOCRINA DE PANCREAS
 AMILASA SERICA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 AMILASA
-163.00
+171.00
 U/L
-30 a 118
+28 a 100
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 LIPASA SERICA
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 LIPASA
-84.90
+61.30
 U/L
 13 a 60
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -497,30 +537,7 @@ METODO: CALCULO
 Muestra Analítica: SUERO
 .
 INDICE LIPASA/AMILASA
-0.52
-
-=== Page 6 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 6 de 12
+0.36
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 METABOLISMO DEL HIERRO
 METODO:
@@ -530,18 +547,19 @@ METABOLISMO DEL HIERRO
 HIERRO SERICO
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 HIERRO SERICO
-39.80
+94.90
 µg/dL
-65 a 175
+33 a 193
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CAPTACION DE HIERRO SERICO
 METODO: FOTOMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
 .
 CAPTACION DE HIERRO
-239.80
+276.90
 µg/dL
 250 a 450
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -550,16 +568,38 @@ METODO: CALCULO
 Muestra Analítica: SUERO
 .
 SATURACION DE HIERRO
-16.60
+34.27
 %
 15 a 50
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+NUMERO DE SERVICIO:
+013250270001*013250270001*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+48 AÑOS, MASCULINO
+MEDICO:
+SARABIA MARTINEZ VICTOR U.
+FECHA DE REGISTRO:
+27/01/2025
+FECHA DE LIBERACION:
+27/01/2025
+IMP. DE RESULTADOS:
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 7 de 10
 UIBC
 METODO: FOTOMETRÍA AUTOMATIZADA
 Muestra Analítica: SUERO
 .
 UIBC
-200.00
+182.00
 ug/dL
 135 a 392
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -568,7 +608,7 @@ METODO: INMUNOTURBIDIMETRÍA
 Muestra Analítica: SUERO
 .
 TRANSFERRINA
-201.00
+226.00
 mg/dL
 200 a 360
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -580,52 +620,32 @@ PERFIL DE INMUNOGLOBULINAS
 INMUNOGLOBULINA A
 METODO: INMUNOTURBIDIMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 INMUNOGLOBULINA A
-572.00
+632.00
 mg/dL
-63 a 484
+70 a 400
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 INMUNOGLOBULINA M
 METODO: INMUNOTURBIDIMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
-
-=== Page 7 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 7 de 12
 INMUNOGLOBULINA M
-206.00
+250.00
 mg/dL
 40 a 230
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 INMUNOGLOBULINA G
 METODO: INMUNOTURBIDIMETRIA AUTOMATIZADA
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 INMUNOGLOBULINA G
-1,304.00
+1,313.00
 mg/dL
-540 a 1822
+595 a 1310
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 PERFIL REUMATICO
 METODO:
@@ -635,147 +655,137 @@ PERFIL REUMATICO
 FACTOR REUMATOIDE
 METODO: INMUNOTURBIDIMETRICO
 Muestra Analítica: SUERO
+Analitos acreditados por ema
 .
 FACTOR REUMATOIDE
-14.30
+14.50
 UI/mL
-0 a 30
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-PROTEINA C REACTIVA ULTRASENSIBLE
-METODO: INMUNONEFELOMETRIA AUTOMATIZADA
-Muestra Analítica: SUERO
-.
-PROTEINA C REACTIVA ULTRASENSIBLE
-3.28
-mg/L
-0 a 3
-Individuo Sano
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-ACIDO URICO
-METODO: FOTOMETRIA AUTOMATIZADA
-Muestra Analítica: SUERO
-.
-ACIDO URICO
-8.01
-mg/dL
-3.5 a 7.2
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-.
-ANTIGENO PROSTATICO ESPECIFICO
-METODO: ELECTROQUIMIOLUMINISCENCIA
-Muestra Analítica: SUERO
-.
-ANTIGENO PROSTATICO ESPECIFICO
-0.84
-ng/mL
-0.0 a 2.5
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-.
-BIOMETRIA HEMATICA
-METODO: CITOMETRIA FLUJO, TINCION CITOQUIMICA Y MICROSCOPIA
-Muestra Analítica: SANGRE TOT/EDTA
-.
-FORMULA ROJA
-ERITROCITOS
-4.59
-x10^6/uL
-4.0 a 6.2
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-HEMOGLOBINA
-13.6
-gr/dL
-13 a 17
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-HEMATOCRITO
-40.8
-%
-42 a 52
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-VOLUMEN GLOBULAR MEDIO
-88.9
-fL
-83 a 100
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-CONCENTRACION MEDIA DE HEMOGLOBINA
-29.6
-pg
-28 a 32
+0 a 14
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
-=== Page 8 ===
 NUMERO DE SERVICIO:
-013241970006*013241970006*
+013250270001*013250270001*
 PACIENTE:
 YAMID ENRIQUE PICO LOPEZ
 GENERALES:
-47 AÑOS, MASCULINO
+48 AÑOS, MASCULINO
 MEDICO:
 SARABIA MARTINEZ VICTOR U.
 FECHA DE REGISTRO:
-15/07/2024
+27/01/2025
 FECHA DE LIBERACION:
-17/07/2024
+27/01/2025
 IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
 RESULTADOS
 UNIDADES
 VALORES DE
 REFERENCIA
 NOTA
-Pag. 8 de 12
+Pag. 8 de 10
+ACIDO URICO
+METODO: FOTOMETRIA AUTOMATIZADA
+Muestra Analítica: SUERO
+Analitos acreditados por ema
+.
+ACIDO URICO
+7.58
+mg/dL
+3.4 a 7
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+PROTEINA C REACTIVA CUANTITATIVA
+METODO: INMUNONEFELOMETRIA AUTOMATIZADA
+Muestra Analítica: SUERO
+Analitos acreditados por ema
+.
+PROTEINA C REACTIVA
+0.95
+mg/L
+0 a 5
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.
+BIOMETRIA HEMATICA
+METODO: CITOMETRIA FLUJO, TINCION CITOQUIMICA Y MICROSCOPIA
+Muestra Analítica: SANGRE TOT/EDTA
+Analitos acreditados por ema
+.
+FORMULA ROJA
+ERITROCITOS
+5.07
+x10^6/uL
+4.5 a 5.8
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+HEMOGLOBINA
+15.3
+gr/dL
+13.5 a 17.5
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+HEMATOCRITO
+44.7
+%
+42 a 52
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+VOLUMEN GLOBULAR MEDIO
+88.2
+fL
+83 a 100
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+CONCENTRACION MEDIA DE HEMOGLOBINA
+30.2
+pg
+28 a 32
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CONCENTRACION MEDIA DE HEMOGLOBINA
 CORPUSCULAR
-33.3
+34.2
 gr/dL
-32 a 34.5
+32 a 36
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 INDICE DE DISTRIBUCION DE ERITROCITOS
-14.7
+14.4
 %
 12 a 15
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 PLAQUETAS
-320
+290
 x10^3/uL
 150 a 450
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 VOLUMEN PLAQUETARIO
-9.6
+9.5
 fL
-9.0 a 12.5
+5 a 15
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 FORMULA BLANCA
 LEUCOCITOS TOTALES
-4.81
+6.22
 x10^3 /uL
-4.0 a 10.5
+4 a 10.5
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 LINFOCITOS:
-42.0
+39.5
 %
-27 a 40
 27 a 40
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 MONOCITOS:
-8.1
+6.6
 %
 1 a 7
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 EOSINOFILOS:
-2.5
+3.2
 %
 0 a 3
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 BASOFILOS:
-0.4
+0.6
 %
 0 a 1
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 NEUTROFILOS SEGMENTADOS:
-46.8
+49.9
 %
-40 a 70
 40 a 70
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 LUC
@@ -786,6 +796,28 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 .
 EXAMEN GENERAL DE ORINA
 METODO: FOTOMETRÍA POR REFLECTANCIA Y REFRACTOMETRÍA/CITOMETRÍA DE FLUJO AUTOMATIZADO
+
+NUMERO DE SERVICIO:
+013250270001*013250270001*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+48 AÑOS, MASCULINO
+MEDICO:
+SARABIA MARTINEZ VICTOR U.
+FECHA DE REGISTRO:
+27/01/2025
+FECHA DE LIBERACION:
+27/01/2025
+IMP. DE RESULTADOS:
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 9 de 10
 Muestra Analítica: ORINA
 .
 EXAMEN FISICO QUIMICO
@@ -796,12 +828,12 @@ COLOR
 AMARILLO
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 DENSIDAD
-1.008
+1.016
 1.005 a 1.035
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 pH
-5
-5.0 a 7.5
+5.5
+5 a 7.5
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 GLUCOSA
 NEGATIVO
@@ -819,19 +851,19 @@ mg/dL
 30 a 250
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 PROTEINAS
-NEGATIVO
+100
 mg/dL
 0 a 30
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ALBUMINA
-30
+>150
 mg/L
 0 a 23.8
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 UROBILINOGENO
 NEGATIVO
 mg/dL
-0 a 2.0
+0 a 2
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 BILIRRUBINAS
 NEGATIVO
@@ -841,7 +873,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 HEMOGLOBINA
 NEGATIVO
 mg/dL
-0.0 a 0.03
+0 a 0.03
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 SANGRE
 NEGATIVO
@@ -850,48 +882,25 @@ Cel./µL
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 NITRITOS
 NEGATIVO
-NEGATIVO a
+a NEGATIVO
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 LEUCOCITOS
 NEGATIVO
 Cel./µL
-0 a 12
-
-=== Page 9 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 9 de 12
+0 a 25
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 COEFICIENTE PROTEINAS/CREATININA
-NORMAL
+>=0.50
 g/gCr
 0 a 0.15
 Normal
-0.16 a 0.50
+0.16 a 0.5
 Proteinuria Moderada
 0.51 a 100
 Proteinuria Significativa
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 COEFICIENTE ALBUMINA/CREATININA
-80
+>=300
 mg/gCr
 0 a 30
 Normal
@@ -903,7 +912,7 @@ Macroalbuminuria
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CITOGRAMA DE FLUJO
 LEUCOCITOS
-0.1
+2.6
 /µL
 0 a 25
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -913,12 +922,12 @@ NEGATIVO
 0 a 23
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ERITROCITOS
-1.3
+2.5
 /µL
 0 a 23
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ERITROCITOS NO LISADOS
-1
+2.2
 /µL
 0 a 23
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -933,22 +942,44 @@ NEGATIVO
 0 a 31
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CEL. EP. TRANSICIONALES
-0.1
+0.0
 /µL
 0 a 1
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CEL. EP. RENALES
-0.1
+0.2
 /µL
 0 a 1
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CILINDROS
-NEGATIVO
+0.13
 /µL
 0 a 1
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+NUMERO DE SERVICIO:
+013250270001*013250270001*
+PACIENTE:
+YAMID ENRIQUE PICO LOPEZ
+GENERALES:
+48 AÑOS, MASCULINO
+MEDICO:
+SARABIA MARTINEZ VICTOR U.
+FECHA DE REGISTRO:
+27/01/2025
+FECHA DE LIBERACION:
+27/01/2025
+IMP. DE RESULTADOS:
+27/01/2025, 13:43 HRS.
+NUM. IMP: 2
+RESULTADOS
+UNIDADES
+VALORES DE
+REFERENCIA
+NOTA
+Pag. 10 de 10
 CILINDROS HIALINOS
-NEGATIVO
+0.13
 /µL
 0 a 1
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -963,12 +994,12 @@ NEGATIVO
 0 a 10
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 BACTERIAS
-2.4 (-)
+7.2 (-)
 /µL
 0 a 1200
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 CELULAS LEVADURIFORMES
-NEGATIVO
+0.1
 /µL
 0 a 1
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -982,106 +1013,17 @@ OTROS:
 /µL
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 .
-HORMONA PARATIROIDEA (PTH-INTACTA)
-PROCESO EN LAB. DE REFERENCIA
+VITAMINA D 25 HIDROXI (CALCIFEROL)
 METODO: ELECTROQUIMIOLUMINISCENCIA
-Muestra Analítica: PLASMA EDTA, PLASMA EDTA CONGELADO
-.
-
-=== Page 10 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 10 de 12
-.
-CISTATINA C SERICA
-PROCESO EN LAB. DE REFERENCIA
-METODO: NEFELOMETRIA
 Muestra Analítica: SUERO
 .
-
-=== Page 11 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 11 de 12
-.
-MICROALBUMINURIA EN ORINA DE 24 HRS
-METODO: FOTOMETRIA AUTOMATIZADA
-Muestra Analítica: ORINA 24 HRS
-.
-MICROALBUMINURIA EN ORINA :
-23.7
-mg/dL
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-VOLUMEN URINARIO:
-2950
-ml
-800 a 2,000
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-MICROALBUMINURIA EN ORINA DE 24 HRS
-699.15
-mg/Día
-0 a 300
-
-=== Page 12 ===
-NUMERO DE SERVICIO:
-013241970006*013241970006*
-PACIENTE:
-YAMID ENRIQUE PICO LOPEZ
-GENERALES:
-47 AÑOS, MASCULINO
-MEDICO:
-SARABIA MARTINEZ VICTOR U.
-FECHA DE REGISTRO:
-15/07/2024
-FECHA DE LIBERACION:
-17/07/2024
-IMP. DE RESULTADOS:
-17/07/2024, 15:25 HRS.
-NUM. IMP: 3
-RESULTADOS
-UNIDADES
-VALORES DE
-REFERENCIA
-NOTA
-Pag. 12 de 12
-50 a 80
-PACIENTE EN REPOSO
+VITAMINA D (25 HIDROXI)
+24.20
+ng/mL
+0 a 20
+DEFICIENTE O INSUFICIENTE
+20 a 100
+NORMAL
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 .
 _________________________________________________________________________________________________________________________________________________________________________

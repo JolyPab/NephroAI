@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from database import SessionLocal, LabResult, Patient
+from backend.database import SessionLocal, LabResult, Patient
 from datetime import datetime
 
 def check_dates_in_db():

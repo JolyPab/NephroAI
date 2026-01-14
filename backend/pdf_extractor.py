@@ -6,7 +6,7 @@ from typing import List, Optional
 import pdfplumber
 from collections import defaultdict
 
-from pdf_structures import RawCell, RawRow
+from backend.pdf_structures import RawCell, RawRow
 
 
 class NoTextLayerError(Exception):

@@ -1,0 +1,109 @@
+{
+  "COMMON": {
+    "APP_NAME": "NephroAI",
+    "DOCS": "Docs",
+    "LOGOUT": "Logout",
+    "NAV": {
+      "HOME": "Home",
+      "UPLOAD": "Upload",
+      "CHARTS": "Charts",
+      "CHAT": "Assistant",
+      "PROFILE": "Profile"
+    },
+    "BRAND_NAME": "NephroAI"
+  },
+  "AUTH": {
+    "TITLE": "Sign in / Sign up",
+    "SUBTITLE": "Secure access to your lab data",
+    "WELCOME_LOGIN": "Welcome back! Sign in to continue.",
+    "WELCOME_REGISTER": "Create an account to share your analyses and trends.",
+    "SWITCH_TO_REGISTER": "Register",
+    "SWITCH_TO_LOGIN": "Sign in",
+    "FULL_NAME": "Full name",
+    "EMAIL": "Email",
+    "PASSWORD": "Password",
+    "CONFIRM_PASSWORD": "Confirm password",
+    "ROLE": "Role",
+    "PATIENT": "Patient",
+    "DOCTOR": "Doctor",
+    "SIGNING_IN": "Signing in...",
+    "CREATING": "Creating account...",
+    "SIGN_IN_BUTTON": "Sign in",
+    "CREATE_BUTTON": "Create account",
+    "FULL_NAME_PLACEHOLDER": "Jane Doe",
+    "EMAIL_PLACEHOLDER": "you@example.com",
+    "PASSWORD_PLACEHOLDER": "Enter password",
+    "PASSWORD_MIN_PLACEHOLDER": "Minimum 8 characters",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "Repeat the password"
+  },
+  "UPLOAD": {
+    "TITLE": "Upload analyses",
+    "SUBTITLE": "PDF -> OCR -> structured data",
+    "DROP_TITLE": "Upload a PDF or drag & drop",
+    "DROP_HINT": "Up to 10 MB. Lab reports only.",
+    "CHOOSE_FILE": "Choose file",
+    "PROCESSING": "Processing...",
+    "UPLOAD_PARSE": "Upload and parse",
+    "STATUS_UPLOADING": "Uploading and parsing...",
+    "STATUS_FETCHING": "File uploaded. Fetching analysis...",
+    "STATUS_SAVED": "Analysis saved.",
+    "RECOGNIZED": "Recognized analysis",
+    "DATE": "Date:",
+    "METRICS_COUNT": "metrics",
+    "RANGE": "Range:"
+  },
+  "PATIENT": {
+    "WORKSPACE": {
+      "TITLE": "Patient workspace",
+      "SUBTITLE": "All analyses, charts, and sharing in one place"
+    },
+    "DASHBOARD": {
+      "TITLE": "Welcome!",
+      "SUBTITLE": "Track your latest lab results, spot trends, and share them with your doctor.",
+      "LOADING": "Loading your latest data...",
+      "EMPTY": "Upload your first PDF lab report to see trends and insights.",
+      "LATEST": "Latest report",
+      "LATEST_SUBTITLE": "Summary of your most recent lab report",
+      "DATE": "Date:",
+      "GO_CHARTS": "Go to charts",
+      "CHARTS": "Charts",
+      "RANGE": "Range:",
+      "NO_DATE": "-"
+    },
+    "SHARE": {
+      "TITLE": "Doctor access",
+      "SUBTITLE": "Manage granting and revoking permissions"
+    },
+    "CHAT": {
+      "TITLE": "AI advice",
+      "SUBTITLE": "Ask about your labs with safe hints"
+    },
+    "PROFILE": {
+      "TITLE": "Profile",
+      "SUBTITLE": "Account and theme settings",
+      "PREFERENCES_TITLE": "Preferences",
+      "PREFERENCES_SUBTITLE": "Theme and language settings.",
+      "LANGUAGE_TITLE": "Language",
+      "LANGUAGE_TEXT": "Choose the interface language."
+    }
+  },
+  "CHARTS": {
+    "TITLE": "Metric trends",
+    "SUBTITLE": "Pick a metric to see its trend and compare it with the allowed normal range.",
+    "SEARCH": "Search metric...",
+    "LOADING": "Building your chart...",
+    "NO_DATA": "No data for the selected metric yet.",
+    "CATEGORICAL_TITLE": "Categorical results"
+  },
+  "ERRORS": {
+    "AUTH_LOGIN_FAILED": "Unable to sign in. Check your email and password.",
+    "AUTH_REGISTER_FAILED": "Registration failed. Please try again.",
+    "AUTH_PASSWORDS_MISMATCH": "Passwords must match.",
+    "UPLOAD_ONLY_PDF": "Please drop PDF files only.",
+    "UPLOAD_FILE_REQUIRED": "Select a PDF file to upload.",
+    "UPLOAD_FAILED": "Unable to upload file. Please try again.",
+    "DASHBOARD_LOAD_FAILED": "Failed to load analyses.",
+    "METRICS_LOAD_FAILED": "Failed to load metrics list.",
+    "SERIES_LOAD_FAILED": "Failed to load time series."
+  }
+}

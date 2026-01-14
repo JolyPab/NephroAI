@@ -5,9 +5,10 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 import { ChartConfiguration, ChartDataset, TooltipModel, ScatterDataPoint, ScriptableContext } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { format } from 'date-fns';
+import { TranslateService } from '@ngx-translate/core';
 
 import { PatientService } from '../../../../core/services/patient.service';
-import { AnalysisSummary, MetricSeriesPoint } from '../../../../core/models/analysis.model';
+import { AnalysisSummary, CategoricalSeriesPoint, MetricSeriesPoint, MetricSeriesResponse } from '../../../../core/models/analysis.model';
 import { DoctorNote } from '../../../../core/models/doctor.model';
 
 Chart.register(zoomPlugin);
@@ -144,6 +145,7 @@ const HIDDEN_METRICS = new Set([
 })
 export class PatientChartsPageComponent implements OnInit {
   private readonly patientService = inject(PatientService);
+  private readonly translate = inject(TranslateService);
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
@@ -153,6 +155,10 @@ export class PatientChartsPageComponent implements OnInit {
   metricFilter = '';
   isLoading = true;
   series: MetricSeriesPoint[] = [];
+  seriesType: MetricSeriesResponse['series_type'] = 'numeric';
+  categoricalPoints: CategoricalSeriesPoint[] = [];
+  seriesStage?: string | null;
+  seriesStageLabel?: string | null;
   errorMessage = '';
   noteMap = new Map<number, DoctorNote[]>();
 
@@ -184,7 +190,7 @@ export class PatientChartsPageComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.errorMessage = err?.error?.detail ?? 'Failed to load metrics list.';
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.METRICS_LOAD_FAILED');
         this.isLoading = false;
       },
     });
@@ -252,23 +258,61 @@ export class PatientChartsPageComponent implements OnInit {
     return normalized.sort((a, b) => new Date(a.t).getTime() - new Date(b.t).getTime());
   }
 
+  private normalizeCategorical(raw: unknown): CategoricalSeriesPoint[] {
+    const asArray: any[] = Array.isArray(raw) ? raw : Object.values(raw ?? {});
+    const normalized = asArray
+      .map((point) => {
+        const dateValue = (point?.date ?? point?.t ?? point?.taken_at ?? point?.created_at) as string | undefined;
+        const valueText = (point?.value_text ?? point?.value) as string | undefined;
+        if (!dateValue || !valueText) {
+          return null;
+        }
+        const ts = Date.parse(dateValue);
+        if (!Number.isFinite(ts)) {
+          return null;
+        }
+        return {
+          date: new Date(ts).toISOString(),
+          value_text: valueText,
+        } as CategoricalSeriesPoint;
+      })
+      .filter((point): point is CategoricalSeriesPoint => point !== null);
+
+    return normalized.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
   private loadSeries(): void {
     if (!this.selectedMetric) {
       this.series = [];
+      this.categoricalPoints = [];
+      this.seriesType = 'numeric';
       this.chartData = { datasets: [] };
       this.chartOptions = this.buildBaseOptions();
       return;
     }
     this.isLoading = true;
     this.patientService.getSeries(this.selectedMetric).subscribe({
-      next: (series) => {
-        this.series = this.normalizeSeries(series);
-        this.updateChart();
+      next: (seriesResponse) => {
+        this.seriesType = seriesResponse?.series_type ?? 'numeric';
+        this.seriesStage = seriesResponse?.stage ?? null;
+        this.seriesStageLabel = seriesResponse?.stage_label ?? null;
+
+        if (this.seriesType === 'categorical') {
+          this.series = [];
+          this.categoricalPoints = this.normalizeCategorical(seriesResponse?.points ?? []);
+          this.chartData = { datasets: [] };
+          this.chartOptions = this.buildBaseOptions();
+        } else {
+          this.categoricalPoints = [];
+          this.series = this.normalizeSeries(seriesResponse?.points ?? seriesResponse);
+          this.updateChart();
+        }
+
         this.loadNotesForMetric(this.selectedMetric);
         this.isLoading = false;
       },
       error: (err) => {
-        this.errorMessage = err?.error?.detail ?? 'Failed to load time series.';
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.SERIES_LOAD_FAILED');
         this.isLoading = false;
       },
     });
@@ -308,10 +352,20 @@ export class PatientChartsPageComponent implements OnInit {
         fill: false,
         pointRadius: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => (this.hasNoteAtContext(ctx) ? 7 : 5),
         pointHoverRadius: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => (this.hasNoteAtContext(ctx) ? 9 : 7),
-        pointBackgroundColor: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) =>
-          this.hasNoteAtContext(ctx) ? 'rgba(252, 211, 77, 0.95)' : 'rgba(118, 168, 255, 0.95)',
-        pointBorderColor: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) =>
-          this.hasNoteAtContext(ctx) ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.9)',
+        pointBackgroundColor: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => {
+          if (this.hasNoteAtContext(ctx)) {
+            return 'rgba(252, 211, 77, 0.95)';
+          }
+          const stage = this.series[ctx.dataIndex]?.stage;
+          return stage ? this.getStageColor(stage) : 'rgba(118, 168, 255, 0.95)';
+        },
+        pointBorderColor: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => {
+          if (this.hasNoteAtContext(ctx)) {
+            return 'rgba(255, 255, 255, 0.95)';
+          }
+          const stage = this.series[ctx.dataIndex]?.stage;
+          return stage ? this.getStageColor(stage) : 'rgba(255, 255, 255, 0.9)';
+        },
         pointBorderWidth: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => (this.hasNoteAtContext(ctx) ? 3 : 2),
       },
     ];
@@ -506,6 +560,7 @@ export class PatientChartsPageComponent implements OnInit {
       const title = tooltip.title?.[0] ?? '';
       const bodyLines: string[] = [];
       tooltip.body.forEach((bodyItem: { lines: string[] }) => bodyLines.push(...bodyItem.lines));
+      const stageLine = this.buildStageHtml(tooltip);
       const notesHtml = this.buildNotesHtml(tooltip);
       tooltipEl.innerHTML = `
         <div class="tooltip-title">${title}</div>
@@ -517,6 +572,7 @@ export class PatientChartsPageComponent implements OnInit {
               </div>`,
           )
           .join('')}
+        ${stageLine}
         ${notesHtml}
       `;
     }
@@ -564,6 +620,27 @@ export class PatientChartsPageComponent implements OnInit {
       })
       .join('');
     return `<div class="tooltip-notes">${items}</div>`;
+  }
+
+  private buildStageHtml(tooltip: TooltipModel<'scatter'>): string {
+    const idx = tooltip.dataPoints?.[0]?.dataIndex;
+    if (idx === undefined || idx === null) return '';
+    const stageLabel = this.series[idx]?.stage_label;
+    if (!stageLabel) return '';
+    return `<div class="tooltip-row"><span>${stageLabel}</span></div>`;
+  }
+
+  private getStageColor(stage: string): string {
+    const normalized = stage.toUpperCase();
+    const colors: Record<string, string> = {
+      G1: '#5ad670',
+      G2: '#9ad66a',
+      G3A: '#f2c94c',
+      G3B: '#f2994a',
+      G4: '#eb5757',
+      G5: '#b71c1c',
+    };
+    return colors[normalized] ?? 'rgba(118, 168, 255, 0.95)';
   }
 
   private hasNoteAtContext(ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>): boolean {

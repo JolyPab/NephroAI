@@ -1,19 +1,42 @@
-<header class="glass glass-toolbar" [class.glass-toolbar--compact]="compact">
-  <button
-    type="button"
-    appGlassButton
-    class="glass-toolbar__back"
-    *ngIf="showBack"
-    (click)="handleBack()"
-    aria-label="Go back"
-  >
-    <i class="bi bi-chevron-left"></i>
-  </button>
-  <div class="glass-toolbar__heading">
-    <h1 class="glass-toolbar__title" *ngIf="title">{{ title }}</h1>
-    <p class="glass-toolbar__subtitle" *ngIf="subtitle">{{ subtitle }}</p>
-  </div>
-  <div class="glass-toolbar__actions">
-    <ng-content></ng-content>
+<header class="glass-toolbar-shell" [class.glass-toolbar--compact]="compact">
+  <div class="toolbar-island glass">
+    <div class="toolbar-island__inner"></div>
+    <div class="glass-toolbar__left">
+      <button
+        type="button"
+        appGlassButton
+        class="glass-toolbar__back"
+        *ngIf="showBack"
+        (click)="handleBack()"
+        aria-label="Go back"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <div class="glass-toolbar__brand">
+        <span *ngIf="!logoError" class="glass-toolbar__logo-wrap">
+          <img
+            class="glass-toolbar__logo"
+            [src]="logoSrc"
+            [attr.alt]="(brandTextKey | translate) + ' logo'"
+            loading="lazy"
+            (error)="handleLogoError()"
+          />
+        </span>
+      </div>
+    </div>
+
+    <div class="glass-toolbar__center page-center">
+      <div class="glass-toolbar__heading">
+        <div class="glass-toolbar__title-row title-row" *ngIf="title">
+          <h1 class="glass-toolbar__title">{{ title }}</h1>
+          <span class="glass-toolbar__badge">BETA</span>
+        </div>
+        <p class="glass-toolbar__subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+      </div>
+    </div>
+
+    <div class="glass-toolbar__actions">
+      <ng-content></ng-content>
+    </div>
   </div>
 </header>

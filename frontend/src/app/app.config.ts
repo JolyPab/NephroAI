@@ -1,7 +1,8 @@
 import { ApplicationConfig, importProvidersFrom, isDevMode, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 
 import { routes } from './app.routes';
 import { CoreModule } from './core/core.module';
@@ -11,7 +12,18 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    importProvidersFrom(CoreModule),
+    importProvidersFrom(
+      CoreModule,
+      TranslateModule.forRoot({
+        defaultLanguage: 'es',
+        useDefaultLang: true,
+        loader: {
+          provide: TranslateLoader,
+          useFactory: HttpLoaderFactory,
+          deps: [HttpClient],
+        },
+      }),
+    ),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideRouter(routes),
     provideServiceWorker('ngsw-worker.js', {
@@ -20,4 +32,11 @@ export const appConfig: ApplicationConfig = {
     }),
   ],
 };
+
+export function HttpLoaderFactory(http: HttpClient) {
+  const loader: TranslateLoader = {
+    getTranslation: (lang: string) => http.get<Record<string, unknown>>(`assets/i18n/${lang}.json`) as any,
+  };
+  return loader;
+}
 

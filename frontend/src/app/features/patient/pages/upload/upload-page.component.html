@@ -9,9 +9,9 @@
     >
       <label class="upload-dropzone" [class.upload-dropzone--active]="isDragging">
         <span class="material-symbols-rounded text-4xl sm:text-5xl text-[var(--accent)]">upload</span>
-        <span class="text-lg font-semibold text-[var(--text)]">{{ 'upload.dropTitle' | translate }}</span>
-        <p class="text-sm text-[var(--text-dim)]">{{ 'upload.dropHint' | translate }}</p>
-        <button type="button" appGlassButton (click)="fileInput.click()">{{ 'upload.chooseFile' | translate }}</button>
+        <span class="text-lg font-semibold text-[var(--text)]">{{ 'UPLOAD.DROP_TITLE' | translate }}</span>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'UPLOAD.DROP_HINT' | translate }}</p>
+        <button type="button" appGlassButton (click)="fileInput.click()">{{ 'UPLOAD.CHOOSE_FILE' | translate }}</button>
         <input
           #fileInput
           type="file"
@@ -41,17 +41,17 @@
 
     <button type="button" appGlassButton (click)="submit()" [glassBlock]="true" [disabled]="isUploading">
       <span *ngIf="isUploading" class="loader-dot"></span>
-      <span>{{ isUploading ? ('upload.processing' | translate) : ('upload.uploadParse' | translate) }}</span>
+      <span>{{ isUploading ? ('UPLOAD.PROCESSING' | translate) : ('UPLOAD.UPLOAD_PARSE' | translate) }}</span>
     </button>
   </app-glass-card>
 
   <app-glass-card *ngIf="uploadedAnalysis as analysis" [extraClass]="'glass-strong space-y-4'">
     <div class="flex flex-wrap justify-between gap-3 items-start">
       <div>
-        <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'upload.recognized' | translate }}</h3>
-        <p class="text-sm text-[var(--text-dim)]">{{ 'upload.date' | translate }} {{ analysis.taken_at | date: 'd MMMM yyyy' }}</p>
+        <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'UPLOAD.RECOGNIZED' | translate }}</h3>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'UPLOAD.DATE' | translate }} {{ analysis.taken_at | date: 'd MMMM yyyy' }}</p>
       </div>
-      <span class="badge-glass badge-accent">{{ analysis.metrics.length }} {{ 'upload.metricsCount' | translate }}</span>
+      <span class="badge-glass badge-accent">{{ analysis.metrics.length }} {{ 'UPLOAD.METRICS_COUNT' | translate }}</span>
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -64,7 +64,7 @@
           <span class="text-sm text-[var(--text-dim)]" *ngIf="metric.unit">{{ metric.unit }}</span>
         </div>
         <p class="text-xs text-[var(--text-dim)] mt-3" *ngIf="metric.ref_min || metric.ref_max">
-          {{ 'upload.range' | translate }} {{ metric.ref_min ?? '-' }} - {{ metric.ref_max ?? '-' }}
+          {{ 'UPLOAD.RANGE' | translate }} {{ metric.ref_min ?? '-' }} - {{ metric.ref_max ?? '-' }}
         </p>
       </app-glass-card>
     </div>

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { User } from '../../../../core/models/user.model';
@@ -15,6 +16,7 @@ export class AuthPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   mode: 'login' | 'register' = 'login';
   isSubmitting = false;
@@ -57,7 +59,7 @@ export class AuthPageComponent implements OnInit {
     this.auth.login(this.loginForm.getRawValue()).subscribe({
       next: (user) => this.redirectAfterAuth(user),
       error: (err) => {
-        this.errorMessage = err?.error?.detail ?? 'Unable to sign in. Check your email and password.';
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_LOGIN_FAILED');
         this.isSubmitting = false;
       },
       complete: () => (this.isSubmitting = false),
@@ -68,7 +70,7 @@ export class AuthPageComponent implements OnInit {
     if (this.registerForm.invalid || this.registerForm.value.password !== this.registerForm.value.confirmPassword) {
       this.registerForm.markAllAsTouched();
       if (this.registerForm.value.password !== this.registerForm.value.confirmPassword) {
-        this.errorMessage = 'Passwords must match.';
+        this.errorMessage = this.translate.instant('ERRORS.AUTH_PASSWORDS_MISMATCH');
       }
       return;
     }
@@ -79,7 +81,7 @@ export class AuthPageComponent implements OnInit {
     this.auth.register({ email, password, role, full_name }).subscribe({
       next: (user) => this.redirectAfterAuth(user),
       error: (err) => {
-        this.errorMessage = err?.error?.detail ?? 'Registration failed. Please try again.';
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_REGISTER_FAILED');
         this.isSubmitting = false;
       },
       complete: () => (this.isSubmitting = false),

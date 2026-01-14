@@ -6,7 +6,7 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'auth' },
   {
     path: 'auth',
-    data: { hideToolbar: true, title: 'Sign in / Sign up' },
+    data: { hideToolbar: true, title: 'AUTH.TITLE' },
     loadChildren: () => import('./features/auth/auth.module').then((m) => m.AuthModule),
   },
   {

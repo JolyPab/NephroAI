@@ -1,5 +1,6 @@
 """Authentication utilities."""
 
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 from passlib.context import CryptContext
@@ -12,7 +13,14 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # JWT settings
-SECRET_KEY = "your-secret-key-change-this-in-production"  # TODO: move to .env
+_env_value = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").lower()
+_is_production = _env_value in {"prod", "production"}
+SECRET_KEY = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    if _is_production:
+        raise ValueError("JWT_SECRET is required in production.")
+    SECRET_KEY = "dev-secret-change-me"
+    print("[WARN] JWT_SECRET not set; using dev fallback.")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 

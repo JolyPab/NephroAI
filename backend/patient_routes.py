@@ -5,8 +5,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import List, Optional
-from database import Patient, SessionLocal
-from auth import get_current_user_id
+from backend.database import Patient, SessionLocal
+from backend.auth import get_current_user_id
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
 

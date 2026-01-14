@@ -1,6 +1,7 @@
 export interface MetricBrief {
   name: string;
-  value: number;
+  value?: number | null;
+  value_text?: string | null;
   unit?: string | null;
   ref_min?: number | null;
   ref_max?: number | null;
@@ -22,4 +23,18 @@ export interface MetricSeriesPoint {
   refMin?: number | null;
   refMax?: number | null;
   unit?: string | null;
+  stage?: string | null;
+  stage_label?: string | null;
+}
+
+export interface CategoricalSeriesPoint {
+  date: string;
+  value_text: string;
+}
+
+export interface MetricSeriesResponse {
+  series_type: 'numeric' | 'categorical';
+  points: MetricSeriesPoint[] | CategoricalSeriesPoint[];
+  stage?: string | null;
+  stage_label?: string | null;
 }

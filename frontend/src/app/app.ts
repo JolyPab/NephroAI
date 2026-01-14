@@ -3,11 +3,10 @@ import { Component, DestroyRef, computed, inject } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import en from '../assets/i18n/en.json';
-import es from '../assets/i18n/es.json';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { AuthService } from './core/services/auth.service';
+import { LanguageService } from './core/services/language.service';
 import { ThemeService } from './core/services/theme.service';
 import { GlassToolbarComponent } from './shared/components/glass-toolbar/glass-toolbar.component';
 import { GlassTabbarComponent } from './shared/components/glass-tabbar/glass-tabbar.component';
@@ -28,13 +27,13 @@ export class AppComponent {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly themeService = inject(ThemeService);
-  private readonly translate = inject(TranslateService);
+  private readonly languageService = inject(LanguageService);
 
   readonly user = this.auth.user;
   readonly isAuthenticated = this.auth.isAuthenticated;
   readonly userEmail = computed(() => this.user()?.email ?? '');
 
-  toolbarTitle = 'Medic Insight';
+  toolbarTitle = 'COMMON.APP_NAME';
   toolbarSubtitle = '';
   toolbarAccent: ToolbarAccent = 'default';
   showToolbar = true;
@@ -55,7 +54,7 @@ export class AppComponent {
   }
 
   ngOnInit(): void {
-    this.initTranslations();
+    this.languageService.init();
     // Restore authenticated user on page reload so toolbar/logout stay in sync
     this.auth.loadProfile().subscribe();
   }
@@ -78,7 +77,7 @@ export class AppComponent {
   private updateShell(): void {
     const data = this.collectRouteData();
 
-    this.toolbarTitle = (data['title'] as string) ?? 'Medic Insight';
+    this.toolbarTitle = (data['title'] as string) ?? 'COMMON.APP_NAME';
     this.toolbarSubtitle = (data['subtitle'] as string) ?? '';
     this.toolbarAccent = (data['accent'] as ToolbarAccent) ?? 'default';
     this.showToolbar = data['hideToolbar'] !== true;
@@ -100,13 +99,4 @@ export class AppComponent {
     return aggregate;
   }
 
-  private initTranslations(): void {
-    this.translate.addLangs(['en', 'es']);
-    this.translate.setDefaultLang('en');
-    // Preload bundled translations to avoid missing keys if HTTP loader fails
-    this.translate.setTranslation('en', en as any, true);
-    this.translate.setTranslation('es', es as any, true);
-    const browserLang = this.translate.getBrowserLang();
-    this.translate.use(browserLang === 'es' ? 'es' : 'en');
-  }
 }

@@ -3,7 +3,7 @@
 import sys
 sys.path.append('.')
 
-from pdf_extractor import extract_rows_from_pdf, detect_column_positions
+from backend.pdf_extractor import extract_rows_from_pdf, detect_column_positions
 
 # Load PDF
 pdf_bytes = open('013241970006.pdf', 'rb').read()
@@ -34,4 +34,3 @@ with open('debug_output.txt', 'w', encoding='utf-8') as f:
         f.write(f"  {col_name}: {x_min:.1f} - {x_max:.1f}\n")
 
 print("Output written to debug_output.txt")
-

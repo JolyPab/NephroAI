@@ -49,24 +49,60 @@
       <p class="text-sm text-[var(--text-dim)]">{{ 'share.noGrants' | translate }}</p>
     </app-glass-card>
 
-    <div class="theme-toggle glass glass-strong">
-      <div class="theme-toggle__text">
-        <h3>{{ 'profile.themeTitle' | translate }}</h3>
-        <p>{{ 'profile.themeText' | translate }}</p>
+    <div class="preferences space-y-4">
+      <div class="preferences__header">
+        <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'PATIENT.PROFILE.PREFERENCES_TITLE' | translate }}</h3>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'PATIENT.PROFILE.PREFERENCES_SUBTITLE' | translate }}</p>
       </div>
-      <div class="theme-toggle__controls">
-        <button
-          type="button"
-          appGlassButton
-          class="theme-toggle__button"
-          (click)="toggleTheme()"
-          [attr.aria-label]="theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate)"
-        >
-          <span class="material-symbols-rounded">
-            {{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
-          </span>
-          <span>{{ theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate) }}</span>
-        </button>
+
+      <div class="theme-toggle glass glass-strong">
+        <div class="theme-toggle__text">
+          <h3>{{ 'profile.themeTitle' | translate }}</h3>
+          <p>{{ 'profile.themeText' | translate }}</p>
+        </div>
+        <div class="theme-toggle__controls">
+          <button
+            type="button"
+            appGlassButton
+            class="theme-toggle__button"
+            (click)="toggleTheme()"
+            [attr.aria-label]="theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate)"
+          >
+            <span class="material-symbols-rounded">
+              {{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
+            </span>
+            <span>{{ theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate) }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="theme-toggle glass glass-strong">
+        <div class="theme-toggle__text">
+          <h3>{{ 'PATIENT.PROFILE.LANGUAGE_TITLE' | translate }}</h3>
+          <p>{{ 'PATIENT.PROFILE.LANGUAGE_TEXT' | translate }}</p>
+        </div>
+        <div class="theme-toggle__controls">
+          <div class="theme-toggle__chips">
+            <button
+              type="button"
+              appGlassButton
+              class="theme-chip"
+              [class.active]="currentLang === 'es'"
+              (click)="setLanguage('es')"
+            >
+              ES
+            </button>
+            <button
+              type="button"
+              appGlassButton
+              class="theme-chip"
+              [class.active]="currentLang === 'en'"
+              (click)="setLanguage('en')"
+            >
+              EN
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

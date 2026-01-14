@@ -2,20 +2,30 @@
   <app-glass-card [extraClass]="'w-full max-w-xl glass-strong space-y-6'">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl sm:text-3xl font-semibold text-[var(--text)]">Medic Insight</h1>
+        <h1 class="text-2xl sm:text-3xl font-semibold text-[var(--text)]">{{ 'COMMON.APP_NAME' | translate }}</h1>
         <p class="text-sm text-[var(--text-dim)]">
-          {{ mode === 'login' ? 'Welcome back! Sign in to continue.' : 'Create an account to share your analyses and trends.' }}
+          {{ mode === 'login' ? ('AUTH.WELCOME_LOGIN' | translate) : ('AUTH.WELCOME_REGISTER' | translate) }}
         </p>
       </div>
       <button type="button" appGlassButton (click)="toggleMode()">
         <span class="material-symbols-rounded">{{ mode === 'login' ? 'person_add' : 'login' }}</span>
-        <span>{{ mode === 'login' ? ('auth.register' | translate) : ('auth.signIn' | translate) }}</span>
+        <span>{{ mode === 'login' ? ('AUTH.SWITCH_TO_REGISTER' | translate) : ('AUTH.SWITCH_TO_LOGIN' | translate) }}</span>
       </button>
     </div>
 
     <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="space-y-5">
-      <app-glass-input [label]="'auth.email' | translate" placeholder="you@example.com" type="email" formControlName="email"></app-glass-input>
-      <app-glass-input [label]="'auth.password' | translate" placeholder="Enter password" type="password" formControlName="password"></app-glass-input>
+      <app-glass-input
+        [label]="'AUTH.EMAIL' | translate"
+        [placeholder]="'AUTH.EMAIL_PLACEHOLDER' | translate"
+        type="email"
+        formControlName="email">
+      </app-glass-input>
+      <app-glass-input
+        [label]="'AUTH.PASSWORD' | translate"
+        [placeholder]="'AUTH.PASSWORD_PLACEHOLDER' | translate"
+        type="password"
+        formControlName="password">
+      </app-glass-input>
 
       <div *ngIf="errorMessage" class="toast-glass error" role="alert">
         <span class="material-symbols-rounded">error</span>
@@ -24,21 +34,41 @@
 
       <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
         <span *ngIf="isSubmitting" class="loader-dot"></span>
-        <span>{{ isSubmitting ? ('auth.signingIn' | translate) : ('auth.signInBtn' | translate) }}</span>
+        <span>{{ isSubmitting ? ('AUTH.SIGNING_IN' | translate) : ('AUTH.SIGN_IN_BUTTON' | translate) }}</span>
       </button>
     </form>
 
     <form *ngIf="mode === 'register'" [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="space-y-5">
-      <app-glass-input [label]="'auth.fullName' | translate" placeholder="Jane Doe" type="text" formControlName="full_name"></app-glass-input>
-      <app-glass-input [label]="'auth.email' | translate" placeholder="you@example.com" type="email" formControlName="email"></app-glass-input>
-      <app-glass-input [label]="'auth.password' | translate" placeholder="Minimum 8 characters" type="password" formControlName="password"></app-glass-input>
-      <app-glass-input [label]="'auth.confirmPassword' | translate" placeholder="Repeat the password" type="password" formControlName="confirmPassword"></app-glass-input>
+      <app-glass-input
+        [label]="'AUTH.FULL_NAME' | translate"
+        [placeholder]="'AUTH.FULL_NAME_PLACEHOLDER' | translate"
+        type="text"
+        formControlName="full_name">
+      </app-glass-input>
+      <app-glass-input
+        [label]="'AUTH.EMAIL' | translate"
+        [placeholder]="'AUTH.EMAIL_PLACEHOLDER' | translate"
+        type="email"
+        formControlName="email">
+      </app-glass-input>
+      <app-glass-input
+        [label]="'AUTH.PASSWORD' | translate"
+        [placeholder]="'AUTH.PASSWORD_MIN_PLACEHOLDER' | translate"
+        type="password"
+        formControlName="password">
+      </app-glass-input>
+      <app-glass-input
+        [label]="'AUTH.CONFIRM_PASSWORD' | translate"
+        [placeholder]="'AUTH.CONFIRM_PASSWORD_PLACEHOLDER' | translate"
+        type="password"
+        formControlName="confirmPassword">
+      </app-glass-input>
 
       <div class="flex flex-col gap-2">
-        <label class="text-xs uppercase tracking-[0.2em] text-[var(--text-dim)]">{{ 'auth.role' | translate }}</label>
+        <label class="text-xs uppercase tracking-[0.2em] text-[var(--text-dim)]">{{ 'AUTH.ROLE' | translate }}</label>
         <select class="input-glass" formControlName="role">
-          <option value="PATIENT">{{ 'auth.patient' | translate }}</option>
-          <option value="DOCTOR">{{ 'auth.doctor' | translate }}</option>
+          <option value="PATIENT">{{ 'AUTH.PATIENT' | translate }}</option>
+          <option value="DOCTOR">{{ 'AUTH.DOCTOR' | translate }}</option>
         </select>
       </div>
 
@@ -49,7 +79,7 @@
 
       <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
         <span *ngIf="isSubmitting" class="loader-dot"></span>
-        <span>{{ isSubmitting ? ('auth.creating' | translate) : ('auth.createBtn' | translate) }}</span>
+        <span>{{ isSubmitting ? ('AUTH.CREATING' | translate) : ('AUTH.CREATE_BUTTON' | translate) }}</span>
       </button>
     </form>
   </app-glass-card>

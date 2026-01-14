@@ -9,7 +9,7 @@ import 'chartjs-adapter-date-fns';
 import { format } from 'date-fns';
 
 import { DoctorService } from '../../../../core/services/doctor.service';
-import { MetricSeriesPoint } from '../../../../core/models/analysis.model';
+import { CategoricalSeriesPoint, MetricSeriesPoint, MetricSeriesResponse } from '../../../../core/models/analysis.model';
 import { DoctorNote } from '../../../../core/models/doctor.model';
 
 Chart.register(zoomPlugin);
@@ -154,6 +154,10 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
   selectedMetric = '';
   loading = true;
   series: MetricSeriesPoint[] = [];
+  seriesType: MetricSeriesResponse['series_type'] = 'numeric';
+  categoricalPoints: CategoricalSeriesPoint[] = [];
+  seriesStage?: string | null;
+  seriesStageLabel?: string | null;
   errorMessage = '';
   private sub?: Subscription;
 
@@ -348,6 +352,12 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
   }
 
   get pointOptions(): { value: string; label: string }[] {
+    if (this.seriesType === 'categorical') {
+      return this.categoricalPoints.map((p) => {
+        const ts = new Date(p.date);
+        return { value: p.date, label: format(ts, 'dd MMM yyyy') };
+      });
+    }
     return this.series.map((p) => {
       const ts = new Date(p.t);
       return { value: p.t, label: format(ts, 'dd MMM yyyy, HH:mm') };
@@ -381,10 +391,23 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.errorMessage = '';
     this.doctorService.getSeries(this.patientId, this.selectedMetric).subscribe({
-      next: (series) => {
-        this.series = series;
-        this.selectedPoint = this.series.length ? this.series[this.series.length - 1].t : '';
-        this.updateChart();
+      next: (seriesResponse) => {
+        this.seriesType = seriesResponse?.series_type ?? 'numeric';
+        this.seriesStage = seriesResponse?.stage ?? null;
+        this.seriesStageLabel = seriesResponse?.stage_label ?? null;
+
+        if (this.seriesType === 'categorical') {
+          this.series = [];
+          this.categoricalPoints = this.normalizeCategorical(seriesResponse?.points ?? []);
+          this.selectedPoint = this.categoricalPoints.length ? this.categoricalPoints[this.categoricalPoints.length - 1].date : '';
+          this.chartData = { datasets: [] };
+        } else {
+          this.categoricalPoints = [];
+          this.series = this.normalizeNumeric(seriesResponse?.points ?? seriesResponse);
+          this.selectedPoint = this.series.length ? this.series[this.series.length - 1].t : '';
+          this.updateChart();
+        }
+
         this.rebuildNoteMap();
         this.chart?.update();
         this.loading = false;
@@ -394,6 +417,71 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
     });
+  }
+
+  private normalizeNumeric(raw: unknown): MetricSeriesPoint[] {
+    const asArray: any[] = Array.isArray(raw) ? raw : Object.values(raw ?? {});
+    const normalized = asArray
+      .map((p) => {
+        const taken =
+          (p?.taken_at as string | undefined) ??
+          (p?.t as string | undefined) ??
+          (p?.date as string | undefined) ??
+          (p?.created_at as string | undefined);
+        const ts = taken ? Date.parse(taken) : NaN;
+        if (!Number.isFinite(ts)) {
+          return null;
+        }
+        const yRaw = (p?.y ?? p?.value) as unknown;
+        const yNum =
+          typeof yRaw === 'string'
+            ? Number(yRaw.replace(',', '.'))
+            : typeof yRaw === 'number'
+              ? yRaw
+              : null;
+        if (yNum === null || !Number.isFinite(yNum)) {
+          return null;
+        }
+
+        const refMinRaw = (p as any)?.refMin ?? (p as any)?.ref_min;
+        const refMaxRaw = (p as any)?.refMax ?? (p as any)?.ref_max;
+        const refMin = typeof refMinRaw === 'string' ? Number(refMinRaw.replace(',', '.')) : refMinRaw;
+        const refMax = typeof refMaxRaw === 'string' ? Number(refMaxRaw.replace(',', '.')) : refMaxRaw;
+
+        return {
+          ...(p as object),
+          t: new Date(ts).toISOString(),
+          y: yNum,
+          refMin: Number.isFinite(refMin as number) ? (refMin as number) : undefined,
+          refMax: Number.isFinite(refMax as number) ? (refMax as number) : undefined,
+        } as MetricSeriesPoint;
+      })
+      .filter((p): p is MetricSeriesPoint => p !== null);
+
+    return normalized.sort((a, b) => new Date(a.t).getTime() - new Date(b.t).getTime());
+  }
+
+  private normalizeCategorical(raw: unknown): CategoricalSeriesPoint[] {
+    const asArray: any[] = Array.isArray(raw) ? raw : Object.values(raw ?? {});
+    const normalized = asArray
+      .map((point) => {
+        const dateValue = (point?.date ?? point?.t ?? point?.taken_at ?? point?.created_at) as string | undefined;
+        const valueText = (point?.value_text ?? point?.value) as string | undefined;
+        if (!dateValue || !valueText) {
+          return null;
+        }
+        const ts = Date.parse(dateValue);
+        if (!Number.isFinite(ts)) {
+          return null;
+        }
+        return {
+          date: new Date(ts).toISOString(),
+          value_text: valueText,
+        } as CategoricalSeriesPoint;
+      })
+      .filter((point): point is CategoricalSeriesPoint => point !== null);
+
+    return normalized.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }
 
   private calculateYAxisMin(ranges: MetricSeriesPoint[]): number | undefined {
@@ -448,10 +536,20 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
           spanGaps: true,
           pointRadius: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => (this.hasNoteAtContext(ctx) ? 6 : 4),
           pointHoverRadius: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => (this.hasNoteAtContext(ctx) ? 8 : 6),
-          pointBackgroundColor: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) =>
-            this.hasNoteAtContext(ctx) ? 'rgba(252, 211, 77, 0.95)' : 'rgba(118, 168, 255, 0.25)',
-          pointBorderColor: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) =>
-            this.hasNoteAtContext(ctx) ? '#fde68a' : '#76a8ff',
+          pointBackgroundColor: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => {
+            if (this.hasNoteAtContext(ctx)) {
+              return 'rgba(252, 211, 77, 0.95)';
+            }
+            const stage = this.series[ctx.dataIndex]?.stage;
+            return stage ? this.getStageColor(stage) : 'rgba(118, 168, 255, 0.25)';
+          },
+          pointBorderColor: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => {
+            if (this.hasNoteAtContext(ctx)) {
+              return '#fde68a';
+            }
+            const stage = this.series[ctx.dataIndex]?.stage;
+            return stage ? this.getStageColor(stage) : '#76a8ff';
+          },
           pointBorderWidth: (ctx: ScriptableContext<'scatter'> | ScriptableContext<'line'>) => (this.hasNoteAtContext(ctx) ? 3 : 1),
           fill: false,
         },
@@ -534,20 +632,35 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
     }
     return this.noteMap.has(timestamp);
   }
-
   private tooltipNotes(context: TooltipItem<'scatter'>): string | string[] {
     const timestamp = this.extractTimestamp(context.parsed?.x);
     if (timestamp === null) {
       return '';
     }
+    const stageLabel = this.series[context.dataIndex]?.stage_label;
     const notes = this.noteMap.get(timestamp) ?? [];
+    const stageLines = stageLabel ? [stageLabel] : [];
     if (!notes.length) {
-      return '';
+      return stageLines;
     }
-    return notes.map((note) => {
+    const noteLines = notes.map((note) => {
       const ts = note.metric_time ? format(new Date(note.metric_time), 'dd MMM yyyy, HH:mm') : '';
-      return `📝 ${note.text}${ts ? ` (${ts})` : ''}`;
+      return `* ${note.text}${ts ? ` (${ts})` : ''}`;
     });
+    return [...stageLines, ...noteLines];
+  }
+
+  private getStageColor(stage: string): string {
+    const normalized = stage.toUpperCase();
+    const colors: Record<string, string> = {
+      G1: '#5ad670',
+      G2: '#9ad66a',
+      G3A: '#f2c94c',
+      G3B: '#f2994a',
+      G4: '#eb5757',
+      G5: '#b71c1c',
+    };
+    return colors[normalized] ?? '#76a8ff';
   }
 
   private extractTimestamp(value: unknown): number | null {

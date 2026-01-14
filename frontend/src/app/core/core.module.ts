@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { ApiService } from './services/api.service';
 import { AuthService } from './services/auth.service';
@@ -16,25 +16,10 @@ import { AdviceClientService } from './services/advice.service';
     CommonModule,
     HttpClientModule,
     NgbModule,
-    TranslateModule.forRoot({
-      loader: {
-        provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
-        deps: [HttpClient],
-      },
-      defaultLanguage: 'en',
-    }),
+    TranslateModule,
   ],
   exports: [NgbModule, TranslateModule],
   providers: [ApiService, AuthService, TokenService, PatientService, DoctorService, AdviceClientService],
 })
 export class CoreModule {}
-
-export function HttpLoaderFactory(http: HttpClient) {
-  const loader: TranslateLoader = {
-    getTranslation: (lang: string) =>
-      http.get<Record<string, string>>(`assets/i18n/${lang}.json`) as any,
-  };
-  return loader;
-}
 

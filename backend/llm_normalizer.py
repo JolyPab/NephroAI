@@ -5,9 +5,9 @@ import time
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pdf_structures import RawRow
-from models import ImportedLabItem
-from llm_config import (
+from backend.pdf_structures import RawRow
+from backend.models import ImportedLabItem
+from backend.llm_config import (
     get_llm_client, 
     get_llm_model, 
     get_batch_size, 
@@ -450,4 +450,3 @@ def normalize_with_llm(rows: List[RawRow], extracted_date: Optional[datetime] = 
         print(f"Extracted metadata: {all_metadata}")
     
     return unique_analytes
-

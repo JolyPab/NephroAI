@@ -127,24 +127,16 @@ pytest test_pdf_parser.py -v
 
 - Работает только с PDF, имеющими текстовый слой
 - Если PDF содержит только изображения (без текстового слоя), будет выброшено исключение `NoTextLayerError`
-- OCR не используется (согласно требованиям)
+- OCR fallback is optional and only used for image-based pages.
 
 ## Пример использования
 
 ```python
-from pdf_parser import parse_pdf_to_import_json
+from backend.pdf_parser import extract_raw_text
 
 with open("report.pdf", "rb") as f:
     pdf_bytes = f.read()
 
-import_data = parse_pdf_to_import_json(
-    pdf_bytes=pdf_bytes,
-    patient_id="123",
-    source_pdf="report.pdf"
-)
-
-print(f"Parsed {len(import_data.items)} items")
-for item in import_data.items:
-    print(f"{item.analyte_name}: {item.value} {item.unit or ''}")
+raw_text = extract_raw_text(pdf_bytes)
+print(raw_text)
 ```
-

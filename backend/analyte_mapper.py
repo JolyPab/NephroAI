@@ -2,8 +2,8 @@
 
 import re
 from typing import List, Optional
-from pdf_structures import RawRow, RawAnalyte, RawCell
-from pdf_extractor import detect_column_positions
+from backend.pdf_structures import RawRow, RawAnalyte, RawCell
+from backend.pdf_extractor import detect_column_positions
 
 
 def is_header_row(row: RawRow) -> bool:

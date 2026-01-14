@@ -8,6 +8,11 @@ services:
       POSTGRES_DB: medic
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   redis:
     image: redis:alpine
@@ -19,6 +24,8 @@ services:
     working_dir: /app/backend
     environment:
       DATABASE_URL: postgresql://medic:medic@db:5432/medic
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       UPLOAD_DIR: /app/uploads
@@ -26,8 +33,10 @@ services:
       - .:/app
       - uploads:/app/uploads
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     expose:
       - "8000"
     restart: always
@@ -38,6 +47,8 @@ services:
     working_dir: /app/backend
     environment:
       DATABASE_URL: postgresql://medic:medic@db:5432/medic
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       UPLOAD_DIR: /app/uploads
@@ -45,8 +56,10 @@ services:
       - .:/app
       - uploads:/app/uploads
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: always
 
   nginx:

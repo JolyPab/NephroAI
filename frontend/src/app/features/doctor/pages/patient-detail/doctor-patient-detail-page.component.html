@@ -49,8 +49,21 @@
       {{ errorMessage }}
     </div>
 
-    <div class="h-[260px] sm:h-[340px]" *ngIf="!loading && !errorMessage">
+    <div class="h-[260px] sm:h-[340px]" *ngIf="!loading && !errorMessage && seriesType === 'numeric'">
       <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'scatter'"></canvas>
+    </div>
+
+    <div *ngIf="!loading && !errorMessage && seriesType === 'categorical'" class="space-y-3">
+      <div class="flex items-center gap-2 text-sm text-[var(--text-dim)]">
+        <span class="material-symbols-rounded text-base">checklist</span>
+        <span>Resultados cualitativos</span>
+      </div>
+      <div class="grid gap-2">
+        <div *ngFor="let point of categoricalPoints" class="glass glass-soft px-3 py-2 flex items-center justify-between">
+          <span class="text-sm text-[var(--text)]">{{ point.value_text }}</span>
+          <span class="text-xs text-[var(--text-dim)]">{{ point.date | date: 'dd MMM yyyy' }}</span>
+        </div>
+      </div>
     </div>
   </app-glass-card>
 

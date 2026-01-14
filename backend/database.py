@@ -1,17 +1,31 @@
 """Database models and setup for lab results storage."""
 
 from datetime import datetime
+from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, ForeignKey, Boolean
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Integer,
+    String,
+    Float,
+    DateTime,
+    Text,
+    ForeignKey,
+    Boolean,
+    inspect,
+    text,
+)
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
+from backend.analyte_utils import normalize_analyte_name, analyte_key
 # Ensure .env is loaded before reading DB_URL so we don't fall back to SQLite accidentally
 load_dotenv()
 
 if TYPE_CHECKING:
-    from models import ImportJson
+    from backend.models import ImportJson
 
 Base = declarative_base()
 
@@ -68,6 +82,9 @@ class LabResult(Base):
     ref_min = Column(Float, nullable=True)
     ref_max = Column(Float, nullable=True)
     source_pdf = Column(String, nullable=True)
+    value_text = Column(String, nullable=True)
+    document_hash = Column(String, nullable=True, index=True)
+    series_key = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships
@@ -159,8 +176,11 @@ class Payment(Base):
     subscription = relationship("Subscription", foreign_keys=[subscription_id])
 
 
-def get_database_url(default_sqlite: str = "sqlite:///./lab_results.db") -> str:
+def get_database_url(default_sqlite: Optional[str] = None) -> str:
     """Get database URL from environment or fallback to local SQLite."""
+    if default_sqlite is None:
+        db_path = (Path(__file__).resolve().parent / "lab_results.db").as_posix()
+        default_sqlite = f"sqlite:///{db_path}"
     return (
         os.getenv("DATABASE_URL")
         or os.getenv("DB_URL")
@@ -184,6 +204,40 @@ def get_session_factory(engine):
 def init_db(engine):
     """Initialize database tables."""
     Base.metadata.create_all(bind=engine)
+    added_columns = ensure_lab_results_columns(engine)
+    if added_columns:
+        print(f"[DB] added columns: {', '.join(added_columns)}")
+
+
+def ensure_lab_results_columns(engine) -> list[str]:
+    """Add missing lab_results columns without full migrations."""
+    try:
+        inspector = inspect(engine)
+        if "lab_results" not in inspector.get_table_names():
+            return []
+        existing = {col["name"] for col in inspector.get_columns("lab_results")}
+        additions: list[tuple[str, str]] = []
+        if "value_text" not in existing:
+            additions.append(("value_text", "TEXT"))
+        if "document_hash" not in existing:
+            additions.append(("document_hash", "TEXT"))
+        if "series_key" not in existing:
+            additions.append(("series_key", "TEXT"))
+        if "ref_min" not in existing:
+            additions.append(("ref_min", "REAL"))
+        if "ref_max" not in existing:
+            additions.append(("ref_max", "REAL"))
+
+        if not additions:
+            return []
+
+        with engine.begin() as conn:
+            for name, col_type in additions:
+                conn.execute(text(f"ALTER TABLE lab_results ADD COLUMN {name} {col_type}"))
+        return [name for name, _ in additions]
+    except Exception as exc:
+        print(f"[WARN] Could not ensure lab_results columns: {exc}")
+        return []
 
 
 # Create default engine and session factory
@@ -260,21 +314,37 @@ def save_import_to_db(session: Session, import_data: "ImportJson", patient_db_id
             doc_date = parsed_dt
             break
     
+    seen = set()
+
     for item in import_data.items:
-        name_clean = (item.analyte_name or "").strip()
+        name_clean = normalize_analyte_name(item.analyte_name)
         if not name_clean:
             continue
-        if name_clean.upper() in junk_names:
+        if name_clean in junk_names:
             continue
 
         ref_min = _coerce_float(getattr(item, "ref_min", None))
         ref_max = _coerce_float(getattr(item, "ref_max", None))
         taken_at = _parse_datetime(item.taken_at) or doc_date
+        taken_at_iso = taken_at.isoformat() if taken_at else ""
+
+        key = analyte_key(
+            name_clean,
+            item.value,
+            item.value_text,
+            item.unit,
+            item.material,
+            taken_at_iso,
+        )
+        if key in seen:
+            continue
+        seen.add(key)
 
         db_item = LabResult(
             patient_id=patient_db_id,  # Use the actual patient_id from DB
-            analyte_name=item.analyte_name,
+            analyte_name=name_clean,
             value=item.value,
+            value_text=item.value_text,
             unit=item.unit,
             material=item.material,
             taken_at=taken_at,
@@ -288,3 +358,135 @@ def save_import_to_db(session: Session, import_data: "ImportJson", patient_db_id
     
     session.commit()
     return items_count
+
+
+def _normalize_series_field(value: Optional[str]) -> str:
+    if not value:
+        return ""
+    text_value = str(value).replace("\u00a0", " ").strip()
+    if not text_value:
+        return ""
+    text_value = " ".join(text_value.split()).upper()
+    text_value = text_value.rstrip(":").strip()
+    return text_value
+
+
+def build_series_key(record: dict) -> str:
+    name = normalize_analyte_name(record.get("test_name_raw"))
+    if not name:
+        return ""
+    specimen = _normalize_series_field(record.get("specimen"))
+    section = _normalize_series_field(record.get("section"))
+    unit_value = record.get("unit_norm") or record.get("unit_raw") or ""
+    unit_value = _normalize_series_field(unit_value)
+    return "|".join([name, specimen, unit_value, section])
+
+
+def save_parsed_records(
+    session: Session,
+    patient_id: int,
+    records: list[dict],
+    source_pdf: Optional[str],
+    document_hash: Optional[str],
+) -> int:
+    if not records:
+        return 0
+
+    def _coerce_datetime(value) -> Optional[datetime]:
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        if hasattr(value, "year") and hasattr(value, "month") and hasattr(value, "day"):
+            try:
+                return datetime(int(value.year), int(value.month), int(value.day))
+            except Exception:
+                return None
+        if isinstance(value, str):
+            val = value.strip()
+            if not val:
+                return None
+            try:
+                return datetime.fromisoformat(val)
+            except Exception:
+                return None
+        return None
+
+    existing_keys = set()
+    if document_hash:
+        rows = (
+            session.query(
+                LabResult.series_key,
+                LabResult.value,
+                LabResult.value_text,
+                LabResult.ref_min,
+                LabResult.ref_max,
+            )
+            .filter(
+                LabResult.patient_id == patient_id,
+                LabResult.document_hash == document_hash,
+            )
+            .all()
+        )
+        for row in rows:
+            series_key = row[0]
+            if not series_key:
+                continue
+            if row[1] is not None:
+                value_key = ("num", float(row[1]))
+            else:
+                vt = (row[2] or "").strip() or None
+                value_key = ("text", vt)
+            existing_keys.add((series_key, value_key, row[3], row[4]))
+
+    inserted = 0
+    seen_keys = set()
+
+    for record in records:
+        name_clean = normalize_analyte_name(record.get("test_name_raw"))
+        if not name_clean:
+            continue
+
+        series_key = build_series_key(record)
+        if not series_key:
+            continue
+        unit_value = record.get("unit_norm") or record.get("unit_raw")
+        ref_min = record.get("ref_min")
+        ref_max = record.get("ref_max")
+        if ref_min is not None and ref_max is not None:
+            ref_range = f"{ref_min} a {ref_max}"
+        else:
+            ref_range = None
+        value_num = record.get("value_num", None)
+        value_text = record.get("value_text") or record.get("value_cat") or record.get("value")
+        taken_at = _coerce_datetime(record.get("taken_at"))
+        if value_num is not None:
+            value_key = ("num", float(value_num))
+        else:
+            vt = (value_text or "").strip() or None
+            value_key = ("text", vt)
+        dedup_key = (series_key, value_key, ref_min, ref_max)
+        if dedup_key in existing_keys or dedup_key in seen_keys:
+            continue
+
+        db_item = LabResult(
+            patient_id=patient_id,
+            analyte_name=name_clean,
+            value=value_num if value_num is not None else None,
+            value_text=value_text if value_num is None else None,
+            unit=unit_value,
+            material=record.get("specimen"),
+            taken_at=taken_at,
+            ref_range=ref_range,
+            ref_min=ref_min,
+            ref_max=ref_max,
+            source_pdf=source_pdf,
+            document_hash=document_hash,
+            series_key=series_key,
+        )
+        session.add(db_item)
+        seen_keys.add(dedup_key)
+        inserted += 1
+
+    session.commit()
+    return inserted

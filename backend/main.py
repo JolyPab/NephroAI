@@ -2,6 +2,7 @@
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -9,17 +10,20 @@ from pydantic import BaseModel
 from typing import List, Optional
 import io
 import os
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 from dotenv import load_dotenv
+import hashlib
 
-from models import ImportJson
-from pdf_parser import parse_pdf_to_import_json, NoTextLayerError
-from vision_parser import parse_pdf_vision
-from tasks import process_pdf_task
-from database import (
+from backend.models import ImportJson
+from backend.analyte_utils import normalize_analyte_name
+from backend.pdf_parser import extract_raw_text
+from backend.parsing.pipeline import coerce_raw_text, parse_with_ocr_fallback
+from backend.tasks import process_pdf_task, CELERY_ENABLED
+from backend.database import (
     create_db_engine,
     get_session_factory,
     init_db,
-    save_import_to_db,
     get_database_url,
     DoctorGrant,
     DoctorNote,
@@ -29,8 +33,11 @@ from database import (
     Subscription,
     Payment,
     UploadStatus,
+    save_parsed_records,
 )
-from auth import get_current_user_id
+from backend.auth import get_current_user_id
+from backend.auth_routes import router as auth_router, UserResponse as AuthUserResponse
+from backend.patient_routes import router as patient_router
 import datetime as dt
 import json
 import re
@@ -73,7 +80,6 @@ def _ensure_note_columns():
 
 def get_current_user(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Get current authenticated user."""
-    from database import User
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -86,6 +92,24 @@ load_dotenv()
 database_url = get_database_url()
 engine = create_db_engine(database_url)
 SessionLocal = get_session_factory(engine)
+
+
+def _pdf_processing_mode() -> str:
+    """Return 'sync' or 'async' based on environment configuration."""
+    mode = (os.getenv("PDF_PROCESSING_MODE") or "").strip().lower()
+    if mode in {"sync", "async"}:
+        if mode == "async" and not CELERY_ENABLED:
+            return "sync"
+        return mode
+    # Back-compat toggle for dev
+    if (os.getenv("PROCESS_PDF_SYNC") or "").strip().lower() in {"1", "true", "yes"}:
+        return "sync"
+    return "async" if CELERY_ENABLED else "sync"
+
+
+def _analysis_id(patient_id: int, source: str) -> str:
+    """Create analysis id consistent with patient analyses grouping."""
+    return f"{patient_id}_{abs(hash(source)) % 10000}"
 
 
 @asynccontextmanager
@@ -104,11 +128,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware for frontend
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-
 # Request logging middleware
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -120,20 +139,28 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(LoggingMiddleware)
 
+_env_value = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").lower()
+_is_production = _env_value in {"prod", "production"}
+if _is_production:
+    cors_raw = os.getenv("CORS_ORIGINS", "")
+    allow_origins = [origin.strip() for origin in cors_raw.split(",") if origin.strip()]
+    if not allow_origins:
+        print("[WARN] CORS_ORIGINS not set in production; CORS will block all origins.")
+else:
+    allow_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for localtunnel/development
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Include auth routes
-from auth_routes import router as auth_router, UserResponse as AuthUserResponse
 app.include_router(auth_router)
 
 # Include patient routes
-from patient_routes import router as patient_router
 app.include_router(patient_router)
 
 
@@ -150,10 +177,34 @@ def _parse_ref_range(rr: str):
     return (None, None)
 
 
+def _derive_egfr_stage_label(
+    name_norm: str,
+    unit: Optional[str],
+    value: Optional[float],
+) -> tuple[Optional[str], Optional[str]]:
+    if value is None or unit is None:
+        return None, None
+    unit_norm = unit.upper()
+    if "ML/MIN/1.73" not in unit_norm:
+        return None, None
+    if not any(tag in name_norm for tag in ("TFG", "EGFR", "GFR", "FILTRACION")):
+        return None, None
+
+    if value >= 90:
+        return "G1", "TFG normal"
+    if value >= 60:
+        return "G2", "TFG levemente disminuida"
+    if value >= 45:
+        return "G3A", "TFG moderadamente disminuida"
+    if value >= 30:
+        return "G3B", "TFG moderadamente a severamente disminuida"
+    if value >= 15:
+        return "G4", "TFG severamente disminuida"
+    return "G5", "TFG fallo renal"
+
+
 def _summarize_metrics(db, patient_id: int, metric_names=None, days: int = 180):
     """Collect recent lab data for the patient."""
-    from database import LabResult
-
     now = dt.datetime.utcnow()
     since = now - dt.timedelta(days=days)
 
@@ -423,9 +474,9 @@ async def preview_import(
     patient_id: str = Form(...),
 ):
     """
-    Preview imported lab results from PDF without saving to database.
-    
-    Returns ImportJson with parsed results.
+    Preview raw text extraction without saving to database.
+
+    Returns ImportJson with empty items.
     """
     try:
         # Read PDF file
@@ -434,19 +485,18 @@ async def preview_import(
         if not pdf_bytes:
             raise HTTPException(status_code=400, detail="Empty file")
         
-        # Parse PDF
+        # Extract raw text only (no parsing)
         try:
-            import_data = parse_pdf_to_import_json(
-                pdf_bytes=pdf_bytes,
-                patient_id=patient_id,
-                source_pdf=file.filename,
-            )
-        except NoTextLayerError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            extract_raw_text(pdf_bytes)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
-        
-        return import_data
+
+        return ImportJson(
+            patient_id=patient_id,
+            items=[],
+            source_pdf=file.filename,
+            normalization_method="raw_text_only",
+        )
         
     except HTTPException:
         raise
@@ -461,10 +511,9 @@ async def upload_pdf_file(
     db: Session = Depends(get_db),
 ):
     """
-    Upload PDF file and process it.
+    Upload PDF file and extract raw text only.
     Returns analysis_id for the uploaded file.
     """
-    from database import Patient, User
     # Get current user
     current_user = db.query(User).filter(User.id == user_id).first()
     if not current_user:
@@ -507,10 +556,74 @@ async def upload_pdf_file(
             f.write(pdf_bytes)
 
         upload.file_path = file_path
+        db.commit()
+
+        mode = _pdf_processing_mode()
+        if mode == "sync":
+            upload.status = "processing"
+            db.commit()
+            try:
+                raw_text = extract_raw_text(pdf_bytes)
+                raw_text_str = coerce_raw_text(raw_text)
+                print(
+                    "[RAW_TEXT] type={type_name} len={length} preview={preview}".format(
+                        type_name=type(raw_text).__name__,
+                        length=len(raw_text_str),
+                        preview=repr(raw_text_str[:200]),
+                    )
+                )
+
+                parse_result = parse_with_ocr_fallback(pdf_bytes, raw_text_str)
+                metrics_before = parse_result["metrics_before"]
+                print(
+                    "[PARSE] records_count={records_count}".format(**metrics_before)
+                )
+                if parse_result["triggered_by"]:
+                    print(
+                        "[OCR] triggered_by={triggered_by}".format(
+                            triggered_by=parse_result["triggered_by"]
+                        )
+                    )
+                    print(
+                        "[PARSE_AFTER_OCR] records_count={records_count}".format(
+                            **parse_result["metrics"]
+                        )
+                    )
+
+                records = parse_result["records"]
+                metrics = parse_result["metrics"]
+                document_hash = hashlib.sha256(pdf_bytes).hexdigest()
+                save_parsed_records(
+                    db,
+                    patient.id,
+                    records,
+                    file.filename or "unknown",
+                    document_hash,
+                )
+                upload.status = "done"
+                upload.error_message = None
+                db.commit()
+                analysis_id = _analysis_id(patient.id, file.filename or "unknown")
+                response = {
+                    "analysis_id": analysis_id,
+                    "upload_id": upload.id,
+                    "status": upload.status,
+                    "items_count": metrics["records_count"],
+                    **metrics,
+                }
+                if metrics["records_count"] == 0:
+                    response["warning"] = "no records extracted"
+                return response
+            except Exception as e:
+                upload.status = "error"
+                upload.error_message = str(e)
+                db.commit()
+                raise HTTPException(status_code=500, detail=f"Text extraction error: {e}")
+
         upload.status = "queued"
         db.commit()
 
-        # Trigger background-like processing
+        # Trigger background processing
         process_pdf_task.delay(upload.id)
 
         return {"upload_id": upload.id, "status": upload.status}
@@ -551,16 +664,14 @@ async def import_lab_results(
     patient_id: int = Form(...),
 ):
     """
-    Import lab results from PDF and save to database.
+    Extract raw text from PDF and save parsed lab results.
     Patient_id must be ID of patient belonging to authenticated user.
-    
+
     For testing without auth, just pass patient_id.
     For production, add user_id: int = Depends(get_current_user_id) parameter.
-    
+
     Returns status and number of items imported.
     """
-    from database import Patient
-    
     try:
         # Read PDF file
         pdf_bytes = await file.read()
@@ -578,34 +689,60 @@ async def import_lab_results(
         # if not patient:
         #     raise HTTPException(status_code=404, detail="Patient not found")
         
-        # Parse PDF with vision (highest accuracy + reflection)
+        # Extract raw text and parse into minimal records
         try:
-            import_data = parse_pdf_vision(pdf_bytes)
+            raw_text = extract_raw_text(pdf_bytes)
+            raw_text_str = coerce_raw_text(raw_text)
+            print(
+                "[RAW_TEXT] type={type_name} len={length} preview={preview}".format(
+                    type_name=type(raw_text).__name__,
+                    length=len(raw_text_str),
+                    preview=repr(raw_text_str[:200]),
+                )
+            )
+
+            parse_result = parse_with_ocr_fallback(pdf_bytes, raw_text_str)
+            metrics_before = parse_result["metrics_before"]
+            print(
+                "[PARSE] records_count={records_count}".format(**metrics_before)
+            )
+            if parse_result["triggered_by"]:
+                print(
+                    "[OCR] triggered_by={triggered_by}".format(
+                        triggered_by=parse_result["triggered_by"]
+                    )
+                )
+                print(
+                    "[PARSE_AFTER_OCR] records_count={records_count}".format(
+                        **parse_result["metrics"]
+                    )
+                )
+
+            records = parse_result["records"]
+            metrics = parse_result["metrics"]
+            document_hash = hashlib.sha256(pdf_bytes).hexdigest()
+            save_parsed_records(
+                db,
+                patient_id,
+                records,
+                file.filename or "unknown",
+                document_hash,
+            )
         except HTTPException:
             raise
         except Exception as e:
             # Surface OpenAI / parsing issues as HTTP 502 to client
-            raise HTTPException(status_code=502, detail=f"OpenAI error: {e}")
+            raise HTTPException(status_code=502, detail=f"Text extraction error: {e}")
 
-        # Ensure patient/source metadata is set
-        import_data.patient_id = patient_id
-        import_data.source_pdf = import_data.source_pdf or file.filename
-        
-        # Save to database
-        db_session = SessionLocal()
-        try:
-            # Extract patient_id from import_data
-            patient_db_id = int(import_data.patient_id) if isinstance(import_data.patient_id, (int, str)) else None
-            if patient_db_id is None:
-                raise HTTPException(status_code=400, detail="Invalid patient_id in import data")
-            items_count = save_import_to_db(db_session, import_data, patient_db_id)
-            return {
-                "status": "ok",
-                "items_count": items_count,
-                "patient_id": patient_id,
-            }
-        finally:
-            db_session.close()
+        response = {
+            "status": "ok",
+            "items_count": metrics["records_count"],
+            "patient_id": patient_id,
+            **metrics,
+        }
+        if metrics["records_count"] == 0:
+            response["warning"] = "no records extracted"
+        return response
         
     except HTTPException:
         raise
@@ -625,9 +762,6 @@ async def get_patient_analyses(
     Р»Р°Р±РѕСЂР°С‚РѕСЂРЅС‹РјРё РїРѕРєР°Р·Р°С‚РµР»СЏРјРё. Р­С‚Рѕ РЅСѓР¶РЅРѕ, С‡С‚РѕР±С‹ РЅР° РіСЂР°С„РёРєР°С… РЅРµ РїРѕСЏРІР»СЏР»РёСЃСЊ
     В«РіРµРЅРµСЂР°Р»РµСЃРёВ» Рё РЅРѕРјРµСЂР° СѓСЃР»СѓРі РІРјРµСЃС‚Рѕ СЂРµР°Р»СЊРЅС‹С… Р°РЅР°Р»РёР·РѕРІ.
     """
-    from datetime import datetime
-    import re
-
     # РќР°Р±РѕСЂ РѕС‡РµРІРёРґРЅРѕ РЅРµ-Р°РЅР°Р»РёС‚РёС‡РµСЃРєРёС… Р·Р°РіРѕР»РѕРІРєРѕРІ / СЃР»СѓР¶РµР±РЅС‹С… СЃС‚СЂРѕРє
     header_keywords = [
         "NUMERO DE SERVICIO",
@@ -648,8 +782,12 @@ async def get_patient_analyses(
 
     def is_junk_lab_result(result: "LabResult") -> bool:
         """Filter out junk/non-analyte rows parsed from PDFs."""
-        name_raw = (result.analyte_name or "").strip()
-        name = name_raw.upper()
+        name = normalize_analyte_name(result.analyte_name)
+        unit_like_patterns = [
+            r"^/\s*UL\b",
+            r"^X10\^?\d+/?UL\b",
+            r"^10\^?\d+/?UL\b",
+        ]
 
         junk_names = {
             "RESPONSABLE DE LABORATORIO",
@@ -687,6 +825,11 @@ async def get_patient_analyses(
         # Staff signatures like Q.F.B.XXX or similar
         if name.startswith("Q.F.B") or "Q.F.B." in name:
             return True
+
+        # Unit-like labels accidentally parsed as analyte names
+        for pattern in unit_like_patterns:
+            if re.match(pattern, name):
+                return True
 
         # Long text without digits and without unit/ref ranges -> likely header/footer noise
         if (
@@ -729,7 +872,8 @@ async def get_patient_analyses(
 
     for result in results:
         # РћС‚Р±СЂР°СЃС‹РІР°РµРј РѕС‡РµРІРёРґРЅС‹Р№ РјСѓСЃРѕСЂ РёР· С€Р°РїРєРё/С„СѓС‚РµСЂР° PDF
-        if not result.analyte_name or is_junk_lab_result(result):
+        name_norm = normalize_analyte_name(result.analyte_name)
+        if not name_norm or is_junk_lab_result(result):
             continue
 
         source = result.source_pdf or "unknown"
@@ -744,8 +888,9 @@ async def get_patient_analyses(
         # Add metric for this result
         metrics_by_source[source].append(
             {
-                "name": result.analyte_name,
+                "name": name_norm,
                 "value": result.value,
+                "value_text": result.value_text,
                 "unit": result.unit,
                 "ref_range": result.ref_range,
             }
@@ -767,10 +912,6 @@ async def get_patient_series(
     db: Session = Depends(get_db),
 ):
     """Get time series data for a specific metric."""
-    from database import Patient, LabResult, User
-    from datetime import datetime
-    import re
-    
     # Get current user
     current_user = db.query(User).filter(User.id == user_id).first()
     if not current_user:
@@ -781,11 +922,36 @@ async def get_patient_series(
     if not patient:
         return []
     
-    # Get all lab results for this metric
+    # Get all lab results for this metric (normalized match)
+    name_norm = normalize_analyte_name(name)
     results = db.query(LabResult).filter(
-        LabResult.patient_id == patient.id,
-        LabResult.analyte_name == name
-    ).order_by(LabResult.taken_at.asc(), LabResult.created_at.asc()).all()
+        LabResult.patient_id == patient.id
+    ).all()
+    results = [
+        r for r in results
+        if normalize_analyte_name(r.analyte_name) == name_norm
+    ]
+    results.sort(key=lambda r: (r.taken_at or r.created_at))
+
+    numeric_results = [r for r in results if r.value is not None]
+    if numeric_results:
+        results = numeric_results
+    else:
+        categorical_results = [r for r in results if r.value_text]
+        if categorical_results:
+            points = []
+            for r in categorical_results:
+                timestamp = r.taken_at if r.taken_at else r.created_at
+                if not timestamp:
+                    continue
+                points.append(
+                    {
+                        "date": timestamp.isoformat(),
+                        "value_text": r.value_text,
+                    }
+                )
+            return {"series_type": "categorical", "points": points}
+        return {"series_type": "numeric", "points": []}
 
     def parse_ref_range(rr: str):
         if not rr:
@@ -829,7 +995,7 @@ async def get_patient_series(
                 bucket_key = r.unit
                 buckets.setdefault(bucket_key, []).append(r)
 
-            name_up = name.upper()
+            name_up = name_norm
             chosen_key = None
 
             # Prefer whitelisted units first
@@ -863,7 +1029,7 @@ async def get_patient_series(
 
         ref_min_tmp, ref_max_tmp = parse_ref_range(result.ref_range or "")
         # If this is creatinina and ref_max is very high (e.g., 30-250 mg/dL), likely urine/24h misparsed -> skip
-        if name.upper() == "CREATININA" and ref_max_tmp is not None and ref_max_tmp > 10:
+        if name_norm == "CREATININA" and ref_max_tmp is not None and ref_max_tmp > 10:
             continue
 
         # Parse ref_range to get min/max
@@ -885,15 +1051,29 @@ async def get_patient_series(
         if key in seen:
             continue
         seen.add(key)
+        stage, stage_label = _derive_egfr_stage_label(name_norm, result.unit, result.value)
         series.append({
             "t": timestamp.isoformat(),
             "y": result.value,
             "refMin": ref_min,
             "refMax": ref_max,
             "unit": result.unit,  # Add unit for Y-axis label
+            "stage": stage,
+            "stage_label": stage_label,
         })
-    
-    return series
+
+    latest_stage = None
+    latest_stage_label = None
+    if series:
+        latest_stage = series[-1].get("stage")
+        latest_stage_label = series[-1].get("stage_label")
+
+    return {
+        "series_type": "numeric",
+        "points": series,
+        "stage": latest_stage,
+        "stage_label": latest_stage_label,
+    }
 
 
 @app.get("/api/health")
@@ -1067,7 +1247,8 @@ async def doctor_patient_analyses(
     metrics_by_source = {}
 
     for result in results:
-        if not result.analyte_name:
+        name_norm = normalize_analyte_name(result.analyte_name)
+        if not name_norm:
             continue
 
         source = result.source_pdf or "unknown"
@@ -1081,8 +1262,9 @@ async def doctor_patient_analyses(
 
         metrics_by_source[source].append(
             {
-                "name": result.analyte_name,
+                "name": name_norm,
                 "value": result.value,
+                "value_text": result.value_text,
                 "unit": result.unit,
                 "ref_range": result.ref_range,
             }
@@ -1110,10 +1292,35 @@ async def doctor_patient_series(
     # reuse logic from patient series by calling directly
     # Temporarily override patient fetch
     # Get patient lab results for this metric
+    name_norm = normalize_analyte_name(name)
     results = db.query(LabResult).filter(
-        LabResult.patient_id == patient_id,
-        LabResult.analyte_name == name
-    ).order_by(LabResult.taken_at.asc(), LabResult.created_at.asc()).all()
+        LabResult.patient_id == patient_id
+    ).all()
+    results = [
+        r for r in results
+        if normalize_analyte_name(r.analyte_name) == name_norm
+    ]
+    results.sort(key=lambda r: (r.taken_at or r.created_at))
+
+    numeric_results = [r for r in results if r.value is not None]
+    if numeric_results:
+        results = numeric_results
+    else:
+        categorical_results = [r for r in results if r.value_text]
+        if categorical_results:
+            points = []
+            for r in categorical_results:
+                timestamp = r.taken_at if r.taken_at else r.created_at
+                if not timestamp:
+                    continue
+                points.append(
+                    {
+                        "date": timestamp.isoformat(),
+                        "value_text": r.value_text,
+                    }
+                )
+            return {"series_type": "categorical", "points": points}
+        return {"series_type": "numeric", "points": []}
 
     def parse_ref_range(rr: str):
         if not rr:
@@ -1159,7 +1366,7 @@ async def doctor_patient_series(
         if not timestamp:
             continue
         ref_min_tmp, ref_max_tmp = parse_ref_range(result.ref_range or "")
-        if name.upper() == "CREATININA" and ref_max_tmp is not None and ref_max_tmp > 10:
+        if name_norm == "CREATININA" and ref_max_tmp is not None and ref_max_tmp > 10:
             continue
 
         if latest_ref_min is not None and latest_ref_max is not None:
@@ -1178,6 +1385,7 @@ async def doctor_patient_series(
         if key in seen:
             continue
         seen.add(key)
+        stage, stage_label = _derive_egfr_stage_label(name_norm, result.unit, result.value)
         series.append(
             {
                 "t": timestamp.isoformat(),
@@ -1185,9 +1393,23 @@ async def doctor_patient_series(
                 "refMin": ref_min,
                 "refMax": ref_max,
                 "unit": result.unit,
+                "stage": stage,
+                "stage_label": stage_label,
             }
         )
-    return series
+
+    latest_stage = None
+    latest_stage_label = None
+    if series:
+        latest_stage = series[-1].get("stage")
+        latest_stage_label = series[-1].get("stage_label")
+
+    return {
+        "series_type": "numeric",
+        "points": series,
+        "stage": latest_stage,
+        "stage_label": latest_stage_label,
+    }
 
 
 @app.post("/api/doctor/patient/{patient_id}/notes", response_model=DoctorNoteResponse)
@@ -1353,8 +1575,6 @@ async def get_advice(
     db: Session = Depends(get_db),
 ):
     """Generate wellness-style advice based on recent labs using Azure OpenAI."""
-    from database import Patient, User
-
     current_user = db.query(User).filter(User.id == user_id).first()
     if not current_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -1440,8 +1660,6 @@ async def get_advice(
 @app.get("/api/me")
 async def get_me_shortcut(user_id: int = Depends(get_current_user_id)):
     """Shortcut for /api/auth/me (frontend compatibility)."""
-    from database import User, SessionLocal
-    
     print(f"[DEBUG] GET /api/me called for user_id={user_id}")
     
     db = SessionLocal()

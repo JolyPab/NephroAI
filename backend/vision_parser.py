@@ -3,13 +3,14 @@
 import base64
 import io
 import os
-from typing import List, Dict, Any
+import re
+from typing import List, Dict, Any, Optional
 
 import fitz  # PyMuPDF
 from PIL import Image
 from openai import OpenAI
 
-from models import ImportJson, ImportedLabItem
+from backend.models import ImportJson, ImportedLabItem
 
 
 SYSTEM_PROMPT = (
@@ -23,14 +24,50 @@ SYSTEM_PROMPT = (
     "Если нет числового или бинарного значения (0/1), не включай запись."
 )
 
+OCR_SYSTEM_PROMPT = (
+    "Extract all text from the image exactly as written. "
+    "Return plain text only, no explanations, no extra formatting."
+)
 
-def _extract_page_text_and_images(pdf_bytes: bytes) -> List[Dict[str, Any]]:
+MIN_TEXT_WORDS = int(os.getenv("VISION_MIN_TEXT_WORDS", "30"))
+MIN_TEXT_NUMBERS = int(os.getenv("VISION_MIN_TEXT_NUMBERS", "6"))
+
+
+def select_pages_for_vision(pdf_bytes: bytes) -> List[int]:
+    """Pick pages that likely need vision (low text, images present)."""
+    pages: List[int] = []
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    try:
+        for page_index, page in enumerate(doc):
+            text = page.get_text("text") or ""
+            words = re.findall(r"[A-Za-zÀ-ÿ]{2,}", text)
+            numbers = re.findall(r"\d+(?:[.,]\d+)?", text)
+            images = page.get_images(full=True)
+
+            text_rich = len(words) >= MIN_TEXT_WORDS or len(numbers) >= MIN_TEXT_NUMBERS
+            if images and not text_rich:
+                pages.append(page_index)
+    finally:
+        doc.close()
+
+    return pages
+
+
+def _extract_page_text_and_images(
+    pdf_bytes: bytes,
+    page_indices: Optional[List[int]] = None,
+) -> List[Dict[str, Any]]:
     """Extract text and embedded images per page as base64 strings, with size filtering and compression."""
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     pages: List[Dict[str, Any]] = []
 
+    page_set = set(page_indices) if page_indices is not None else None
+
     try:
-        for page in doc:
+        for page_index, page in enumerate(doc):
+            if page_set is not None and page_index not in page_set:
+                continue
+
             page_text = page.get_text("text") or ""
             page_images: List[str] = []
 
@@ -58,7 +95,9 @@ def _extract_page_text_and_images(pdf_bytes: bytes) -> List[Dict[str, Any]]:
 
                 page_images.append(base64.b64encode(img_bytes).decode("ascii"))
 
-            pages.append({"text": page_text, "images": page_images})
+            pages.append(
+                {"page_index": page_index, "text": page_text, "images": page_images}
+            )
     finally:
         doc.close()
 
@@ -122,7 +161,10 @@ def _postprocess_item(item: ImportedLabItem) -> ImportedLabItem:
     )
 
 
-def parse_pdf_vision(pdf_bytes: bytes) -> ImportJson:
+def parse_pdf_vision(
+    pdf_bytes: bytes,
+    page_indices: Optional[List[int]] = None,
+) -> ImportJson:
     """
     Parse PDF bytes using GPT-4o vision with structured outputs.
 
@@ -135,7 +177,7 @@ def parse_pdf_vision(pdf_bytes: bytes) -> ImportJson:
 
     client = OpenAI(api_key=api_key, base_url=os.getenv("OPENAI_BASE_URL"), timeout=60.0)
 
-    pages = _extract_page_text_and_images(pdf_bytes)
+    pages = _extract_page_text_and_images(pdf_bytes, page_indices=page_indices)
     if not pages:
         raise ValueError("PDF has no readable content")
 
@@ -147,16 +189,17 @@ def parse_pdf_vision(pdf_bytes: bytes) -> ImportJson:
     for idx, page in enumerate(pages):
         text = page.get("text", "")
         images = page.get("images", [])
+        page_index = page.get("page_index", idx)
 
         if not text.strip() and not images:
             continue
 
-        print(f"--- Обработка страницы {idx + 1}... ---")
+        print(f"--- Page {page_index + 1}... ---")
 
         user_content: List[dict] = []
         if text.strip():
             user_content.append(
-                {"type": "text", "text": f"Page {idx + 1} text:\n{text}"}
+                {"type": "text", "text": f"Page {page_index + 1} text:\n{text}"}
             )
 
         for img_b64 in images:
@@ -213,3 +256,48 @@ def parse_pdf_vision(pdf_bytes: bytes) -> ImportJson:
         source_pdf=source_pdf,
         normalization_method=normalization_method,
     )
+
+
+def ocr_pages_to_text(pdf_bytes: bytes, page_indices: List[int]) -> List[Dict[str, Any]]:
+    """OCR pages using a vision model and return plain text per page."""
+    if not page_indices:
+        return []
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is not set")
+
+    client = OpenAI(api_key=api_key, base_url=os.getenv("OPENAI_BASE_URL"), timeout=60.0)
+    pages = _extract_page_text_and_images(pdf_bytes, page_indices=page_indices)
+    results: List[Dict[str, Any]] = []
+
+    for page in pages:
+        images = page.get("images", [])
+        page_index = int(page.get("page_index", 0))
+        if not images:
+            results.append({"page": page_index, "text": page.get("text", "") or ""})
+            continue
+
+        user_content: List[dict] = []
+        for img_b64 in images:
+            user_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"},
+                }
+            )
+
+        model_name = os.getenv("OPENAI_MODEL_OCR", "gpt-4o-mini")
+        completion = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": OCR_SYSTEM_PROMPT},
+                {"role": "user", "content": user_content},
+            ],
+            temperature=0,
+        )
+
+        text = completion.choices[0].message.content or ""
+        results.append({"page": page_index, "text": text})
+
+    return results

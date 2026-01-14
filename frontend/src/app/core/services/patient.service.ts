@@ -3,7 +3,7 @@ import { catchError } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
 import { ApiService } from './api.service';
-import { AnalysisSummary, MetricSeriesPoint } from '../models/analysis.model';
+import { AnalysisSummary, MetricSeriesResponse } from '../models/analysis.model';
 import { ShareGrant } from '../models/share.model';
 import { DoctorNote } from '../models/doctor.model';
 
@@ -15,8 +15,8 @@ export class PatientService {
     return this.api.get<AnalysisSummary[]>('/patient/analyses');
   }
 
-  getSeries(metricName: string): Observable<MetricSeriesPoint[]> {
-    return this.api.get<MetricSeriesPoint[]>('/patient/series', { name: metricName });
+  getSeries(metricName: string): Observable<MetricSeriesResponse> {
+    return this.api.get<MetricSeriesResponse>('/patient/series', { name: metricName });
   }
 
   uploadPdf(file: File): Observable<{ analysis_id: string }> {
