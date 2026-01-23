@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 import io
 import os
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -237,6 +237,128 @@ def _summarize_metrics(db, patient_id: int, metric_names=None, days: int = 180):
     return grouped
 
 
+def _build_doctor_chat_context(db: Session, patient: Patient) -> Dict[str, Any]:
+    results = db.query(LabResult).filter(LabResult.patient_id == patient.id).all()
+    results.sort(
+        key=lambda r: (r.taken_at or r.created_at or dt.datetime.min),
+        reverse=True,
+    )
+
+    if not results:
+        return {
+            "patient": {"id": patient.id, "name": patient.full_name},
+            "latest_analysis_date": None,
+            "recent_analyses": [],
+            "metrics_snapshot": [],
+            "trends": {},
+            "egfr": None,
+        }
+
+    latest_ts = results[0].taken_at or results[0].created_at
+
+    recent_analyses: List[Dict[str, Any]] = []
+    seen_sources = set()
+    for r in results:
+        source = r.source_pdf or "unknown"
+        if source in seen_sources:
+            continue
+        seen_sources.add(source)
+        ts = r.taken_at or r.created_at
+        recent_analyses.append(
+            {
+                "date": ts.isoformat() if ts else None,
+                "source": source,
+            }
+        )
+        if len(recent_analyses) >= 8:
+            break
+
+    metrics_snapshot: List[Dict[str, Any]] = []
+    seen_metrics = set()
+    for r in results:
+        name_norm = normalize_analyte_name(r.analyte_name)
+        if not name_norm or name_norm in seen_metrics:
+            continue
+        seen_metrics.add(name_norm)
+        ts = r.taken_at or r.created_at
+        metrics_snapshot.append(
+            {
+                "analyte_key": name_norm,
+                "name": name_norm,
+                "value_num": r.value,
+                "value_text": r.value_text,
+                "unit": r.unit,
+                "ref_min": r.ref_min,
+                "ref_max": r.ref_max,
+                "date": ts.isoformat() if ts else None,
+            }
+        )
+        if len(metrics_snapshot) >= 20:
+            break
+
+    key_tokens = [
+        "CREATININA",
+        "UREA",
+        "BUN",
+        "TFG",
+        "EGFR",
+        "FILTRACION",
+        "ALBUMINA",
+        "GLUCOSA",
+        "COLESTEROL",
+        "TRIGLICERIDOS",
+        "CRP",
+        "PCR",
+        "HEMOGLOBINA",
+        "PLAQUETAS",
+        "POTASIO",
+        "SODIO",
+    ]
+    normalized_names = sorted(seen_metrics)
+    key_metric_names = [
+        name for name in normalized_names if any(token in name for token in key_tokens)
+    ][:12]
+    trends = _summarize_metrics(db, patient.id, metric_names=key_metric_names, days=365) if key_metric_names else {}
+
+    egfr_info = None
+    for r in results:
+        name_norm = normalize_analyte_name(r.analyte_name)
+        stage, label = _derive_egfr_stage_label(name_norm, r.unit, r.value)
+        if stage:
+            egfr_info = {
+                "latest_value": r.value,
+                "stage": stage,
+                "stage_label": label,
+            }
+            break
+
+    return {
+        "patient": {"id": patient.id, "name": patient.full_name},
+        "latest_analysis_date": latest_ts.isoformat() if latest_ts else None,
+        "recent_analyses": recent_analyses,
+        "metrics_snapshot": metrics_snapshot,
+        "trends": trends,
+        "egfr": egfr_info,
+    }
+
+
+def _trim_chat_context(context: Dict[str, Any], max_chars: int = 12000) -> Dict[str, Any]:
+    serialized = json.dumps(context, ensure_ascii=False)
+    if len(serialized) <= max_chars:
+        return context
+
+    trimmed = dict(context)
+    trimmed["metrics_snapshot"] = (context.get("metrics_snapshot") or [])[:10]
+    trimmed["recent_analyses"] = (context.get("recent_analyses") or [])[:5]
+    trimmed["trends"] = {}
+    serialized = json.dumps(trimmed, ensure_ascii=False)
+    if len(serialized) <= max_chars:
+        return trimmed
+
+    trimmed["metrics_snapshot"] = (context.get("metrics_snapshot") or [])[:6]
+    return trimmed
+
+
 def _openai_chat_completion(system_prompt: str, user_prompt: str):
     """Call OpenAI chat completion."""
     key = os.getenv("OPENAI_API_KEY")
@@ -288,6 +410,21 @@ class AdviceResponse(BaseModel):
     answer: str
     usedMetrics: List[AdviceMetric]
     disclaimer: bool = True
+
+
+class DoctorChatHistoryItem(BaseModel):
+    role: str
+    content: str
+
+
+class DoctorChatRequest(BaseModel):
+    message: str
+    history: Optional[List[DoctorChatHistoryItem]] = None
+
+
+class DoctorChatResponse(BaseModel):
+    reply: str
+    disclaimer: bool = False
 
 class SubscriptionStatus(BaseModel):
     active: bool
@@ -1476,6 +1613,76 @@ async def list_doctor_notes(
             )
         )
     return result
+
+
+@app.get("/api/doctor/patient/{patient_id}/chat/context")
+async def doctor_patient_chat_context(
+    patient_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Provide chat context for a doctor viewing a patient."""
+    doctor = db.query(User).filter(User.id == user_id).first()
+    patient = _ensure_doctor_access(db, doctor, patient_id)
+    context = _build_doctor_chat_context(db, patient)
+    context = _trim_chat_context(context)
+    return context
+
+
+@app.post("/api/doctor/patient/{patient_id}/chat", response_model=DoctorChatResponse)
+async def doctor_patient_chat(
+    patient_id: int,
+    payload: DoctorChatRequest,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Doctor-facing assistant chat with patient lab context."""
+    doctor = db.query(User).filter(User.id == user_id).first()
+    patient = _ensure_doctor_access(db, doctor, patient_id)
+
+    context = _build_doctor_chat_context(db, patient)
+    if not context.get("metrics_snapshot") and not context.get("recent_analyses"):
+        return DoctorChatResponse(
+            reply="No lab data available yet for this patient. Upload/import reports first.",
+            disclaimer=False,
+        )
+
+    context = _trim_chat_context(context)
+    context_text = json.dumps(context, ensure_ascii=False, indent=2)
+
+    history_lines = []
+    for item in (payload.history or [])[-6:]:
+        role = (item.role or "").strip().upper()
+        content = (item.content or "").strip()
+        if not content:
+            continue
+        history_lines.append(f"{role}: {content}")
+    history_text = "\n".join(history_lines) if history_lines else "None"
+
+    system_prompt = (
+        "You are a clinical assistant supporting a doctor. "
+        "Use the provided lab context to summarize trends, highlight anomalies/risks, "
+        "and suggest what to clarify and what to check next. "
+        "Do not prescribe treatments or dosages. "
+        "Provide concise, structured bullet points. "
+        "If data are insufficient, ask clarifying questions. "
+        "Reply in the same language as the doctor's question."
+    )
+
+    user_prompt = "\n".join(
+        [
+            "PATIENT_CONTEXT:",
+            context_text,
+            "",
+            "CONVERSATION_HISTORY:",
+            history_text,
+            "",
+            f"QUESTION: {payload.message}",
+        ]
+    )
+
+    reply = _openai_chat_completion(system_prompt, user_prompt)
+    return DoctorChatResponse(reply=reply, disclaimer=True)
 
 
 @app.get("/api/patient/notes", response_model=List[DoctorNoteResponse])

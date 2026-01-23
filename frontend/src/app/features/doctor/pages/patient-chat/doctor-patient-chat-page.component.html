@@ -1,0 +1,36 @@
+<div class="space-y-6">
+  <div class="doctor-tabs">
+    <a
+      appGlassButton
+      [routerLink]="['/doctor/patient', patientId]"
+      routerLinkActive="is-active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      >{{ 'DOCTOR.CHARTS_TAB' | translate }}</a
+    >
+    <a
+      appGlassButton
+      [routerLink]="['/doctor/patient', patientId, 'assistant']"
+      routerLinkActive="is-active"
+      >{{ 'DOCTOR.ASSISTANT_TAB' | translate }}</a
+    >
+  </div>
+
+  <app-chat-shell
+    [titleKey]="'DOCTOR.CHAT.TITLE'"
+    [subtitleKey]="'DOCTOR.CHAT.SUBTITLE'"
+    [subtitleParams]="subtitleParams"
+    [secureKey]="'chat.secure'"
+    [emptyKey]="hasLabData ? 'DOCTOR.CHAT.EMPTY' : 'DOCTOR.CHAT.NO_DATA'"
+    [placeholderKey]="'DOCTOR.CHAT.PLACEHOLDER'"
+    [minCharsKey]="'chat.minChars'"
+    [youKey]="'chat.you'"
+    [aiKey]="'chat.ai'"
+    [disclaimerKey]="'DOCTOR.CHAT.DISCLAIMER'"
+    [history]="history"
+    [isLoading]="isLoading"
+    [form]="chatForm"
+    [quickPrompts]="quickPrompts"
+    (submitMessage)="submit()"
+    (selectPrompt)="setPrompt($event)"
+  ></app-chat-shell>
+</div>

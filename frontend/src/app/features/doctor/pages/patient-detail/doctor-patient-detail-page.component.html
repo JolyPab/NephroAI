@@ -1,4 +1,26 @@
 <div class="space-y-6">
+  <div class="doctor-tabs">
+    <a
+      appGlassButton
+      [routerLink]="['/doctor/patient', patientId]"
+      routerLinkActive="is-active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      >{{ 'DOCTOR.CHARTS_TAB' | translate }}</a
+    >
+    <a
+      appGlassButton
+      [routerLink]="['/doctor/patient', patientId, 'assistant']"
+      routerLinkActive="is-active"
+      >{{ 'DOCTOR.ASSISTANT_TAB' | translate }}</a
+    >
+  </div>
+
+  <app-latest-report-summary
+    [analyses]="analyses"
+    [showChartsButton]="false"
+    [showEmptyState]="!analysesLoading"
+  ></app-latest-report-summary>
+
   <app-glass-card [extraClass]="'glass-strong space-y-5'">
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
       <div>

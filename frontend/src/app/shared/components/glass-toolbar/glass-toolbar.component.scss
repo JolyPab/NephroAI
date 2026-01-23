@@ -212,3 +212,46 @@
     display: none;
   }
 }
+
+@media (max-width: 520px) {
+  .toolbar-island {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "left actions"
+      "center center";
+    row-gap: 0.5rem;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .glass-toolbar__left {
+    grid-area: left;
+  }
+
+  .glass-toolbar__center {
+    grid-area: center;
+    justify-self: stretch;
+  }
+
+  .glass-toolbar__actions {
+    grid-area: actions;
+    gap: 0.5rem;
+  }
+
+  .page-center {
+    max-width: 100%;
+  }
+
+  .glass-toolbar__heading {
+    text-align: center;
+  }
+
+  .glass-toolbar__title {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .glass-toolbar__button {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+  }
+}

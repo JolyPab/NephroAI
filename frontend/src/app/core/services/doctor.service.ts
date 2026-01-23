@@ -5,6 +5,7 @@ import { catchError, map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { DoctorNote, DoctorPatientSummary } from '../models/doctor.model';
 import { MetricSeriesResponse } from '../models/analysis.model';
+import { DoctorChatContext, DoctorChatHistoryItem, DoctorChatResponse } from '../models/doctor-chat.model';
 
 @Injectable({ providedIn: 'root' })
 export class DoctorService {
@@ -35,6 +36,21 @@ export class DoctorService {
       text,
       metric_name: metricName,
       metric_time: metricTime,
+    });
+  }
+
+  getChatContext(patientId: string): Observable<DoctorChatContext> {
+    return this.api.get<DoctorChatContext>(`/doctor/patient/${patientId}/chat/context`);
+  }
+
+  sendChatMessage(
+    patientId: string,
+    message: string,
+    history?: DoctorChatHistoryItem[],
+  ): Observable<DoctorChatResponse> {
+    return this.api.post<DoctorChatResponse>(`/doctor/patient/${patientId}/chat`, {
+      message,
+      history,
     });
   }
 }

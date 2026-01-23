@@ -93,3 +93,18 @@
   gap: 0.5rem;
   text-align: left;
 }
+
+.metric-label {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.metric-label__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.2;
+}

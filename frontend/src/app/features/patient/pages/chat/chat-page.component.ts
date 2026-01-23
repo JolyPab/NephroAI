@@ -4,14 +4,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { AdviceClientService } from '../../../../core/services/advice.service';
 import { AdviceResponseModel } from '../../../../core/models/advice.model';
 import { PatientService } from '../../../../core/services/patient.service';
-
-interface ChatMessage {
-  question: string;
-  answer: string;
-  metrics: { name: string; value: number; unit?: string | null }[];
-  disclaimer?: boolean;
-  timestamp: Date;
-}
+import { ChatMessage } from '../../../../core/models/chat.model';
 
 @Component({
   selector: 'app-patient-chat-page',

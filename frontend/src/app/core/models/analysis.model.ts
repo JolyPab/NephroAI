@@ -12,8 +12,9 @@ export interface AnalysisSummary {
   date?: string | null;
   taken_at?: string | null;
   created_at?: string | null;
-  source_pdf: string;
-  metrics_count: number;
+  source_pdf?: string | null;
+  source?: string | null;
+  metrics_count?: number | null;
   metrics: MetricBrief[];
 }
 

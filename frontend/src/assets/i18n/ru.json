@@ -64,6 +64,8 @@
       "EMPTY": "Upload your first PDF lab report to see trends and insights.",
       "LATEST": "Latest report",
       "LATEST_SUBTITLE": "Summary of your most recent lab report",
+      "SOURCE": "Source:",
+      "METRICS": "Metrics:",
       "DATE": "Date:",
       "GO_CHARTS": "Go to charts",
       "CHARTS": "Charts",
@@ -105,5 +107,17 @@
     "DASHBOARD_LOAD_FAILED": "Failed to load analyses.",
     "METRICS_LOAD_FAILED": "Failed to load metrics list.",
     "SERIES_LOAD_FAILED": "Failed to load time series."
+  },
+  "DOCTOR": {
+    "CHARTS_TAB": "Charts",
+    "ASSISTANT_TAB": "AI Assistant",
+    "CHAT": {
+      "TITLE": "AI Assistant",
+      "SUBTITLE": "Context: {{patient}}",
+      "PLACEHOLDER": "Ask about trends, risks, or follow-up questions...",
+      "EMPTY": "Ask about lab dynamics, abnormalities, or next steps.",
+      "NO_DATA": "No lab data available yet for this patient. Upload/import reports first.",
+      "DISCLAIMER": "Use this summary as clinical support and correlate with patient history."
+    }
   }
 }

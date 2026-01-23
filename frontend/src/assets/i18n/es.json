@@ -64,6 +64,8 @@
       "EMPTY": "Sube tu primer PDF de laboratorio para ver tendencias y hallazgos.",
       "LATEST": "Ultimo reporte",
       "LATEST_SUBTITLE": "Resumen de tu ultimo reporte de laboratorio",
+      "SOURCE": "Fuente:",
+      "METRICS": "Metricas:",
       "DATE": "Fecha:",
       "GO_CHARTS": "Ir a graficas",
       "CHARTS": "Graficas",
@@ -235,5 +237,17 @@
     "loading": "Cargando datos...",
     "seriesError": "No se pudo cargar la serie temporal.",
     "date": "Fecha"
+  },
+  "DOCTOR": {
+    "CHARTS_TAB": "Graficas",
+    "ASSISTANT_TAB": "Asistente IA",
+    "CHAT": {
+      "TITLE": "Asistente IA",
+      "SUBTITLE": "Contexto: {{patient}}",
+      "PLACEHOLDER": "Pregunta sobre tendencias, riesgos o seguimiento...",
+      "EMPTY": "Pregunta sobre dinamica de laboratorios, anomalias o siguientes pasos.",
+      "NO_DATA": "No hay datos de laboratorio para este paciente. Sube o importa reportes primero.",
+      "DISCLAIMER": "Usa este resumen como apoyo clinico y correlacionalo con la historia."
+    }
   }
 }

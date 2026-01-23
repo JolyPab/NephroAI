@@ -15,46 +15,7 @@
     {{ errorMessage }}
     </div>
 
-  <div *ngIf="!loading && !errorMessage && analyses.length === 0" class="glass glass-strong p-6 text-[var(--text-dim)] text-center">
-    {{ 'PATIENT.DASHBOARD.EMPTY' | translate }}
-  </div>
-
-  <ng-container *ngIf="!loading && analyses.length > 0 && latestAnalysis as latest">
-    <app-glass-card [extraClass]="'glass-strong flex flex-col gap-4'">
-      <div class="flex flex-wrap justify-between gap-3 items-start">
-        <div class="space-y-1">
-          <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'PATIENT.DASHBOARD.LATEST' | translate }}</h3>
-          <p class="text-sm text-[var(--text-dim)]">{{ 'PATIENT.DASHBOARD.LATEST_SUBTITLE' | translate }}</p>
-          <p class="text-sm text-[var(--text-dim)]">
-            {{ 'PATIENT.DASHBOARD.DATE' | translate }}
-            <span *ngIf="latestDate(latest); else noDate">
-              {{ latestDate(latest) | date: 'd MMMM yyyy' }}
-            </span>
-            <ng-template #noDate>{{ 'PATIENT.DASHBOARD.NO_DATE' | translate }}</ng-template>
-          </p>
-        </div>
-        <button type="button" appGlassButton routerLink="/patient/charts">
-          <i class="bi bi-graph-up"></i>
-          <span class="hidden sm:inline">{{ 'PATIENT.DASHBOARD.GO_CHARTS' | translate }}</span>
-          <span class="sm:hidden">{{ 'PATIENT.DASHBOARD.CHARTS' | translate }}</span>
-        </button>
-      </div>
-
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" *ngIf="summaryMetrics.length > 0">
-        <app-glass-card
-          *ngFor="let metric of summaryMetrics"
-          [extraClass]="'glass-strong h-full'">
-          <div class="flex items-start justify-between gap-3">
-            <div class="space-y-1">
-              <p class="uppercase text-[var(--text-dim)] text-xs tracking-[0.2em]">{{ metric.name }}</p>
-              <div class="flex items-baseline gap-2">
-                <span class="text-3xl font-semibold text-[var(--text)]">{{ metric.value }}</span>
-                <span class="text-sm text-[var(--text-dim)]" *ngIf="metric.unit">{{ metric.unit }}</span>
-              </div>
-            </div>
-          </div>
-        </app-glass-card>
-      </div>
-    </app-glass-card>
+  <ng-container *ngIf="!loading && !errorMessage">
+    <app-latest-report-summary [analyses]="analyses"></app-latest-report-summary>
   </ng-container>
 </div>

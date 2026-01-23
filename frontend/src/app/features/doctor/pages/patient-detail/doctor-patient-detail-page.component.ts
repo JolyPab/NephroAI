@@ -9,7 +9,7 @@ import 'chartjs-adapter-date-fns';
 import { format } from 'date-fns';
 
 import { DoctorService } from '../../../../core/services/doctor.service';
-import { CategoricalSeriesPoint, MetricSeriesPoint, MetricSeriesResponse } from '../../../../core/models/analysis.model';
+import { AnalysisSummary, CategoricalSeriesPoint, MetricSeriesPoint, MetricSeriesResponse } from '../../../../core/models/analysis.model';
 import { DoctorNote } from '../../../../core/models/doctor.model';
 
 Chart.register(zoomPlugin);
@@ -152,6 +152,8 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
   showMetricList = false;
   metricFilter = '';
   selectedMetric = '';
+  analyses: AnalysisSummary[] = [];
+  analysesLoading = true;
   loading = true;
   series: MetricSeriesPoint[] = [];
   seriesType: MetricSeriesResponse['series_type'] = 'numeric';
@@ -251,9 +253,11 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.errorMessage = '';
     this.metricOptions = [];
+    this.analysesLoading = true;
 
     this.doctorService.getAnalyses(this.patientId).subscribe({
       next: (analyses) => {
+        this.analyses = analyses ?? [];
         const names = new Set<string>();
         (analyses ?? []).forEach((analysis: any) => {
           (analysis.metrics ?? []).forEach((m: any) => {
@@ -270,6 +274,7 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
 
         this.metricOptions = Array.from(names).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         this.filteredMetrics = [...this.metricOptions];
+        this.analysesLoading = false;
 
         if (!this.metricOptions.length) {
           this.errorMessage = 'No metrics available for this patient yet.';
@@ -281,6 +286,8 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
         this.loadSeries();
       },
       error: (err) => {
+        this.analyses = [];
+        this.analysesLoading = false;
         this.errorMessage = err?.error?.detail ?? 'Failed to load metrics list.';
         this.loading = false;
       },

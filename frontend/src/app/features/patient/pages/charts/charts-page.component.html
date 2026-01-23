@@ -22,11 +22,12 @@
           type="button"
           class="chip w-full justify-between"
           [class.badge-accent]="selectedMetric === name"
+          [attr.title]="name"
           (click)="onMetricChange(name)"
         >
-          <span class="flex items-center gap-2">
+          <span class="metric-label flex items-center gap-2">
             <i class="bi" [ngClass]="selectedMetric === name ? 'bi-activity' : 'bi-dot'"></i>
-            {{ name }}
+            <span class="metric-label__text">{{ name }}</span>
           </span>
           <i *ngIf="selectedMetric === name" class="bi bi-check2 text-[var(--accent)]"></i>
         </button>

@@ -16,7 +16,7 @@
         <span *ngIf="!logoError" class="glass-toolbar__logo-wrap">
           <img
             class="glass-toolbar__logo"
-            [src]="logoSrc"
+            [src]="resolvedLogoSrc"
             [attr.alt]="(brandTextKey | translate) + ' logo'"
             loading="lazy"
             (error)="handleLogoError()"

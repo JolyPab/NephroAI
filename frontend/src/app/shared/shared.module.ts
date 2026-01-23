@@ -12,6 +12,8 @@ import { GlassButtonDirective } from './components/glass-button/glass-button.dir
 import { GlassInputComponent } from './components/glass-input/glass-input.component';
 import { GlassToolbarComponent } from './components/glass-toolbar/glass-toolbar.component';
 import { GlassTabbarComponent } from './components/glass-tabbar/glass-tabbar.component';
+import { LatestReportSummaryComponent } from './components/latest-report-summary/latest-report-summary.component';
+import { ChatShellComponent } from './components/chat-shell/chat-shell.component';
 
 @NgModule({
   imports: [
@@ -28,6 +30,8 @@ import { GlassTabbarComponent } from './components/glass-tabbar/glass-tabbar.com
     GlassInputComponent,
     GlassToolbarComponent,
     GlassTabbarComponent,
+    LatestReportSummaryComponent,
+    ChatShellComponent,
   ],
   exports: [
     CommonModule,
@@ -43,6 +47,8 @@ import { GlassTabbarComponent } from './components/glass-tabbar/glass-tabbar.com
     GlassInputComponent,
     GlassToolbarComponent,
     GlassTabbarComponent,
+    LatestReportSummaryComponent,
+    ChatShellComponent,
   ],
 })
 export class SharedModule {}
