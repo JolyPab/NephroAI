@@ -5,17 +5,31 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func
+from sqlalchemy.sql import over
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from typing import Any, Dict, List, Optional
 import io
 import os
+import logging
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from dotenv import load_dotenv
 import hashlib
-
+from pathlib import Path
 from backend.models import ImportJson
+from backend.v2.extractor import extract as extract_v2
+from backend.v2.schemas import (
+    ImportV2,
+    V2AnalyteItemResponse,
+    V2CreateDocumentDuplicateResponse,
+    V2CreateDocumentResponse,
+    V2DoctorNoteResponse,
+    V2DoctorPatientResponse,
+    V2DocumentDetailResponse,
+    V2UpsertDoctorNoteRequest,
+    V2SeriesResponse,
+)
 from backend.analyte_utils import normalize_analyte_name
 from backend.pdf_parser import extract_raw_text
 from backend.parsing.pipeline import coerce_raw_text, parse_with_ocr_fallback
@@ -33,6 +47,9 @@ from backend.database import (
     Subscription,
     Payment,
     UploadStatus,
+    V2DoctorNote,
+    V2Document,
+    V2Metric,
     save_parsed_records,
 )
 from backend.auth import get_current_user_id
@@ -42,7 +59,10 @@ import datetime as dt
 import json
 import re
 import requests
+import unicodedata
 from urllib.parse import urljoin
+
+logger = logging.getLogger(__name__)
 
 def get_db():
     """Database session dependency."""
@@ -86,7 +106,12 @@ def get_current_user(user_id: int = Depends(get_current_user_id), db: Session = 
     return user
 
 # Load environment variables from .env file
-load_dotenv()
+ENV_PATH = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=ENV_PATH)
+print("[DEBUG] OPENAI_API_KEY loaded:", bool(os.getenv("OPENAI_API_KEY")))
+print("[DEBUG] CWD:", os.getcwd())
+
+
 
 # Database setup
 database_url = get_database_url()
@@ -237,6 +262,292 @@ def _summarize_metrics(db, patient_id: int, metric_names=None, days: int = 180):
     return grouped
 
 
+def _reference_bounds_from_v2(reference_json: Optional[dict]) -> tuple[Optional[float], Optional[float]]:
+    if not reference_json or not isinstance(reference_json, dict):
+        return (None, None)
+    ref_type = str(reference_json.get("type") or "").lower()
+    min_val = reference_json.get("min")
+    max_val = reference_json.get("max")
+    threshold = reference_json.get("threshold")
+
+    def _to_float(value):
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            try:
+                return float(value.replace(",", ".").strip())
+            except ValueError:
+                return None
+        return None
+
+    min_num = _to_float(min_val)
+    max_num = _to_float(max_val)
+    threshold_num = _to_float(threshold)
+
+    if ref_type == "max" and threshold_num is not None:
+        return (None, threshold_num)
+    if ref_type == "min" and threshold_num is not None:
+        return (threshold_num, None)
+    return (min_num, max_num)
+
+
+def _summarize_metrics_v2(db: Session, user_id: int, metric_names=None, days: int = 180):
+    """Collect recent V2 lab data for the user."""
+    since = dt.datetime.utcnow() - dt.timedelta(days=days)
+    dt_expr = func.coalesce(V2Document.analysis_date, V2Document.created_at)
+
+    rows = (
+        db.query(V2Metric, dt_expr.label("dt"))
+        .join(V2Document, V2Metric.document_id == V2Document.id)
+        .filter(V2Document.user_id == user_id)
+        .filter(dt_expr >= since)
+        .order_by(V2Metric.analyte_key.asc(), dt_expr.desc(), V2Metric.id.desc())
+        .all()
+    )
+
+    metric_filters = None
+    if metric_names:
+        metric_filters = {str(name).strip().upper() for name in metric_names if str(name).strip()}
+
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for metric, ts in rows:
+        key = metric.analyte_key or (metric.raw_name or "").strip().upper()
+        if not key:
+            continue
+
+        if metric_filters:
+            raw_name = (metric.raw_name or "").strip().upper()
+            if key.upper() not in metric_filters and raw_name not in metric_filters:
+                continue
+
+        grouped.setdefault(key, [])
+        reference_json = metric.reference_json if isinstance(metric.reference_json, dict) else None
+        ref_min, ref_max = _reference_bounds_from_v2(reference_json)
+        grouped[key].append(
+            {
+                "t": ts.isoformat() if ts else None,
+                "value": metric.value_numeric,
+                "value_text": metric.value_text,
+                "unit": metric.unit,
+                "ref_min": ref_min,
+                "ref_max": ref_max,
+            }
+        )
+
+    for name in list(grouped.keys()):
+        grouped[name] = grouped[name][:5]
+        if not grouped[name]:
+            grouped.pop(name, None)
+
+    return grouped
+
+
+def _short_iso_date(value: Optional[str]) -> str:
+    if not value:
+        return "-"
+    text = str(value).strip()
+    if len(text) >= 10:
+        return text[:10]
+    return text
+
+
+def _fmt_num(value: Optional[float]) -> str:
+    if value is None:
+        return "-"
+    if float(value).is_integer():
+        return str(int(value))
+    return f"{float(value):.2f}".rstrip("0").rstrip(".")
+
+
+def _classify_metric_latest_status(values: list[Dict[str, Any]]) -> str:
+    if not values:
+        return "unknown"
+    latest = values[0]
+    value = latest.get("value")
+    if value is None:
+        return "text" if latest.get("value_text") else "unknown"
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return "unknown"
+
+    ref_min = latest.get("ref_min")
+    ref_max = latest.get("ref_max")
+    try:
+        min_num = float(ref_min) if ref_min is not None else None
+    except (TypeError, ValueError):
+        min_num = None
+    try:
+        max_num = float(ref_max) if ref_max is not None else None
+    except (TypeError, ValueError):
+        max_num = None
+
+    if min_num is not None and num < min_num:
+        return "low"
+    if max_num is not None and num > max_num:
+        return "high"
+    if min_num is not None or max_num is not None:
+        return "normal"
+    return "no_ref"
+
+
+def _build_deterministic_advice(
+    metrics_summary: Dict[str, List[Dict[str, Any]]],
+    language: str,
+    days: int,
+) -> str:
+    lang = (language or "es").lower()
+    is_es = lang.startswith("es")
+
+    flattened: list[tuple[str, Dict[str, Any]]] = []
+    for name, values in metrics_summary.items():
+        if not values:
+            continue
+        flattened.append((name, values[0]))
+
+    def _ts(item: tuple[str, Dict[str, Any]]) -> str:
+        return str(item[1].get("t") or "")
+
+    flattened.sort(key=_ts, reverse=True)
+    total = len(flattened)
+    latest_date = _short_iso_date(flattened[0][1].get("t")) if flattened else "-"
+
+    abnormal: list[tuple[str, Dict[str, Any], str]] = []
+    normal: list[tuple[str, Dict[str, Any], str]] = []
+    no_ref: list[tuple[str, Dict[str, Any], str]] = []
+    for name, _latest in flattened:
+        status = _classify_metric_latest_status(metrics_summary.get(name, []))
+        row = (name, metrics_summary[name][0], status)
+        if status in {"low", "high"}:
+            abnormal.append(row)
+        elif status == "normal":
+            normal.append(row)
+        else:
+            no_ref.append(row)
+
+    focus = (abnormal + normal + no_ref)[:3]
+
+    if is_es:
+        lines = [
+            "Resumen rápido de tus resultados recientes (sin diagnóstico médico):",
+            f"- Métricas revisadas: {total} (últimos {days} días).",
+            f"- Fuera de rango: {len(abnormal)}.",
+            f"- Fecha más reciente: {latest_date}.",
+            "",
+            "Hallazgos clave:",
+        ]
+        if focus:
+            for name, latest, status in focus:
+                value = latest.get("value")
+                value_text = str(latest.get("value_text") or "").strip()
+                unit = latest.get("unit") or ""
+                if value is not None:
+                    value_label = f"{_fmt_num(float(value))}{f' {unit}' if unit else ''}"
+                else:
+                    value_label = value_text or "-"
+                min_v = latest.get("ref_min")
+                max_v = latest.get("ref_max")
+                if min_v is not None and max_v is not None:
+                    ref_label = f"{_fmt_num(float(min_v))}-{_fmt_num(float(max_v))}"
+                elif max_v is not None:
+                    ref_label = f"< {_fmt_num(float(max_v))}"
+                elif min_v is not None:
+                    ref_label = f"> {_fmt_num(float(min_v))}"
+                else:
+                    ref_label = "sin referencia"
+
+                status_label = {
+                    "low": "bajo",
+                    "high": "alto",
+                    "normal": "normal",
+                    "no_ref": "sin referencia",
+                    "text": "resultado textual",
+                    "unknown": "sin referencia",
+                }.get(status, "sin referencia")
+                lines.append(f"- {name}: {value_label} ({status_label}; ref {ref_label})")
+        else:
+            lines.append("- No hay suficientes métricas para resumir.")
+
+        lines.extend(
+            [
+                "",
+                "Para comentar con tu médico:",
+                "- ¿Qué 2-3 métricas conviene vigilar con más frecuencia?",
+                "- ¿Qué cambios de hábitos priorizar según estos valores?",
+                "- ¿Cuándo repetir control para confirmar tendencia?",
+            ]
+        )
+        return "\n".join(lines)
+
+    lines = [
+        "Quick summary of your recent results (not a medical diagnosis):",
+        f"- Metrics reviewed: {total} (last {days} days).",
+        f"- Out-of-range values: {len(abnormal)}.",
+        f"- Most recent date: {latest_date}.",
+        "",
+        "Key findings:",
+    ]
+    if focus:
+        for name, latest, status in focus:
+            value = latest.get("value")
+            value_text = str(latest.get("value_text") or "").strip()
+            unit = latest.get("unit") or ""
+            if value is not None:
+                value_label = f"{_fmt_num(float(value))}{f' {unit}' if unit else ''}"
+            else:
+                value_label = value_text or "-"
+            min_v = latest.get("ref_min")
+            max_v = latest.get("ref_max")
+            if min_v is not None and max_v is not None:
+                ref_label = f"{_fmt_num(float(min_v))}-{_fmt_num(float(max_v))}"
+            elif max_v is not None:
+                ref_label = f"< {_fmt_num(float(max_v))}"
+            elif min_v is not None:
+                ref_label = f"> {_fmt_num(float(min_v))}"
+            else:
+                ref_label = "no reference"
+
+            status_label = {
+                "low": "low",
+                "high": "high",
+                "normal": "normal",
+                "no_ref": "no reference",
+                "text": "text result",
+                "unknown": "no reference",
+            }.get(status, "no reference")
+            lines.append(f"- {name}: {value_label} ({status_label}; ref {ref_label})")
+    else:
+        lines.append("- Not enough metrics to build a useful summary.")
+
+    lines.extend(
+        [
+            "",
+            "Discuss with your doctor:",
+            "- Which 2-3 metrics should be monitored more closely?",
+            "- Which lifestyle changes should be prioritized from these values?",
+            "- When should labs be repeated to confirm trend direction?",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _is_low_signal_advice(answer: str) -> bool:
+    text = (answer or "").strip().lower()
+    if not text:
+        return True
+    low_signal_markers = [
+        "no es un diagnostico",
+        "no es un diagnóstico",
+        "consulta siempre a tu medico",
+        "consulta siempre a tu médico",
+        "not a medical diagnosis",
+        "always discuss with your doctor",
+    ]
+    if len(text) < 140 and any(marker in text for marker in low_signal_markers):
+        return True
+    return False
+
+
 def _build_doctor_chat_context(db: Session, patient: Patient) -> Dict[str, Any]:
     results = db.query(LabResult).filter(LabResult.patient_id == patient.id).all()
     results.sort(
@@ -372,23 +683,68 @@ def _openai_chat_completion(system_prompt: str, user_prompt: str):
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
     }
-    payload = {
+    base_payload = {
         "model": model,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.4,
-        "max_tokens": 800,
     }
 
-    resp = requests.post(url, headers=headers, data=json.dumps(payload))
-    if resp.status_code >= 400:
-        raise HTTPException(status_code=502, detail=f"OpenAI error: {resp.text}")
+    preferred_token_param = "max_tokens"
+    model_lc = model.lower()
+    if model_lc.startswith(("gpt-5", "o1", "o3", "o4")):
+        preferred_token_param = "max_completion_tokens"
+    token_params = [preferred_token_param, "max_completion_tokens", "max_tokens"]
+
+    resp = None
+    last_error_text = ""
+    for token_param in dict.fromkeys(token_params):
+        payload = dict(base_payload)
+        payload[token_param] = 800
+        resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=120)
+        if resp.status_code < 400:
+            break
+
+        last_error_text = resp.text
+        error_text_lc = last_error_text.lower()
+        can_retry_with_other_param = (
+            resp.status_code == 400
+            and (
+                "max_tokens" in error_text_lc
+                or "max_completion_tokens" in error_text_lc
+            )
+        )
+        if not can_retry_with_other_param:
+            raise HTTPException(status_code=502, detail=f"OpenAI error: {last_error_text}")
+
+    if resp is None or resp.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"OpenAI error: {last_error_text}")
 
     data = resp.json()
     try:
-        return data["choices"][0]["message"]["content"]
+        content = data["choices"][0]["message"]["content"]
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            chunks: list[str] = []
+            for item in content:
+                if isinstance(item, str):
+                    chunks.append(item)
+                    continue
+                if not isinstance(item, dict):
+                    continue
+                text_value = item.get("text")
+                if isinstance(text_value, str):
+                    chunks.append(text_value)
+                    continue
+                if isinstance(text_value, dict):
+                    nested_value = text_value.get("value")
+                    if isinstance(nested_value, str):
+                        chunks.append(nested_value)
+            return "\n".join(part for part in chunks if part).strip()
+        return str(content)
     except Exception:
         raise HTTPException(status_code=502, detail="Malformed response from OpenAI.")
 
@@ -639,6 +995,615 @@ async def preview_import(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@app.post("/api/v2/preview", response_model=ImportV2)
+async def preview_import_v2(file: UploadFile = File(...)):
+    """Preview v2 extraction from uploaded PDF via GPT-5.2 structured output."""
+    pdf_bytes = await file.read()
+    if not pdf_bytes:
+        raise HTTPException(status_code=400, detail="Empty file")
+    try:
+        return await extract_v2(pdf_bytes)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
+
+
+def _iso_or_none(value: Optional[dt.datetime]) -> Optional[str]:
+    return value.isoformat() if value else None
+
+
+def _serialize_v2_doctor_note(note: V2DoctorNote, doctor_name: Optional[str] = None) -> V2DoctorNoteResponse:
+    return V2DoctorNoteResponse(
+        id=note.id,
+        analyte_key=note.analyte_key,
+        t=_iso_or_none(note.t) or "",
+        note=note.note,
+        doctor_id=note.doctor_user_id,
+        doctor_name=doctor_name,
+        updated_at=_iso_or_none(note.updated_at) or "",
+    )
+
+
+def _normalize_series_text(value: Optional[str]) -> str:
+    if value is None:
+        return ""
+    text_value = str(value).strip()
+    if not text_value:
+        return ""
+    text_value = unicodedata.normalize("NFKD", text_value)
+    text_value = "".join(ch for ch in text_value if not unicodedata.combining(ch))
+    text_value = re.sub(r"\s+", " ", text_value).strip().upper()
+    return text_value
+
+
+def _is_missing_like_text(normalized: str) -> bool:
+    if not normalized:
+        return True
+    missing_values = {
+        "",
+        "-",
+        "--",
+        "---",
+        "N/A",
+        "NA",
+        "NA`",
+        "N.D",
+        "N.D.",
+        "ND",
+        "N/D",
+        "NULL",
+        "NONE",
+        "NO APLICA",
+        "NOT AVAILABLE",
+    }
+    return normalized in missing_values
+
+
+def _is_binary_text(normalized: str) -> bool:
+    compact = re.sub(r"[\s\-_./]+", "", normalized)
+    binary_values = {
+        "NEG",
+        "NEGATIVE",
+        "NEGATIVO",
+        "POS",
+        "POSITIVE",
+        "POSITIVO",
+        "REACTIVO",
+        "NOREACTIVO",
+        "REACTIVE",
+        "NOREACTIVE",
+        "NONREACTIVE",
+        "DETECTED",
+        "NOTDETECTED",
+        "DETECTADO",
+        "NODETECTADO",
+    }
+    return compact in binary_values
+
+
+def _is_ordinal_text(normalized: str) -> bool:
+    compact = normalized.replace(" ", "")
+    if not compact:
+        return False
+    return all(ch == "+" for ch in compact)
+
+
+def _classify_v2_series_type(rows: list[tuple[Any, Any, Any]]) -> str:
+    if not rows:
+        return "text"
+    all_numeric = all(metric.value_numeric is not None for metric, _doc, _dt in rows)
+    no_text_values = all(
+        _normalize_series_text(metric.value_text) == "" for metric, _doc, _dt in rows
+    )
+    if all_numeric and no_text_values:
+        return "numeric"
+
+    text_values: list[str] = []
+    for metric, _doc, _dt in rows:
+        normalized = _normalize_series_text(metric.value_text)
+        if _is_missing_like_text(normalized):
+            continue
+        text_values.append(normalized)
+
+    if text_values and all(_is_binary_text(value) for value in text_values):
+        return "binary"
+    if text_values and all(_is_ordinal_text(value) for value in text_values):
+        return "ordinal"
+    return "text"
+
+
+def _query_v2_analytes_for_user(db: Session, scoped_user_id: int) -> list[V2AnalyteItemResponse]:
+    dt_expr = func.coalesce(V2Document.analysis_date, V2Document.created_at)
+    rn = func.row_number().over(
+        partition_by=V2Metric.analyte_key,
+        order_by=(dt_expr.desc(), V2Document.id.desc(), V2Metric.id.desc()),
+    ).label("rn")
+
+    subq = (
+        db.query(
+            V2Metric.analyte_key.label("analyte_key"),
+            V2Metric.value_numeric.label("last_value_numeric"),
+            V2Metric.value_text.label("last_value_text"),
+            V2Metric.unit.label("unit"),
+            dt_expr.label("dt"),
+            rn,
+        )
+        .join(V2Document, V2Metric.document_id == V2Document.id)
+        .filter(V2Document.user_id == scoped_user_id)
+        .subquery()
+    )
+
+    rows = (
+        db.query(
+            subq.c.analyte_key,
+            subq.c.last_value_numeric,
+            subq.c.last_value_text,
+            subq.c.unit,
+            subq.c.dt,
+        )
+        .filter(subq.c.rn == 1)
+        .order_by(subq.c.analyte_key.asc())
+        .all()
+    )
+
+    return [
+        V2AnalyteItemResponse(
+            analyte_key=row.analyte_key,
+            last_value_numeric=row.last_value_numeric,
+            last_value_text=row.last_value_text,
+            last_date=_iso_or_none(row.dt),
+            unit=row.unit,
+        )
+        for row in rows
+    ]
+
+
+def _query_v2_series_rows_for_user(db: Session, scoped_user_id: int, analyte_key: str):
+    dt_expr = func.coalesce(V2Document.analysis_date, V2Document.created_at)
+    return (
+        db.query(V2Metric, V2Document, dt_expr.label("dt"))
+        .join(V2Document, V2Metric.document_id == V2Document.id)
+        .filter(
+            V2Document.user_id == scoped_user_id,
+            V2Metric.analyte_key == analyte_key,
+        )
+        .order_by(dt_expr.asc(), V2Document.id.asc(), V2Metric.id.asc())
+        .all()
+    )
+
+
+@app.post("/api/v2/documents", response_model=V2CreateDocumentResponse | V2CreateDocumentDuplicateResponse)
+async def create_v2_document(
+    file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Persist a parsed V2 document and metrics for the authenticated user."""
+    pdf_bytes = await file.read()
+    if not pdf_bytes:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    document_hash = hashlib.sha256(pdf_bytes).hexdigest()
+    try:
+        existing_doc = (
+            db.query(V2Document)
+            .filter(
+                V2Document.user_id == user_id,
+                V2Document.document_hash == document_hash,
+            )
+            .first()
+        )
+        if existing_doc:
+            num_metrics = (
+                db.query(func.count(V2Metric.id))
+                .filter(V2Metric.document_id == existing_doc.id)
+                .scalar()
+                or 0
+            )
+            return {
+                "status": "duplicate",
+                "document_id": existing_doc.id,
+                "analysis_date": _iso_or_none(existing_doc.analysis_date),
+                "num_metrics": int(num_metrics),
+            }
+
+        try:
+            payload = await extract_v2(pdf_bytes)
+        except ValidationError as e:
+            raise HTTPException(status_code=422, detail=e.errors())
+
+        doc = V2Document(
+            user_id=user_id,
+            document_hash=document_hash,
+            source_filename=file.filename,
+            analysis_date=payload.analysis_date,
+            report_date=payload.report_date,
+        )
+        db.add(doc)
+        db.flush()
+
+        for metric in payload.metrics:
+            db.add(
+                V2Metric(
+                    document_id=doc.id,
+                    analyte_key=metric.analyte_key,
+                    raw_name=metric.raw_name,
+                    specimen=metric.specimen.value if hasattr(metric.specimen, "value") else str(metric.specimen),
+                    context=metric.context.value if hasattr(metric.context, "value") else str(metric.context),
+                    value_numeric=metric.value_numeric,
+                    value_text=metric.value_text,
+                    unit=metric.unit,
+                    reference_json=metric.reference.model_dump(mode="json") if metric.reference else None,
+                    page=metric.page,
+                    evidence=metric.evidence,
+                )
+            )
+
+        db.commit()
+        db.refresh(doc)
+        return {
+            "document_id": doc.id,
+            "analysis_date": _iso_or_none(doc.analysis_date),
+            "num_metrics": len(payload.metrics),
+        }
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.exception(
+            "Failed to persist V2 document user_id=%s filename=%s document_hash=%s",
+            user_id,
+            file.filename,
+            document_hash,
+        )
+        raise HTTPException(status_code=500, detail=f"Failed to persist V2 document: {type(e).__name__}")
+
+
+@app.get("/api/v2/analytes", response_model=List[V2AnalyteItemResponse])
+async def list_v2_analytes(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """List user's analytes with latest observed value/date (fast)."""
+    return _query_v2_analytes_for_user(db, user_id)
+
+
+@app.get("/api/v2/series", response_model=V2SeriesResponse)
+async def get_v2_series(
+    analyte_key: str,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Return time series for a specific V2 analyte_key."""
+    rows = _query_v2_series_rows_for_user(db, user_id, analyte_key)
+
+    series_type = _classify_v2_series_type(rows)
+
+    latest_unit = None
+    latest_reference = None
+    for metric, _doc, _dt in reversed(rows):
+        if latest_unit is None and metric.unit is not None:
+            latest_unit = metric.unit
+        if latest_reference is None and metric.reference_json is not None:
+            latest_reference = metric.reference_json
+        if latest_unit is not None and latest_reference is not None:
+            break
+
+    points = []
+    for metric, _doc, dt_value in rows:
+        points.append(
+            {
+                "t": _iso_or_none(dt_value),
+                "y": metric.value_numeric,
+                "text": metric.value_text,
+                "page": metric.page,
+                "evidence": metric.evidence,
+            }
+        )
+
+    return {
+        "analyte_key": analyte_key,
+        "series_type": series_type,
+        "unit": latest_unit,
+        "reference": latest_reference,
+        "points": points,
+    }
+
+
+@app.get("/api/v2/documents/{document_id}", response_model=V2DocumentDetailResponse)
+async def get_v2_document(
+    document_id: str,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Return V2 document and all metrics for debug/trust views."""
+    document = (
+        db.query(V2Document)
+        .filter(
+            V2Document.id == document_id,
+            V2Document.user_id == user_id,
+        )
+        .first()
+    )
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    metrics = (
+        db.query(V2Metric)
+        .filter(V2Metric.document_id == document.id)
+        .order_by(V2Metric.analyte_key.asc(), V2Metric.id.asc())
+        .all()
+    )
+    return {
+        "document": {
+            "id": document.id,
+            "user_id": document.user_id,
+            "document_hash": document.document_hash,
+            "source_filename": document.source_filename,
+            "analysis_date": _iso_or_none(document.analysis_date),
+            "report_date": _iso_or_none(document.report_date),
+            "created_at": _iso_or_none(document.created_at),
+        },
+        "metrics": [
+            {
+                "id": metric.id,
+                "document_id": metric.document_id,
+                "analyte_key": metric.analyte_key,
+                "raw_name": metric.raw_name,
+                "specimen": metric.specimen,
+                "context": metric.context,
+                "value_numeric": metric.value_numeric,
+                "value_text": metric.value_text,
+                "unit": metric.unit,
+                "reference_json": metric.reference_json,
+                "page": metric.page,
+                "evidence": metric.evidence,
+            }
+            for metric in metrics
+        ],
+    }
+
+
+@app.get("/api/v2/doctor/patients", response_model=List[V2DoctorPatientResponse])
+async def list_v2_doctor_patients(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """List patients who granted V2 access to the authenticated doctor."""
+    doctor = db.query(User).filter(User.id == user_id).first()
+    if not doctor or not doctor.is_doctor:
+        raise HTTPException(status_code=403, detail="Not a doctor")
+
+    grants = (
+        db.query(DoctorGrant)
+        .filter(
+            DoctorGrant.revoked_at.is_(None),
+            (
+                (DoctorGrant.doctor_id == doctor.id)
+                | (DoctorGrant.doctor_email.ilike(doctor.email))
+            ),
+        )
+        .order_by(DoctorGrant.granted_at.desc(), DoctorGrant.id.desc())
+        .all()
+    )
+    if not grants:
+        return []
+
+    latest_grant_by_patient: dict[int, DoctorGrant] = {}
+    for grant in grants:
+        if grant.patient_id not in latest_grant_by_patient:
+            latest_grant_by_patient[grant.patient_id] = grant
+
+    patient_ids = list(latest_grant_by_patient.keys())
+    patients = (
+        db.query(Patient)
+        .filter(Patient.id.in_(patient_ids))
+        .all()
+    )
+    if not patients:
+        return []
+
+    patients_by_id = {patient.id: patient for patient in patients}
+    owner_ids = {patient.user_id for patient in patients}
+
+    owners = db.query(User).filter(User.id.in_(owner_ids)).all()
+    owners_by_id = {owner.id: owner for owner in owners}
+
+    latest_dates_by_user: dict[int, dt.datetime] = {}
+    for row in (
+        db.query(
+            V2Document.user_id,
+            func.max(func.coalesce(V2Document.analysis_date, V2Document.created_at)).label("latest_dt"),
+        )
+        .filter(V2Document.user_id.in_(owner_ids))
+        .group_by(V2Document.user_id)
+        .all()
+    ):
+        if row.latest_dt is not None:
+            latest_dates_by_user[row.user_id] = row.latest_dt
+
+    result: list[V2DoctorPatientResponse] = []
+    for patient_id, grant in latest_grant_by_patient.items():
+        patient = patients_by_id.get(patient_id)
+        if not patient:
+            continue
+        owner = owners_by_id.get(patient.user_id)
+        latest_dt = latest_dates_by_user.get(patient.user_id)
+        display_name = patient.full_name or (owner.full_name if owner else None)
+        result.append(
+            V2DoctorPatientResponse(
+                patient_id=patient.id,
+                display_name=display_name,
+                email=owner.email if owner else None,
+                granted_at=_iso_or_none(grant.granted_at),
+                latest_analysis_date=_iso_or_none(latest_dt),
+            )
+        )
+
+    result.sort(key=lambda item: ((item.display_name or item.email or "").lower(), item.patient_id))
+    return result
+
+
+@app.get("/api/v2/doctor/patients/{patient_id}/analytes", response_model=List[V2AnalyteItemResponse])
+async def list_v2_doctor_patient_analytes(
+    patient_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """List V2 analytes for a granted patient in doctor scope."""
+    doctor = db.query(User).filter(User.id == user_id).first()
+    patient = _ensure_doctor_access(db, doctor, patient_id)
+    return _query_v2_analytes_for_user(db, patient.user_id)
+
+
+@app.get("/api/v2/doctor/patients/{patient_id}/series", response_model=V2SeriesResponse)
+async def get_v2_doctor_patient_series(
+    patient_id: int,
+    analyte_key: str,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Return V2 series for a granted patient and analyte_key in doctor scope."""
+    doctor = db.query(User).filter(User.id == user_id).first()
+    patient = _ensure_doctor_access(db, doctor, patient_id)
+    rows = _query_v2_series_rows_for_user(db, patient.user_id, analyte_key)
+
+    series_type = _classify_v2_series_type(rows)
+
+    latest_unit = None
+    latest_reference = None
+    for metric, _doc, _dt in reversed(rows):
+        if latest_unit is None and metric.unit is not None:
+            latest_unit = metric.unit
+        if latest_reference is None and metric.reference_json is not None:
+            latest_reference = metric.reference_json
+        if latest_unit is not None and latest_reference is not None:
+            break
+
+    points = []
+    for metric, _doc, dt_value in rows:
+        points.append(
+            {
+                "t": _iso_or_none(dt_value),
+                "y": metric.value_numeric,
+                "text": metric.value_text,
+                "page": metric.page,
+                "evidence": metric.evidence,
+            }
+        )
+
+    return {
+        "analyte_key": analyte_key,
+        "series_type": series_type,
+        "unit": latest_unit,
+        "reference": latest_reference,
+        "points": points,
+    }
+
+
+@app.get("/api/v2/notes", response_model=List[V2DoctorNoteResponse])
+async def list_v2_patient_notes(
+    analyte_key: str,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """List doctor notes for the authenticated patient and analyte."""
+    rows = (
+        db.query(V2DoctorNote, User)
+        .join(User, User.id == V2DoctorNote.doctor_user_id)
+        .filter(
+            V2DoctorNote.patient_user_id == user_id,
+            V2DoctorNote.analyte_key == analyte_key,
+            V2DoctorNote.visibility == "patient",
+        )
+        .order_by(V2DoctorNote.t.desc(), V2DoctorNote.updated_at.desc())
+        .all()
+    )
+    return [
+        _serialize_v2_doctor_note(
+            note,
+            doctor_name=(doctor.full_name or doctor.email) if doctor else None,
+        )
+        for note, doctor in rows
+    ]
+
+
+@app.get("/api/v2/doctor/patients/{patient_id}/notes", response_model=List[V2DoctorNoteResponse])
+async def list_v2_doctor_patient_notes(
+    patient_id: int,
+    analyte_key: str,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """List current doctor's point notes for a granted patient and analyte."""
+    doctor = db.query(User).filter(User.id == user_id).first()
+    patient = _ensure_doctor_access(db, doctor, patient_id)
+    rows = (
+        db.query(V2DoctorNote)
+        .filter(
+            V2DoctorNote.patient_user_id == patient.user_id,
+            V2DoctorNote.doctor_user_id == user_id,
+            V2DoctorNote.analyte_key == analyte_key,
+        )
+        .order_by(V2DoctorNote.t.desc(), V2DoctorNote.updated_at.desc())
+        .all()
+    )
+    doctor_name = (doctor.full_name or doctor.email) if doctor else None
+    return [_serialize_v2_doctor_note(note, doctor_name=doctor_name) for note in rows]
+
+
+@app.post("/api/v2/doctor/patients/{patient_id}/notes", response_model=V2DoctorNoteResponse)
+async def upsert_v2_doctor_patient_note(
+    patient_id: int,
+    payload: V2UpsertDoctorNoteRequest,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Create/update a doctor's point note for a granted patient and analyte."""
+    doctor = db.query(User).filter(User.id == user_id).first()
+    patient = _ensure_doctor_access(db, doctor, patient_id)
+
+    note_text = payload.note.strip()
+    if not note_text:
+        raise HTTPException(status_code=400, detail="Note must not be empty")
+
+    point_time = payload.t.replace(tzinfo=None) if payload.t.tzinfo else payload.t
+    existing = (
+        db.query(V2DoctorNote)
+        .filter(
+            V2DoctorNote.patient_user_id == patient.user_id,
+            V2DoctorNote.doctor_user_id == user_id,
+            V2DoctorNote.analyte_key == payload.analyte_key,
+            V2DoctorNote.t == point_time,
+        )
+        .first()
+    )
+
+    now = dt.datetime.utcnow()
+    if existing:
+        existing.note = note_text
+        existing.updated_at = now
+        note_row = existing
+    else:
+        note_row = V2DoctorNote(
+            patient_user_id=patient.user_id,
+            doctor_user_id=user_id,
+            analyte_key=payload.analyte_key,
+            t=point_time,
+            note=note_text,
+            visibility="patient",
+            created_at=now,
+            updated_at=now,
+        )
+        db.add(note_row)
+
+    db.commit()
+    db.refresh(note_row)
+
+    doctor_name = (doctor.full_name or doctor.email) if doctor else None
+    return _serialize_v2_doctor_note(note_row, doctor_name=doctor_name)
 
 
 @app.post("/api/files/pdf")
@@ -1222,6 +2187,9 @@ def _ensure_doctor_access(db: Session, doctor_user: User, patient_id: int) -> Pa
     """Ensure doctor has an active grant to the patient and return patient."""
     if not doctor_user or not doctor_user.is_doctor:
         raise HTTPException(status_code=403, detail="Not a doctor")
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
     grant = (
         db.query(DoctorGrant)
         .filter(
@@ -1236,9 +2204,6 @@ def _ensure_doctor_access(db: Session, doctor_user: User, patient_id: int) -> Pa
     )
     if not grant:
         raise HTTPException(status_code=403, detail="No access to this patient")
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
     return patient
 
 
@@ -1791,20 +2756,53 @@ async def get_advice(
         raise HTTPException(status_code=404, detail="Patient not found")
 
     days = req.days or 180
-    metrics_summary = _summarize_metrics(
+    metrics_summary = _summarize_metrics_v2(
         db,
-        patient_id=patient.id,
+        user_id=current_user.id,
         metric_names=req.metric_names,
         days=days,
     )
+    if not metrics_summary:
+        # Legacy fallback for older imported records.
+        metrics_summary = _summarize_metrics(
+            db,
+            patient_id=patient.id,
+            metric_names=req.metric_names,
+            days=days,
+        )
+    if not metrics_summary:
+        # If there is no recent window data, use full history as fallback.
+        metrics_summary = _summarize_metrics_v2(
+            db,
+            user_id=current_user.id,
+            metric_names=req.metric_names,
+            days=36500,
+        )
+    if not metrics_summary:
+        metrics_summary = _summarize_metrics(
+            db,
+            patient_id=patient.id,
+            metric_names=req.metric_names,
+            days=36500,
+        )
 
     if not metrics_summary:
         raise HTTPException(status_code=400, detail="No lab data available for advice.")
 
     language = req.language or "es"
 
-    # Pull latest doctor notes for context
-    notes = (
+    # Pull latest doctor notes for context (V2 + legacy)
+    v2_notes = (
+        db.query(V2DoctorNote)
+        .filter(
+            V2DoctorNote.patient_user_id == current_user.id,
+            V2DoctorNote.visibility == "patient",
+        )
+        .order_by(V2DoctorNote.updated_at.desc(), V2DoctorNote.created_at.desc())
+        .limit(5)
+        .all()
+    )
+    legacy_notes = (
         db.query(DoctorNote)
         .filter(DoctorNote.patient_id == patient.id)
         .order_by(DoctorNote.created_at.desc())
@@ -1812,7 +2810,13 @@ async def get_advice(
         .all()
     )
     notes_lines = []
-    for n in notes:
+    for n in v2_notes:
+        meta_parts = [n.analyte_key or ""]
+        if n.t:
+            meta_parts.append(n.t.isoformat())
+        prefix = f"[{' · '.join([part for part in meta_parts if part])}] " if meta_parts else ""
+        notes_lines.append(f"- {prefix}{n.note}")
+    for n in legacy_notes:
         meta_parts = []
         if n.metric_name:
             meta_parts.append(n.metric_name)
@@ -1828,7 +2832,8 @@ async def get_advice(
         "Eres un asistente de un nefrólogo y dietólogo experto en problemas renales y enfermedad renal crónica. "
         "No eres el médico del paciente y no das diagnósticos ni prescribes fármacos. "
         "Ofreces consejos generales de bienestar, alimentación y hábitos, y sugieres consultar a su médico. "
-        "Responde en el idioma solicitado, sé breve y práctico. Usa solo los datos de laboratorio proporcionados."
+        "Responde en el idioma solicitado, sé breve y práctico. Usa solo los datos de laboratorio proporcionados. "
+        "No respondas solo con disclaimer: incluye un resumen útil con datos concretos del contexto."
     )
 
     metrics_text = json.dumps(metrics_summary, ensure_ascii=False, indent=2)
@@ -1845,11 +2850,17 @@ async def get_advice(
     parts.append(
         "Instrucciones: responde de forma concisa, con puntos claros. "
         "Si algún valor está fuera de rango, menciónalo brevemente y da consejos generales de estilo de vida/alimentación. "
-        "No hagas diagnósticos ni ajustes de medicación."
+        "No hagas diagnósticos ni ajustes de medicación. "
+        "Estructura sugerida: 1) Resumen breve de tendencia, 2) Hallazgos clave (2-4 viñetas con métricas), "
+        "3) Qué comentar con el médico (2-3 preguntas concretas)."
     )
     user_prompt = "\n".join(parts)
 
     answer = _openai_chat_completion(system_prompt, user_prompt)
+    if isinstance(answer, str):
+        answer = answer.strip()
+    if not answer or _is_low_signal_advice(answer):
+        answer = _build_deterministic_advice(metrics_summary, language, days)
 
     used_metrics = [
         AdviceMetric(name=name, value=values[0].get("value"), unit=values[0].get("unit"))

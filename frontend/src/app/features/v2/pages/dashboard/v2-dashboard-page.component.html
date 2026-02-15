@@ -1,0 +1,124 @@
+<div class="space-y-6">
+  <app-glass-card [extraClass]="'glass-strong space-y-5'">
+    <div class="flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <h3 class="text-lg font-semibold text-[var(--text)]">{{ copy.title }}</h3>
+        <p class="text-sm text-[var(--text-dim)]">{{ copy.subtitle }}</p>
+      </div>
+      <div class="lang-toggle">
+        <button
+          type="button"
+          class="chip chip-sm"
+          [class.badge-accent]="language === 'es'"
+          (click)="setLanguage('es')"
+        >
+          ES
+        </button>
+        <button
+          type="button"
+          class="chip chip-sm"
+          [class.badge-accent]="language === 'en'"
+          (click)="setLanguage('en')"
+        >
+          EN
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="w-full relative"
+      [class.is-dragging]="isDragging"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+    >
+      <label class="upload-dropzone" [class.upload-dropzone--active]="isDragging">
+        <span class="material-symbols-rounded text-4xl sm:text-5xl text-[var(--accent)]">upload_file</span>
+        <span class="text-lg font-semibold text-[var(--text)]">{{ copy.title }}</span>
+        <p class="text-sm text-[var(--text-dim)]">{{ copy.subtitle }}</p>
+        <button type="button" appGlassButton (click)="fileInput.click()">{{ copy.chooseFile }}</button>
+        <input #fileInput type="file" accept="application/pdf" class="hidden" (change)="onFileSelected($event)" />
+      </label>
+    </div>
+
+    <div *ngIf="selectedFile" class="glass chip justify-center">
+      <span class="material-symbols-rounded">description</span>
+      {{ selectedFile.name }}
+      <button type="button" class="ml-2 text-[var(--danger)]" (click)="clearFile()">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+
+    <div *ngIf="uploadMessage" class="toast-glass success" role="status">
+      <span class="material-symbols-rounded">check_circle</span>
+      <span>{{ uploadMessage }}</span>
+    </div>
+    <div *ngIf="errorMessage" class="toast-glass error" role="alert">
+      <span class="material-symbols-rounded">error</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <button type="button" appGlassButton (click)="upload()" [glassBlock]="true" [disabled]="isUploading">
+      <span *ngIf="isUploading" class="loader-dot"></span>
+      <span>{{ isUploading ? copy.uploading : copy.uploadAction }}</span>
+    </button>
+  </app-glass-card>
+
+  <app-glass-card [extraClass]="'glass-strong space-y-4'">
+    <div class="flex items-center justify-between gap-3">
+      <h3 class="text-xl font-semibold text-[var(--text)]">{{ copy.listTitle }}</h3>
+      <span class="badge-glass badge-accent">{{ visibleAnalytes.length }}</span>
+    </div>
+
+    <div class="filters-grid">
+      <input
+        type="text"
+        class="glass-input-basic"
+        [ngModel]="searchTerm"
+        (ngModelChange)="onSearchTermChange($event)"
+        [placeholder]="copy.searchPlaceholder"
+      />
+      <select class="glass-input-basic" [ngModel]="sortMode" (ngModelChange)="setSortMode($any($event))">
+        <option value="recent">{{ copy.sortRecent }}</option>
+        <option value="az">{{ copy.sortAz }}</option>
+        <option value="za">{{ copy.sortZa }}</option>
+      </select>
+      <label class="glass chip filter-chip">
+        <input type="checkbox" [checked]="numericOnly" (change)="toggleNumericOnly($any($event.target).checked)" />
+        <span>{{ copy.numericOnly }}</span>
+      </label>
+      <label class="glass chip filter-chip">
+        <input type="checkbox" [checked]="textOnly" (change)="toggleTextOnly($any($event.target).checked)" />
+        <span>{{ copy.textOnly }}</span>
+      </label>
+    </div>
+
+    <div *ngIf="isLoadingAnalytes" class="flex flex-col items-center justify-center gap-3 min-h-[140px]">
+      <div class="animate-spin h-8 w-8 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
+      <p class="text-sm text-[var(--text-dim)]">{{ copy.loadingAnalytes }}</p>
+    </div>
+
+    <p *ngIf="!isLoadingAnalytes && !visibleAnalytes.length" class="text-sm text-[var(--text-dim)]">
+      {{ copy.emptyAnalytes }}
+    </p>
+
+    <div *ngIf="!isLoadingAnalytes && visibleAnalytes.length" class="grid gap-2">
+      <a
+        *ngFor="let analyte of visibleAnalytes; trackBy: trackByAnalyte"
+        [routerLink]="['/v2/analyte', analyte.analyte_key]"
+        class="glass glass-soft analyte-row"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-[var(--text)] break-words">{{ getPrimaryLabel(analyte) }}</p>
+            <p class="text-xs text-[var(--text-dim)] break-words">{{ getSecondaryLabel(analyte) }}</p>
+            <p class="text-xs text-[var(--text-dim)]">
+              {{ formatDateLabel(analyte.last_date) }}
+            </p>
+          </div>
+          <p class="text-sm text-[var(--text)] whitespace-nowrap">{{ formatLastValue(analyte) }}</p>
+        </div>
+      </a>
+    </div>
+  </app-glass-card>
+</div>

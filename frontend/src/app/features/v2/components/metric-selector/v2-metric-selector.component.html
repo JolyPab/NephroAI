@@ -1,0 +1,87 @@
+<div class="selector-root">
+  <div class="metric-controls">
+    <div class="relative w-full max-w-md">
+      <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]"></i>
+      <input
+        type="text"
+        class="w-full rounded-full bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.12)] px-10 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent)]/60 transition"
+        [placeholder]="copy.searchPlaceholder"
+        [(ngModel)]="metricFilter"
+      />
+    </div>
+    <div class="sort-dropdown">
+      <button
+        type="button"
+        class="sort-trigger"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="sortMenuOpen"
+        (click)="toggleSortMenu()"
+      >
+        <span>{{ copy.sortPrefix }}: {{ currentSortLabel }}</span>
+        <i class="bi" [ngClass]="sortMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </button>
+      <div *ngIf="sortMenuOpen" class="sort-menu glass" role="menu">
+        <button
+          *ngFor="let option of sortOptions"
+          type="button"
+          class="sort-option"
+          role="menuitemradio"
+          [attr.aria-checked]="sortMode === option.value"
+          [class.sort-option--active]="sortMode === option.value"
+          (click)="selectSortMode(option.value)"
+          (keydown.enter)="selectSortMode(option.value)"
+        >
+          <span>{{ getSortOptionLabel(option.value) }}</span>
+          <i *ngIf="sortMode === option.value" class="bi bi-check2"></i>
+        </button>
+      </div>
+    </div>
+    <label *ngIf="showNumericTextToggles" class="glass chip filter-chip">
+      <input type="checkbox" [checked]="numericOnly" (change)="onNumericOnlyChange($any($event.target).checked)" />
+      <span>{{ copy.numericOnly }}</span>
+    </label>
+    <label *ngIf="showNumericTextToggles" class="glass chip filter-chip">
+      <input type="checkbox" [checked]="textOnly" (change)="onTextOnlyChange($any($event.target).checked)" />
+      <span>{{ copy.textOnly }}</span>
+    </label>
+  </div>
+
+  <div class="metric-groups" *ngIf="groupedAnalytes.length; else noAnalytes">
+    <div *ngFor="let group of groupedAnalytes; trackBy: trackByGroup" class="metric-group">
+      <p class="metric-group__title">{{ group.label }}</p>
+      <div class="metric-list-shell glass glass-soft">
+        <div class="metric-list-scroll scrollable">
+          <div class="metric-list">
+            <div class="metric-row" *ngFor="let analyte of group.items; trackBy: trackByAnalyte">
+              <button
+                type="button"
+                class="chip metric-chip"
+                [class.badge-accent]="selectedKey === analyte.analyte_key"
+                [attr.title]="analyte.analyte_key"
+                (click)="onMetricSelect(analyte.analyte_key)"
+              >
+                <span class="metric-label flex items-center gap-2">
+                  <i class="bi" [ngClass]="selectedKey === analyte.analyte_key ? 'bi-activity' : 'bi-dot'"></i>
+                  <span class="metric-label__text">{{ getDisplayName(analyte) }}</span>
+                </span>
+                <i *ngIf="selectedKey === analyte.analyte_key" class="bi bi-check2 text-[var(--accent)]"></i>
+              </button>
+              <button
+                type="button"
+                class="favorite-btn"
+                [class.favorite-btn--active]="isFavorite(analyte.analyte_key)"
+                [attr.aria-label]="isFavorite(analyte.analyte_key) ? 'Unfavorite' : 'Favorite'"
+                (click)="toggleFavorite(analyte.analyte_key)"
+              >
+                <i class="bi" [ngClass]="isFavorite(analyte.analyte_key) ? 'bi-star-fill' : 'bi-star'"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template #noAnalytes>
+    <p class="text-sm text-[var(--text-dim)]">{{ copy.noAnalytes }}</p>
+  </ng-template>
+</div>

@@ -70,7 +70,31 @@
       "GO_CHARTS": "Go to charts",
       "CHARTS": "Charts",
       "RANGE": "Range:",
-      "NO_DATE": "-"
+      "NO_DATE": "-",
+      "SMART": {
+        "SNAPSHOT_TITLE": "Smart Snapshot",
+        "TRACKED": "Tracked",
+        "ATTENTION": "Attention",
+        "EXPLAIN_RESULTS": "Explain my results",
+        "KEY_METRICS_TITLE": "Key Metrics",
+        "NO_METRICS": "No metrics yet.",
+        "REF": "Ref",
+        "VIEW_TREND": "View trend",
+        "ATTENTION_TITLE": "Attention Needed",
+        "QUICK_ACTIONS_TITLE": "Quick Actions",
+        "ACTION_UPLOAD": "Upload new PDF",
+        "ACTION_TRENDS": "Open Trends",
+        "ACTION_AI": "Ask AI",
+        "STATUS_NORMAL": "Normal",
+        "STATUS_LOW": "Low",
+        "STATUS_HIGH": "High",
+        "STATUS_UNKNOWN": "Unknown",
+        "SNAPSHOT_BULLET_WARNING": "Warning: {{count}} value(s) outside reference in latest results.",
+        "SNAPSHOT_BULLET_OK": "OK: No out-of-range values detected in latest results.",
+        "SNAPSHOT_BULLET_LATEST_DATE": "Most recent upload date: {{date}}.",
+        "SNAPSHOT_BULLET_FOCUS": "Focus metrics: {{metrics}}.",
+        "SNAPSHOT_BULLET_TIP": "Tip: open Trends to explore changes over time."
+      }
     },
     "SHARE": {
       "TITLE": "Doctor access",

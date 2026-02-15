@@ -4,6 +4,7 @@
 
 .app-shell {
   min-height: 100svh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   padding-bottom: 2rem;
@@ -33,6 +34,10 @@
   transition: padding-bottom 200ms ease;
 }
 
+.with-tabbar-padding {
+  padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
+}
+
 @media (max-width: 640px) {
   .page-container {
     padding: 0 1rem;
@@ -44,5 +49,9 @@
 
   .page-content {
     padding: 1.5rem 0 2.5rem;
+  }
+
+  .with-tabbar-padding {
+    padding-bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px));
   }
 }

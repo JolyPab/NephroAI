@@ -333,6 +333,39 @@
   align-self: flex-start;
 }
 
+.scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollable::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.scrollable::-webkit-scrollbar-button {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb);
+  border-radius: 8px;
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scroll-thumb-hover);
+}
+
 @supports not (backdrop-filter: blur(0)) {
   .glass {
     background: rgba(22, 27, 43, 0.75);

@@ -1,4 +1,4 @@
-<div class="space-y-6">
+﻿<div class="space-y-6">
   <div class="space-y-2">
     <h2 class="text-2xl sm:text-3xl font-semibold text-[var(--text)]">{{ 'PATIENT.DASHBOARD.TITLE' | translate }}</h2>
     <p class="text-sm sm:text-base text-[var(--text-dim)] max-w-2xl">
@@ -11,11 +11,101 @@
     <p class="text-sm text-[var(--text-dim)]">{{ 'PATIENT.DASHBOARD.LOADING' | translate }}</p>
   </div>
 
-    <div *ngIf="!loading && errorMessage" class="glass glass-strong p-4 text-[var(--danger)] border border-[var(--danger)]/40">
+  <div *ngIf="!loading && errorMessage" class="glass glass-strong p-4 text-[var(--danger)] border border-[var(--danger)]/40">
     {{ errorMessage }}
-    </div>
+  </div>
 
   <ng-container *ngIf="!loading && !errorMessage">
-    <app-latest-report-summary [analyses]="analyses"></app-latest-report-summary>
+    <app-glass-card [extraClass]="'glass-strong space-y-3'">
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="snapshot-headline">{{ snapshot.headline }}</h3>
+        <div class="flex items-center gap-2">
+          <span class="badge-glass">{{ 'PATIENT.DASHBOARD.SMART.TRACKED' | translate }}: {{ snapshot.stats.total }}</span>
+          <span class="badge-glass" [class.badge-warn]="snapshot.stats.abnormal > 0">{{ 'PATIENT.DASHBOARD.SMART.ATTENTION' | translate }}: {{ snapshot.stats.abnormal }}</span>
+        </div>
+      </div>
+
+      <p class="snapshot-narrative">{{ snapshot.narrative }}</p>
+
+      <div class="snapshot-highlights">
+        <div class="snapshot-highlight" *ngFor="let item of snapshot.highlights">
+          <span class="snapshot-highlight__label">{{ item.label }}</span>
+          <span class="snapshot-highlight__value">{{ item.value }}</span>
+        </div>
+      </div>
+
+      <div class="snapshot-chips" *ngIf="snapshot.chips.length">
+        <span class="chip" *ngFor="let chip of snapshot.chips">{{ chip }}</span>
+      </div>
+
+      <div class="snapshot-actions">
+        <button type="button" class="how-link" (click)="toggleHowComputed()">{{ summaryTexts.howComputedLink }}</button>
+        <a appGlassButton [routerLink]="['/patient/chat']" [queryParams]="{ from: 'home' }">{{ summaryTexts.cta }}</a>
+      </div>
+
+      <div class="how-panel glass glass-soft" *ngIf="showHowComputed">
+        <p class="how-panel__title">{{ summaryTexts.howComputedTitle }}</p>
+        <ul class="snapshot-list">
+          <li *ngFor="let line of snapshot.howComputed">{{ line }}</li>
+        </ul>
+      </div>
+    </app-glass-card>
+
+    <app-glass-card [extraClass]="'glass-strong space-y-3'">
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'PATIENT.DASHBOARD.SMART.KEY_METRICS_TITLE' | translate }}</h3>
+        <span class="badge-glass">{{ keyMetrics.length }}</span>
+      </div>
+      <p *ngIf="!keyMetrics.length" class="text-sm text-[var(--text-dim)]">{{ 'PATIENT.DASHBOARD.SMART.NO_METRICS' | translate }}</p>
+      <div class="metric-grid">
+        <a
+          *ngFor="let card of keyMetrics"
+          class="glass glass-soft metric-card"
+          [routerLink]="['/patient/charts']"
+          [queryParams]="{ analyte_key: card.analyteKey }"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-[var(--text)] break-words">{{ card.displayName }}</p>
+              <p class="text-xs text-[var(--text-dim)] break-words">{{ card.analyteKey }}</p>
+              <p class="text-xs text-[var(--text-dim)]" *ngIf="card.refLabel">{{ 'PATIENT.DASHBOARD.SMART.REF' | translate }}: {{ card.refLabel }}</p>
+            </div>
+            <span [class]="getStatusClass(card)">{{ card.statusLabel }}</span>
+          </div>
+          <div class="metric-card__footer">
+            <p class="text-sm text-[var(--text)]">{{ card.valueLabel }}</p>
+            <p class="text-xs text-[var(--text-dim)]">{{ card.dateLabel }}</p>
+            <span class="metric-link">{{ 'PATIENT.DASHBOARD.SMART.VIEW_TREND' | translate }}</span>
+          </div>
+        </a>
+      </div>
+    </app-glass-card>
+
+    <app-glass-card *ngIf="attentionItems.length" [extraClass]="'glass-strong space-y-3'">
+      <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'PATIENT.DASHBOARD.SMART.ATTENTION_TITLE' | translate }}</h3>
+      <div class="space-y-2">
+        <a
+          *ngFor="let card of attentionItems"
+          class="glass glass-soft attention-row"
+          [routerLink]="['/patient/charts']"
+          [queryParams]="{ analyte_key: card.analyteKey }"
+        >
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-[var(--text)]">{{ card.displayName }}</p>
+            <p class="text-xs text-[var(--text-dim)]">{{ card.valueLabel }} • {{ card.dateLabel }}</p>
+          </div>
+          <span [class]="getStatusClass(card)">{{ card.statusLabel }}</span>
+        </a>
+      </div>
+    </app-glass-card>
+
+    <app-glass-card [extraClass]="'glass-strong space-y-3'">
+      <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'PATIENT.DASHBOARD.SMART.QUICK_ACTIONS_TITLE' | translate }}</h3>
+      <div class="quick-actions">
+        <a appGlassButton [routerLink]="['/patient/upload']">{{ 'PATIENT.DASHBOARD.SMART.ACTION_UPLOAD' | translate }}</a>
+        <a appGlassButton [routerLink]="['/patient/charts']">{{ 'PATIENT.DASHBOARD.SMART.ACTION_TRENDS' | translate }}</a>
+        <a appGlassButton [routerLink]="['/patient/chat']">{{ 'PATIENT.DASHBOARD.SMART.ACTION_AI' | translate }}</a>
+      </div>
+    </app-glass-card>
   </ng-container>
 </div>

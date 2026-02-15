@@ -9,6 +9,8 @@ import { PatientChartsPageComponent } from './pages/charts/charts-page.component
 import { PatientSharePageComponent } from './pages/share/share-page.component';
 import { PatientChatPageComponent } from './pages/chat/chat-page.component';
 import { PatientProfilePageComponent } from './pages/profile/profile-page.component';
+import { V2SeriesPageComponent } from '../v2/pages/series/v2-series-page.component';
+import { V2MetricSelectorComponent } from '../v2/components/metric-selector/v2-metric-selector.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,7 @@ import { PatientProfilePageComponent } from './pages/profile/profile-page.compon
     PatientChatPageComponent,
     PatientProfilePageComponent,
   ],
-  imports: [SharedModule, PatientRoutingModule],
+  imports: [SharedModule, PatientRoutingModule, V2SeriesPageComponent, V2MetricSelectorComponent],
 })
 export class PatientModule {}
 

@@ -1,0 +1,102 @@
+<div class="space-y-6">
+  <app-glass-card *ngIf="!embedded" [extraClass]="'glass-strong flex items-center justify-between gap-3'">
+    <div>
+      <h3 class="text-xl font-semibold text-[var(--text)] break-all">{{ analyteDisplayName }}</h3>
+      <p class="text-xs text-[var(--text-dim)] break-words">{{ analyteKey }}</p>
+      <p class="text-sm text-[var(--text-dim)]">Series type: {{ series?.series_type ?? '-' }}</p>
+      <p class="text-sm text-[var(--text-dim)]">
+        Unit: {{ headerUnit }} | Points: {{ headerPointCount }} | Dates: {{ headerDateRange }}
+        <span *ngIf="isNumeric && hasReferenceBounds"> | Abnormal: {{ headerAbnormalCount ?? 0 }}</span>
+      </p>
+    </div>
+    <a appGlassButton [routerLink]="['/v2']">Back to dashboard</a>
+  </app-glass-card>
+
+  <div *ngIf="isLoading" class="glass glass-strong flex flex-col items-center justify-center gap-3 min-h-[280px]">
+    <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
+    <p class="text-sm text-[var(--text-dim)]">Loading series...</p>
+  </div>
+
+  <div *ngIf="!isLoading && errorMessage" class="glass glass-strong p-4 text-[var(--danger)] border border-[var(--danger)]/40">
+    {{ errorMessage }}
+  </div>
+
+  <app-glass-card *ngIf="!isLoading && !errorMessage && series" [extraClass]="'glass-strong min-h-[320px] space-y-4'">
+    <div *ngIf="isNumeric && hasReferenceBounds && !hasCategoricalReference" class="inline-flex">
+      <label class="glass chip filter-chip">
+        <input type="checkbox" [checked]="abnormalOnly" (change)="onAbnormalOnlyChange($any($event.target).checked)" />
+        <span>Abnormal only</span>
+      </label>
+    </div>
+
+    <div *ngIf="isBinary" class="inline-flex">
+      <label class="glass chip filter-chip">
+        <input type="checkbox" [checked]="positivesOnly" (change)="onPositivesOnlyChange($any($event.target).checked)" />
+        <span>Positives only</span>
+      </label>
+    </div>
+
+    <div *ngIf="isNumeric" class="inline-flex gap-2">
+      <button type="button" class="details-btn" (click)="onResetView()">Reset view</button>
+      <button type="button" class="details-btn" (click)="openSelectedEvidence()" [disabled]="!selectedPointKey">
+        View evidence
+      </button>
+    </div>
+
+    <div *ngIf="isNumeric; else textTimeline" class="h-[260px] sm:h-[340px]">
+      <div *ngIf="zoneLegendItems.length" class="zone-legend">
+        <span class="zone-legend__title">Zones:</span>
+        <div class="zone-legend__items">
+          <div class="zone-legend__item" *ngFor="let item of zoneLegendItems">
+            <span class="zone-legend__swatch" [style.background]="item.color" [style.borderColor]="item.borderColor"></span>
+            <span class="zone-legend__label">{{ item.label }}</span>
+          </div>
+        </div>
+      </div>
+      <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'line'" (chartClick)="onChartClick($event)"></canvas>
+      <p class="text-xs text-[var(--text-dim)] mt-2">
+        Reference: {{ formatReferenceRangeLabel(referenceBounds) }} | Click selects point | Ctrl/Cmd + click opens evidence
+      </p>
+      <p *ngIf="!chartData.datasets?.[0]?.data?.length" class="text-sm text-[var(--text-dim)] text-center mt-3">
+        No numeric points available.
+      </p>
+    </div>
+
+    <ng-template #textTimeline>
+      <div class="space-y-2">
+        <div
+          *ngFor="let point of timelinePoints"
+          class="glass glass-soft timeline-row px-3 py-2 flex items-center justify-between gap-3"
+          [class.timeline-row--selected]="isPointSelected(point)"
+          (click)="onTimelineRowClick(point)"
+        >
+          <div class="min-w-0">
+            <p class="text-sm text-[var(--text)] break-words">{{ displayTextValue(point) }}</p>
+            <p class="text-xs text-[var(--text-dim)]" *ngIf="point.evidence">{{ point.evidence }}</p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="text-xs text-[var(--text-dim)]">{{ formatPointDate(point.t) }}</p>
+            <p class="text-xs text-[var(--text-dim)]" *ngIf="point.page !== null && point.page !== undefined">
+              Page {{ point.page }}
+            </p>
+            <button type="button" class="details-btn mt-1" (click)="openDetail(point); $event.stopPropagation()">Details</button>
+          </div>
+        </div>
+      </div>
+      <p *ngIf="!timelinePoints.length" class="text-sm text-[var(--text-dim)] text-center">No points available.</p>
+    </ng-template>
+  </app-glass-card>
+</div>
+
+<app-v2-point-detail-panel
+  [open]="isDetailOpen"
+  [analyteLabel]="analyteDisplayName"
+  [analyteKey]="analyteKey"
+  [unit]="series?.unit ?? null"
+  [point]="detailPoint"
+  [valueLabel]="detailValueLabel"
+  [statusLabel]="detailStatusLabel"
+  [doctorNotes]="detailDoctorNotes"
+  [emptyDoctorNotesLabel]="language === 'es' ? 'No hay notas del doctor para este punto.' : 'No doctor notes for this point.'"
+  (closePanel)="closeDetail()"
+></app-v2-point-detail-panel>

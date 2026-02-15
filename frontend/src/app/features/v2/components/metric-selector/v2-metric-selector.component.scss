@@ -1,0 +1,177 @@
+:host {
+  display: block;
+}
+
+.selector-root {
+  width: 100%;
+}
+
+.badge-accent {
+  color: var(--accent);
+  border-color: rgba(118, 168, 255, 0.45);
+  background: rgba(118, 168, 255, 0.12);
+}
+
+.metric-list-shell {
+  max-height: 220px;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+}
+
+.metric-list-scroll {
+  max-height: 220px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.metric-list {
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.metric-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.metric-chip {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.metric-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sort-dropdown {
+  position: relative;
+}
+
+.sort-trigger {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sort-trigger:hover {
+  border-color: rgba(118, 168, 255, 0.45);
+}
+
+.sort-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 20;
+  min-width: 170px;
+  padding: 0.35rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sort-option {
+  width: 100%;
+  border-radius: 0.6rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sort-option:hover {
+  background: rgba(118, 168, 255, 0.12);
+}
+
+.sort-option--active {
+  background: rgba(118, 168, 255, 0.16);
+  color: var(--accent);
+}
+
+.metric-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.metric-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.metric-group__title {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin: 0 0 0 0.25rem;
+}
+
+.favorite-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-btn:hover {
+  border-color: rgba(118, 168, 255, 0.45);
+  color: var(--text);
+}
+
+.favorite-btn--active {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.15);
+}
+
+.metric-label {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.metric-label__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+.filter-chip {
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.filter-chip input {
+  accent-color: var(--accent);
+}

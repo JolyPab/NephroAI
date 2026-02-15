@@ -8,11 +8,17 @@ import { AdviceResponseModel } from '../models/advice.model';
 export class AdviceClientService {
   private readonly api = inject(ApiService);
 
-  ask(question: string, metricNames?: string[], days?: number): Observable<AdviceResponseModel> {
+  ask(
+    question: string,
+    metricNames?: string[],
+    days?: number,
+    language?: 'es' | 'en',
+  ): Observable<AdviceResponseModel> {
     return this.api.post<AdviceResponseModel>('/advice', {
       question,
       metricNames,
       days,
+      language,
     });
   }
 }

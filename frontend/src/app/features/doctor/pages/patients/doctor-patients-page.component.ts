@@ -2,9 +2,9 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { DoctorService } from '../../../../core/services/doctor.service';
-import { DoctorPatientSummary } from '../../../../core/models/doctor.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { V2DoctorPatientResponse } from '../../../../core/models/v2.model';
+import { V2Service } from '../../../../core/services/v2.service';
 
 @Component({
   selector: 'app-doctor-patients-page',
@@ -13,14 +13,14 @@ import { AuthService } from '../../../../core/services/auth.service';
   styleUrls: ['./doctor-patients-page.component.scss'],
 })
 export class DoctorPatientsPageComponent implements OnInit {
-  private readonly doctorService = inject(DoctorService);
+  private readonly v2Service = inject(V2Service);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   readonly user = this.auth.user;
 
   loading = true;
-  patients: DoctorPatientSummary[] = [];
+  patients: V2DoctorPatientResponse[] = [];
   errorMessage = '';
   savingName = false;
   nameMessage = '';
@@ -31,9 +31,9 @@ export class DoctorPatientsPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.doctorService.listPatients().subscribe({
-      next: (response) => {
-        this.patients = response?.patients ?? [];
+    this.v2Service.listDoctorPatients().subscribe({
+      next: (patients) => {
+        this.patients = patients ?? [];
         this.loading = false;
       },
       error: (err) => {
@@ -43,7 +43,7 @@ export class DoctorPatientsPageComponent implements OnInit {
     });
   }
 
-  openPatient(patient: DoctorPatientSummary): void {
+  openPatient(patient: V2DoctorPatientResponse): void {
     void this.router.navigate(['/doctor/patient', patient.patient_id]);
   }
 

@@ -10,6 +10,7 @@ import { TokenService } from './services/token.service';
 import { PatientService } from './services/patient.service';
 import { DoctorService } from './services/doctor.service';
 import { AdviceClientService } from './services/advice.service';
+import { V2Service } from './services/v2.service';
 
 @NgModule({
   imports: [
@@ -19,7 +20,7 @@ import { AdviceClientService } from './services/advice.service';
     TranslateModule,
   ],
   exports: [NgbModule, TranslateModule],
-  providers: [ApiService, AuthService, TokenService, PatientService, DoctorService, AdviceClientService],
+  providers: [ApiService, AuthService, TokenService, PatientService, DoctorService, AdviceClientService, V2Service],
 })
 export class CoreModule {}
 

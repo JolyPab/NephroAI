@@ -49,12 +49,12 @@
         (click)="openPatient(patient)"
       >
         <div>
-          <p class="text-sm font-semibold text-[var(--text)]">{{ patient.full_name || patient.email || ('doctor.unknownPatient' | translate) }}</p>
+          <p class="text-sm font-semibold text-[var(--text)]">{{ patient.display_name || patient.email || ('doctor.unknownPatient' | translate) }}</p>
           <p class="text-xs text-[var(--text-dim)]" *ngIf="patient.email">{{ patient.email }}</p>
           <p class="text-xs text-[var(--text-dim)]">{{ 'doctor.grantedAt' | translate }} {{ patient.granted_at | date: 'd MMMM yyyy, HH:mm' }}</p>
         </div>
         <span class="badge-glass badge-accent">
-          {{ 'doctor.latestAnalysis' | translate }} {{ patient.latest_taken_at ? (patient.latest_taken_at | date: 'd MMM yyyy') : '-' }}
+          {{ 'doctor.latestAnalysis' | translate }} {{ patient.latest_analysis_date ? (patient.latest_analysis_date | date: 'd MMM yyyy') : '-' }}
         </span>
       </button>
     </div>

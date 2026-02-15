@@ -20,7 +20,7 @@ services:
 
   api:
     build: .
-    command: gunicorn -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:8000 main:app
+    command: gunicorn -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:8000 --timeout 330 main:app
     working_dir: /app/backend
     environment:
       DATABASE_URL: postgresql://medic:medic@db:5432/medic

@@ -21,5 +21,10 @@ export const routes: Routes = [
     data: { accent: 'doctor' },
     loadChildren: () => import('./features/doctor/doctor.module').then((m) => m.DoctorModule),
   },
+  {
+    path: 'v2',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/v2/v2.module').then((m) => m.V2Module),
+  },
   { path: '**', redirectTo: 'auth' },
 ];

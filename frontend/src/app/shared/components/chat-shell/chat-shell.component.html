@@ -11,8 +11,8 @@
       </div>
     </header>
 
-    <section class="chat-window" *ngIf="history.length; else emptyState">
-      <div class="message" *ngFor="let message of history">
+    <section #chatWindow class="chat-window" *ngIf="history.length || isLoading; else emptyState">
+      <div class="message" *ngFor="let message of history; let i = index">
         <div class="bubble bubble-user">
           <div class="bubble-meta">
             <div class="avatar"><i class="bi bi-person"></i></div>
@@ -21,10 +21,15 @@
               <span class="time">{{ message.timestamp | date: 'd MMM HH:mm' }}</span>
             </div>
           </div>
-          <p class="bubble-text">{{ message.question }}</p>
+          <div class="bubble-text" [innerHTML]="renderMessageAsHtml(message.question)"></div>
         </div>
 
-        <div class="bubble bubble-ai">
+        <div
+          class="bubble bubble-ai"
+          *ngIf="
+            ((displayedAnswers[i] !== undefined ? displayedAnswers[i] : message.answer) || '').trim().length > 0
+          "
+        >
           <div class="bubble-meta">
             <div class="avatar avatar-ai"><i class="bi bi-stars"></i></div>
             <div>
@@ -32,11 +37,29 @@
               <span class="time">{{ message.timestamp | date: 'd MMM HH:mm' }}</span>
             </div>
           </div>
-          <p class="bubble-text">{{ message.answer }}</p>
+          <div
+            class="bubble-text"
+            [innerHTML]="renderMessageAsHtml(displayedAnswers[i] !== undefined ? displayedAnswers[i] : message.answer)"
+          ></div>
 
           <p class="disclaimer" *ngIf="message.disclaimer">
             {{ disclaimerKey | translate }}
           </p>
+        </div>
+      </div>
+
+      <div class="message" *ngIf="isLoading">
+        <div class="bubble bubble-ai bubble-thinking">
+          <div class="bubble-meta">
+            <div class="avatar avatar-ai"><i class="bi bi-stars"></i></div>
+            <div>
+              <span class="who">{{ aiKey | translate }}</span>
+              <span class="time">{{ thinkingKey | translate }}</span>
+            </div>
+          </div>
+          <div class="thinking-dots" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
         </div>
       </div>
     </section>

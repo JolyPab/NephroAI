@@ -11,12 +11,13 @@
         <span class="material-symbols-rounded text-4xl sm:text-5xl text-[var(--accent)]">upload</span>
         <span class="text-lg font-semibold text-[var(--text)]">{{ 'UPLOAD.DROP_TITLE' | translate }}</span>
         <p class="text-sm text-[var(--text-dim)]">{{ 'UPLOAD.DROP_HINT' | translate }}</p>
-        <button type="button" appGlassButton (click)="fileInput.click()">{{ 'UPLOAD.CHOOSE_FILE' | translate }}</button>
+        <button type="button" appGlassButton [disabled]="isUploading" (click)="fileInput.click()">{{ 'UPLOAD.CHOOSE_FILE' | translate }}</button>
         <input
           #fileInput
           type="file"
           accept="application/pdf"
           class="hidden"
+          [disabled]="isUploading"
           (change)="onFileSelected($event)"
         />
       </label>
@@ -25,7 +26,7 @@
     <div *ngIf="selectedFile" class="glass chip justify-center">
       <span class="material-symbols-rounded">description</span>
       {{ selectedFile.name }}
-      <button type="button" class="ml-2 text-[var(--danger)]" (click)="clearSelection()">
+      <button type="button" class="ml-2 text-[var(--danger)]" [disabled]="isUploading" (click)="clearSelection()">
         <span class="material-symbols-rounded">close</span>
       </button>
     </div>
@@ -43,30 +44,5 @@
       <span *ngIf="isUploading" class="loader-dot"></span>
       <span>{{ isUploading ? ('UPLOAD.PROCESSING' | translate) : ('UPLOAD.UPLOAD_PARSE' | translate) }}</span>
     </button>
-  </app-glass-card>
-
-  <app-glass-card *ngIf="uploadedAnalysis as analysis" [extraClass]="'glass-strong space-y-4'">
-    <div class="flex flex-wrap justify-between gap-3 items-start">
-      <div>
-        <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'UPLOAD.RECOGNIZED' | translate }}</h3>
-        <p class="text-sm text-[var(--text-dim)]">{{ 'UPLOAD.DATE' | translate }} {{ analysis.taken_at | date: 'd MMMM yyyy' }}</p>
-      </div>
-      <span class="badge-glass badge-accent">{{ analysis.metrics.length }} {{ 'UPLOAD.METRICS_COUNT' | translate }}</span>
-    </div>
-
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <app-glass-card
-        *ngFor="let metric of analysis.metrics"
-        [extraClass]="'glass-strong h-full'">
-        <p class="text-xs text-[var(--text-dim)] uppercase tracking-[0.2em] mb-1">{{ metric.name }}</p>
-        <div class="flex items-baseline gap-2">
-          <span class="text-3xl font-semibold text-[var(--text)]">{{ metric.value }}</span>
-          <span class="text-sm text-[var(--text-dim)]" *ngIf="metric.unit">{{ metric.unit }}</span>
-        </div>
-        <p class="text-xs text-[var(--text-dim)] mt-3" *ngIf="metric.ref_min || metric.ref_max">
-          {{ 'UPLOAD.RANGE' | translate }} {{ metric.ref_min ?? '-' }} - {{ metric.ref_max ?? '-' }}
-        </p>
-      </app-glass-card>
-    </div>
   </app-glass-card>
 </div>

@@ -1,37 +1,19 @@
 ﻿<div class="space-y-6">
   <app-glass-card [extraClass]="'glass-strong flex flex-wrap gap-4 items-center justify-between'">
     <div class="space-y-1">
-        <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'CHARTS.TITLE' | translate }}</h3>
+      <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'CHARTS.TITLE' | translate }}</h3>
       <p class="text-sm text-[var(--text-dim)] max-w-xl">
         {{ 'CHARTS.SUBTITLE' | translate }}
       </p>
     </div>
     <div class="w-full flex flex-col gap-3">
-      <div class="relative w-full max-w-md">
-        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]"></i>
-        <input
-          type="text"
-          class="w-full rounded-full bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.12)] px-10 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent)]/60 transition"
-          [placeholder]="'CHARTS.SEARCH' | translate"
-          [(ngModel)]="metricFilter"
-        />
-      </div>
-      <div class="metric-list glass glass-soft">
-        <button
-          *ngFor="let name of filteredMetrics; trackBy: trackByName"
-          type="button"
-          class="chip w-full justify-between"
-          [class.badge-accent]="selectedMetric === name"
-          [attr.title]="name"
-          (click)="onMetricChange(name)"
-        >
-          <span class="metric-label flex items-center gap-2">
-            <i class="bi" [ngClass]="selectedMetric === name ? 'bi-activity' : 'bi-dot'"></i>
-            <span class="metric-label__text">{{ name }}</span>
-          </span>
-          <i *ngIf="selectedMetric === name" class="bi bi-check2 text-[var(--accent)]"></i>
-        </button>
-      </div>
+      <app-v2-metric-selector
+        [items]="analytes"
+        [selectedKey]="selectedMetric"
+        [lang]="language"
+        [showNumericTextToggles]="true"
+        (select)="onMetricChange($event)"
+      ></app-v2-metric-selector>
     </div>
   </app-glass-card>
 
@@ -45,34 +27,13 @@
   </div>
 
   <app-glass-card *ngIf="!isLoading && !errorMessage" [extraClass]="'glass-strong min-h-[320px]'">
-    <div class="h-[260px] sm:h-[320px]" *ngIf="seriesType === 'numeric'">
-      <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'scatter'"></canvas>
-    </div>
-
-    <div *ngIf="seriesType === 'categorical'" class="space-y-3">
-      <div class="flex items-center gap-2 text-sm text-[var(--text-dim)]">
-        <i class="bi bi-list-check"></i>
-        <span>{{ 'CHARTS.CATEGORICAL_TITLE' | translate }}</span>
-      </div>
-      <div class="grid gap-2">
-        <div *ngFor="let point of categoricalPoints" class="glass glass-soft px-3 py-2 flex items-center justify-between">
-          <span class="text-sm text-[var(--text)]">{{ point.value_text }}</span>
-          <span class="text-xs text-[var(--text-dim)]">{{ point.date | date: 'dd.MM.yyyy' }}</span>
-        </div>
-      </div>
-    </div>
-
-    <p
-      *ngIf="seriesType === 'numeric' && !series.length"
-      class="text-sm text-[var(--text-dim)] text-center"
-    >
-      {{ 'CHARTS.NO_DATA' | translate }}
-    </p>
-    <p
-      *ngIf="seriesType === 'categorical' && !categoricalPoints.length"
-      class="text-sm text-[var(--text-dim)] text-center"
-    >
-      {{ 'CHARTS.NO_DATA' | translate }}
-    </p>
+    <app-v2-series-page
+      *ngIf="selectedMetric; else noMetric"
+      [embedded]="true"
+      [analyteKeyInput]="selectedMetric"
+    ></app-v2-series-page>
+    <ng-template #noMetric>
+      <p class="text-sm text-[var(--text-dim)] text-center">{{ 'CHARTS.NO_DATA' | translate }}</p>
+    </ng-template>
   </app-glass-card>
 </div>

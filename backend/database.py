@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 import os
+import uuid
 from dotenv import load_dotenv
 from sqlalchemy import (
     create_engine,
@@ -15,9 +16,12 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     Boolean,
+    JSON,
+    UniqueConstraint,
     inspect,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
 from backend.analyte_utils import normalize_analyte_name, analyte_key
@@ -174,6 +178,75 @@ class Payment(Base):
 
     user = relationship("User", foreign_keys=[user_id])
     subscription = relationship("Subscription", foreign_keys=[subscription_id])
+
+
+class V2Document(Base):
+    """V2 extracted document metadata and ownership."""
+
+    __tablename__ = "v2_documents"
+    __table_args__ = (
+        UniqueConstraint("user_id", "document_hash", name="uq_v2_documents_user_hash"),
+    )
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    document_hash = Column(String, nullable=False)
+    source_filename = Column(String, nullable=True)
+    analysis_date = Column(DateTime, nullable=True)
+    report_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id])
+    metrics = relationship("V2Metric", back_populates="document", cascade="all, delete-orphan")
+
+
+class V2Metric(Base):
+    """V2 extracted metric rows linked to V2Document."""
+
+    __tablename__ = "v2_metrics"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    document_id = Column(String(36), ForeignKey("v2_documents.id"), nullable=False, index=True)
+    analyte_key = Column(String, nullable=False, index=True)
+    raw_name = Column(String, nullable=False)
+    specimen = Column(String, nullable=False)
+    context = Column(String, nullable=False)
+    value_numeric = Column(Float, nullable=True)
+    value_text = Column(Text, nullable=True)
+    unit = Column(String, nullable=True)
+    reference_json = Column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
+    page = Column(Integer, nullable=True)
+    evidence = Column(Text, nullable=True)
+
+    document = relationship("V2Document", back_populates="metrics")
+
+
+class V2DoctorNote(Base):
+    """Doctor-authored point note for V2 series."""
+
+    __tablename__ = "v2_doctor_notes"
+    __table_args__ = (
+        UniqueConstraint(
+            "patient_user_id",
+            "doctor_user_id",
+            "analyte_key",
+            "t",
+            name="uq_v2_doctor_notes_point",
+        ),
+    )
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    patient_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    doctor_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    analyte_key = Column(String, nullable=False, index=True)
+    t = Column(DateTime, nullable=False, index=True)
+    note = Column(Text, nullable=False)
+    visibility = Column(String, nullable=False, default="patient")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    patient_user = relationship("User", foreign_keys=[patient_user_id])
+    doctor_user = relationship("User", foreign_keys=[doctor_user_id])
 
 
 def get_database_url(default_sqlite: Optional[str] = None) -> str:
