@@ -13,7 +13,7 @@ export class LanguageService {
 
   init(): void {
     this.translate.addLangs([...SUPPORTED_LANGS]);
-    this.translate.setDefaultLang('en');
+    this.translate.setDefaultLang('es');
 
     const stored = this.loadStoredLang();
     const nextLang = this.isSupportedLang(stored) ? stored : 'es';

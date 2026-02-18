@@ -61,7 +61,7 @@ export class PatientDashboardPageComponent implements OnInit {
   loading = true;
   analytes: V2AnalyteItemResponse[] = [];
   errorMessage = '';
-  language: V2DashboardLang = 'en';
+  language: V2DashboardLang = 'es';
   showHowComputed = false;
   snapshot: DashboardSnapshot = {
     headline: '',
@@ -73,7 +73,7 @@ export class PatientDashboardPageComponent implements OnInit {
   };
   keyMetrics: KeyMetricCard[] = [];
   attentionItems: KeyMetricCard[] = [];
-  summaryTexts: HomeSummaryTexts = this.getHomeSummaryTexts('en');
+  summaryTexts: HomeSummaryTexts = this.getHomeSummaryTexts('es');
 
   ngOnInit(): void {
     this.language = this.loadV2Language();
@@ -140,7 +140,7 @@ export class PatientDashboardPageComponent implements OnInit {
 
   private loadV2Language(): V2DashboardLang {
     const stored = localStorage.getItem('v2_lang');
-    return stored === 'es' || stored === 'en' ? stored : 'en';
+    return stored === 'es' || stored === 'en' ? stored : 'es';
   }
 
   private getDateValue(item: V2AnalyteItemResponse): string | null {

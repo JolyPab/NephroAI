@@ -24,7 +24,7 @@ export class PatientChatPageComponent implements OnInit {
   history: ChatMessage[] = [];
   errorMessage = '';
   patientSnapshot = '';
-  language: V2DashboardLang = 'en';
+  language: V2DashboardLang = 'es';
   quickPrompts: string[] = [
     'Summarize my recent lab trends.',
     'Which metrics are out of range?',
@@ -226,7 +226,7 @@ export class PatientChatPageComponent implements OnInit {
     if (current.startsWith('en')) {
       return 'en';
     }
-    return 'en';
+    return 'es';
   }
 
   private formatReferenceLabel(item: V2AnalyteItemResponse): string {

@@ -21,6 +21,10 @@ export class PatientUploadPageComponent {
   errorMessage = "";
   isDragging = false;
 
+  get uploadAccuracyHint(): string {
+    return getV2UiStrings().uploadAccuracyHint;
+  }
+
   onFileSelected(event: Event): void {
     if (this.isUploading) {
       return;

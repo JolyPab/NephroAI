@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
   V2AnalyteItemResponse,
+  V2DeleteDocumentResponse,
+  V2DocumentListItemResponse,
   V2DoctorNoteResponse,
   V2DoctorPatientResponse,
   V2SeriesResponse,
@@ -19,6 +21,14 @@ export class V2Service {
     const formData = new FormData();
     formData.append('file', file);
     return this.api.postForm<V2UploadResponse>('/v2/documents', formData);
+  }
+
+  listDocuments(): Observable<V2DocumentListItemResponse[]> {
+    return this.api.get<V2DocumentListItemResponse[]>('/v2/documents');
+  }
+
+  deleteDocument(documentId: string): Observable<V2DeleteDocumentResponse> {
+    return this.api.delete<V2DeleteDocumentResponse>(`/v2/documents/${documentId}`);
   }
 
   getAnalytes(): Observable<V2AnalyteItemResponse[]> {

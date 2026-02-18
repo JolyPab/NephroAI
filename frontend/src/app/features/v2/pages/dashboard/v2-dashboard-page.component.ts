@@ -103,7 +103,7 @@ export class V2DashboardPageComponent implements OnInit {
   uploadMessage = '';
   errorMessage = '';
   isDragging = false;
-  language: V2DashboardLang = 'en';
+  language: V2DashboardLang = 'es';
   searchTerm = '';
   sortMode: SortMode = 'recent';
   numericOnly = false;
@@ -333,7 +333,7 @@ export class V2DashboardPageComponent implements OnInit {
 
   private loadLanguage(): V2DashboardLang {
     const stored = localStorage.getItem(this.langStorageKey);
-    return stored === 'es' || stored === 'en' ? stored : 'en';
+    return stored === 'es' || stored === 'en' ? stored : 'es';
   }
 
   private formatUploadMessage(response: V2UploadResponse): string {

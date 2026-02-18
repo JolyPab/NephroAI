@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="space-y-6" [class.series-page--embedded]="embedded">
   <app-glass-card *ngIf="!embedded" [extraClass]="'glass-strong flex items-center justify-between gap-3'">
     <div>
       <h3 class="text-xl font-semibold text-[var(--text)] break-all">{{ analyteDisplayName }}</h3>
@@ -21,7 +21,7 @@
     {{ errorMessage }}
   </div>
 
-  <app-glass-card *ngIf="!isLoading && !errorMessage && series" [extraClass]="'glass-strong min-h-[320px] space-y-4'">
+  <app-glass-card *ngIf="!isLoading && !errorMessage && series" [extraClass]="'glass-strong min-h-[320px] series-card'">
     <div *ngIf="isNumeric && hasReferenceBounds && !hasCategoricalReference" class="inline-flex">
       <label class="glass chip filter-chip">
         <input type="checkbox" [checked]="abnormalOnly" (change)="onAbnormalOnlyChange($any($event.target).checked)" />
@@ -43,7 +43,7 @@
       </button>
     </div>
 
-    <div *ngIf="isNumeric; else textTimeline" class="h-[260px] sm:h-[340px]">
+    <div *ngIf="isNumeric; else textTimeline" class="series-chart-shell">
       <div *ngIf="zoneLegendItems.length" class="zone-legend">
         <span class="zone-legend__title">Zones:</span>
         <div class="zone-legend__items">
@@ -53,8 +53,10 @@
           </div>
         </div>
       </div>
-      <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'line'" (chartClick)="onChartClick($event)"></canvas>
-      <p class="text-xs text-[var(--text-dim)] mt-2">
+      <div class="series-chart-canvas">
+        <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'line'" (chartClick)="onChartClick($event)"></canvas>
+      </div>
+      <p class="text-xs text-[var(--text-dim)] mt-2 series-chart-footnote">
         Reference: {{ formatReferenceRangeLabel(referenceBounds) }} | Click selects point | Ctrl/Cmd + click opens evidence
       </p>
       <p *ngIf="!chartData.datasets?.[0]?.data?.length" class="text-sm text-[var(--text-dim)] text-center mt-3">

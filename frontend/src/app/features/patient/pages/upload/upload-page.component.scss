@@ -35,6 +35,24 @@
   animation: pulse 1s infinite ease-in-out;
 }
 
+.upload-hint {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 48rem;
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--r-lg);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.upload-hint .material-symbols-rounded {
+  font-size: 1rem;
+  color: var(--accent);
+  margin-top: 0.05rem;
+}
+
 @keyframes pulse {
   0%,
   100% {

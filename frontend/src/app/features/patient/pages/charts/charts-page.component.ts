@@ -22,7 +22,7 @@ export class PatientChartsPageComponent implements OnInit {
   selectedMetric = '';
   isLoading = true;
   errorMessage = '';
-  language: V2DashboardLang = 'en';
+  language: V2DashboardLang = 'es';
   private pendingSelectedAnalyteKey: string | null = null;
 
   ngOnInit(): void {
@@ -76,7 +76,7 @@ export class PatientChartsPageComponent implements OnInit {
 
   private loadV2Language(): V2DashboardLang {
     const stored = localStorage.getItem('v2_lang');
-    return stored === 'es' || stored === 'en' ? stored : 'en';
+    return stored === 'es' || stored === 'en' ? stored : 'es';
   }
 
   private sortByDisplay(items: V2AnalyteItemResponse[]): V2AnalyteItemResponse[] {

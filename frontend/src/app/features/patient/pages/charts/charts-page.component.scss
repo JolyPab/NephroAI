@@ -1,5 +1,27 @@
 :host {
   display: block;
+  --charts-panel-height: clamp(420px, 56vh, 620px);
+}
+
+.charts-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.charts-selector {
+  align-self: start;
+}
+
+.charts-series {
+  min-width: 0;
+}
+
+.charts-series-card {
+  min-height: 0;
+}
+
+.charts-series-card > app-glass-card {
+  display: block;
 }
 
 .badge-accent {
@@ -75,6 +97,38 @@
   .chip {
     font-size: 0.75rem;
     padding: 0.35rem 0.65rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .charts-layout {
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .charts-selector {
+    height: var(--charts-panel-height);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .charts-selector > app-glass-card {
+    display: block;
+    height: 100%;
+  }
+
+  .charts-selector app-v2-metric-selector {
+    display: block;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .charts-series-card {
+    height: var(--charts-panel-height);
+  }
+
+  .charts-series-card > app-glass-card {
+    height: 100%;
   }
 }
 

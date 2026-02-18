@@ -1,39 +1,46 @@
-﻿<div class="space-y-6">
-  <app-glass-card [extraClass]="'glass-strong flex flex-wrap gap-4 items-center justify-between'">
+<div class="space-y-6">
+  <app-glass-card [extraClass]="'glass-strong'">
     <div class="space-y-1">
       <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'CHARTS.TITLE' | translate }}</h3>
-      <p class="text-sm text-[var(--text-dim)] max-w-xl">
-        {{ 'CHARTS.SUBTITLE' | translate }}
-      </p>
-    </div>
-    <div class="w-full flex flex-col gap-3">
-      <app-v2-metric-selector
-        [items]="analytes"
-        [selectedKey]="selectedMetric"
-        [lang]="language"
-        [showNumericTextToggles]="true"
-        (select)="onMetricChange($event)"
-      ></app-v2-metric-selector>
+      <p class="text-sm text-[var(--text-dim)] max-w-xl">{{ 'CHARTS.SUBTITLE' | translate }}</p>
     </div>
   </app-glass-card>
 
-  <div *ngIf="isLoading" class="glass glass-strong flex flex-col items-center justify-center gap-3 min-h-[280px]">
-    <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
-    <p class="text-sm text-[var(--text-dim)]">{{ 'CHARTS.LOADING' | translate }}</p>
-  </div>
+  <div class="charts-layout">
+    <div class="charts-selector">
+      <app-glass-card [extraClass]="'glass-strong h-full'">
+        <app-v2-metric-selector
+          [items]="analytes"
+          [selectedKey]="selectedMetric"
+          [lang]="language"
+          [showNumericTextToggles]="true"
+          (select)="onMetricChange($event)"
+        ></app-v2-metric-selector>
+      </app-glass-card>
+    </div>
 
-  <div *ngIf="!isLoading && errorMessage" class="glass glass-strong p-4 text-[var(--danger)] border border-[var(--danger)]/40">
-    {{ errorMessage }}
-  </div>
+    <div class="charts-series">
+      <div *ngIf="isLoading" class="glass glass-strong flex flex-col items-center justify-center gap-3 min-h-[280px]">
+        <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
+        <p class="text-sm text-[var(--text-dim)]">{{ 'CHARTS.LOADING' | translate }}</p>
+      </div>
 
-  <app-glass-card *ngIf="!isLoading && !errorMessage" [extraClass]="'glass-strong min-h-[320px]'">
-    <app-v2-series-page
-      *ngIf="selectedMetric; else noMetric"
-      [embedded]="true"
-      [analyteKeyInput]="selectedMetric"
-    ></app-v2-series-page>
-    <ng-template #noMetric>
-      <p class="text-sm text-[var(--text-dim)] text-center">{{ 'CHARTS.NO_DATA' | translate }}</p>
-    </ng-template>
-  </app-glass-card>
+      <div *ngIf="!isLoading && errorMessage" class="glass glass-strong p-4 text-[var(--danger)] border border-[var(--danger)]/40">
+        {{ errorMessage }}
+      </div>
+
+      <div class="charts-series-card" *ngIf="!isLoading && !errorMessage">
+        <app-glass-card [extraClass]="'glass-strong min-h-[320px] h-full'">
+          <app-v2-series-page
+            *ngIf="selectedMetric; else noMetric"
+            [embedded]="true"
+            [analyteKeyInput]="selectedMetric"
+          ></app-v2-series-page>
+          <ng-template #noMetric>
+            <p class="text-sm text-[var(--text-dim)] text-center">{{ 'CHARTS.NO_DATA' | translate }}</p>
+          </ng-template>
+        </app-glass-card>
+      </div>
+    </div>
+  </div>
 </div>

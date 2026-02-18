@@ -2,6 +2,54 @@
   display: block;
 }
 
+.series-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.series-chart-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+}
+
+@media (min-width: 640px) {
+  .series-chart-shell {
+    min-height: 340px;
+  }
+}
+
+.series-chart-canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 180px;
+}
+
+.series-chart-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.series-chart-footnote {
+  flex: 0 0 auto;
+}
+
+.series-page--embedded .series-card {
+  height: auto;
+  min-height: 0;
+}
+
+.series-page--embedded .series-chart-shell {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.series-page--embedded .series-chart-canvas {
+  min-height: 0;
+}
+
 .timeline-row {
   border: 1px solid transparent;
   border-radius: var(--r-lg);

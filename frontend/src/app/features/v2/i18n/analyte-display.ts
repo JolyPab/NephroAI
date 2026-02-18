@@ -39,17 +39,18 @@ const ES_SUFFIX_OVERRIDES: Record<string, string> = {
 
 export function getAnalyteDisplayName(analyteKey: string, lang: V2DashboardLang, rawName?: string | null): string {
   const normalized = (analyteKey ?? '').trim().toUpperCase();
-  const mapped = ANALYTE_DISPLAY_MAP[normalized]?.[lang];
-  if (mapped) {
-    return mapped;
-  }
-
-  const raw = rawName?.trim();
+  const raw = normalizeRawLabName(rawName);
   if (raw) {
     return raw;
   }
 
-  return humanizeAnalyteKey(normalized || analyteKey, lang);
+  const mappedEs = ANALYTE_DISPLAY_MAP[normalized]?.es;
+  if (mappedEs) {
+    return mappedEs;
+  }
+
+  // Keep analyte labels in Spanish for Ecuador-first UX.
+  return humanizeAnalyteKey(normalized || analyteKey, 'es');
 }
 
 function humanizeAnalyteKey(analyteKey: string, lang: V2DashboardLang): string {
@@ -81,4 +82,14 @@ function humanizeAnalyteKey(analyteKey: string, lang: V2DashboardLang): string {
 function toTitleCase(word: string): string {
   const lower = word.toLowerCase();
   return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
+function normalizeRawLabName(rawName?: string | null): string {
+  if (!rawName) {
+    return '';
+  }
+  return rawName
+    .replace(/[_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

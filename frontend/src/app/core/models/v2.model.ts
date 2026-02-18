@@ -11,6 +11,21 @@ export interface V2CreateDocumentDuplicateResponse {
   num_metrics: number;
 }
 
+export interface V2DocumentListItemResponse {
+  id: string;
+  source_filename: string | null;
+  analysis_date: string | null;
+  report_date: string | null;
+  created_at: string | null;
+  num_metrics: number;
+}
+
+export interface V2DeleteDocumentResponse {
+  status: 'deleted';
+  document_id: string;
+  num_metrics_deleted: number;
+}
+
 export type V2UploadResponse = V2CreateDocumentResponse | V2CreateDocumentDuplicateResponse;
 
 export interface V2AnalyteItemResponse {

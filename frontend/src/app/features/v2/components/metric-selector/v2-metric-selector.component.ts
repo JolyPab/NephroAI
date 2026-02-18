@@ -7,12 +7,6 @@ import { getAnalyteDisplayName, V2DashboardLang } from '../../i18n/analyte-displ
 
 type AnalyteSortMode = 'most_recent' | 'a_z' | 'z_a';
 
-interface AnalyteGroup {
-  key: 'favorites' | 'recent' | 'all';
-  label: string;
-  items: V2AnalyteItemResponse[];
-}
-
 interface SortOption {
   value: AnalyteSortMode;
 }
@@ -27,12 +21,10 @@ interface SortOption {
 export class V2MetricSelectorComponent implements OnInit, OnChanges {
   private readonly hostElement = inject(ElementRef<HTMLElement>);
   private readonly favoritesStorageKey = 'v2_favorites';
-  private readonly recentsStorageKey = 'v2_recent_analytes';
-  private readonly maxRecent = 10;
 
   @Input() items: V2AnalyteItemResponse[] = [];
   @Input() selectedKey: string | null = null;
-  @Input() lang: V2DashboardLang = 'en';
+  @Input() lang: V2DashboardLang = 'es';
   @Input() showNumericTextToggles = false;
 
   @Output() selectedKeyChange = new EventEmitter<string>();
@@ -42,7 +34,6 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
   sortMode: AnalyteSortMode = 'a_z';
   sortMenuOpen = false;
   favorites: string[] = [];
-  recentAnalytes: string[] = [];
   numericOnly = false;
   textOnly = false;
 
@@ -54,7 +45,6 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.favorites = this.loadStoredArray(this.favoritesStorageKey);
-    this.recentAnalytes = this.loadStoredArray(this.recentsStorageKey);
     this.reconcileStoredKeys();
   }
 
@@ -66,32 +56,8 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
     return item.analyte_key;
   }
 
-  trackByGroup(_: number, group: AnalyteGroup): string {
-    return group.key;
-  }
-
-  get groupedAnalytes(): AnalyteGroup[] {
-    const filtered = this.filteredAnalytes;
-    if (!filtered.length) {
-      return [];
-    }
-
-    const byKey = new Map(filtered.map((item) => [item.analyte_key, item] as const));
-    const favoriteSet = new Set(this.favorites);
-
-    const favorites = this.sortAnalytes(filtered.filter((item) => favoriteSet.has(item.analyte_key)));
-    const recent = this.recentAnalytes
-      .map((key) => byKey.get(key))
-      .filter((item): item is V2AnalyteItemResponse => !!item && !favoriteSet.has(item.analyte_key));
-    const excluded = new Set<string>([...favorites, ...recent].map((item) => item.analyte_key));
-    const all = this.sortAnalytes(filtered.filter((item) => !excluded.has(item.analyte_key)));
-
-    const groups: AnalyteGroup[] = [
-      { key: 'favorites', label: this.copy.favorites, items: favorites },
-      { key: 'recent', label: this.copy.recent, items: recent },
-      { key: 'all', label: this.copy.all, items: all },
-    ];
-    return groups.filter((group) => group.items.length > 0);
+  get visibleAnalytes(): V2AnalyteItemResponse[] {
+    return this.sortAnalytes(this.filteredAnalytes);
   }
 
   get filteredAnalytes(): V2AnalyteItemResponse[] {
@@ -121,9 +87,6 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
     searchPlaceholder: string;
     sortPrefix: string;
     noAnalytes: string;
-    favorites: string;
-    recent: string;
-    all: string;
     numericOnly: string;
     textOnly: string;
   } {
@@ -132,9 +95,6 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
         searchPlaceholder: 'Buscar metrica',
         sortPrefix: 'Orden',
         noAnalytes: 'No hay metricas.',
-        favorites: 'Favoritas',
-        recent: 'Recientes',
-        all: 'Todas',
         numericOnly: 'Solo numericas',
         textOnly: 'Solo texto',
       };
@@ -143,9 +103,6 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
       searchPlaceholder: 'Search metric',
       sortPrefix: 'Sort',
       noAnalytes: 'No analytes found.',
-      favorites: 'Favorites',
-      recent: 'Recent',
-      all: 'All',
       numericOnly: 'Numeric only',
       textOnly: 'Text only',
     };
@@ -169,7 +126,6 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
   }
 
   onMetricSelect(metric: string): void {
-    this.pushRecent(metric);
     this.selectedKeyChange.emit(metric);
     this.select.emit(metric);
   }
@@ -198,8 +154,15 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
   }
 
   private sortAnalytes(items: V2AnalyteItemResponse[]): V2AnalyteItemResponse[] {
+    const favoriteSet = new Set(this.favorites);
     const copy = [...items];
     copy.sort((a, b) => {
+      const aFav = favoriteSet.has(a.analyte_key) ? 1 : 0;
+      const bFav = favoriteSet.has(b.analyte_key) ? 1 : 0;
+      if (aFav !== bFav) {
+        return bFav - aFav;
+      }
+
       if (this.sortMode === 'most_recent') {
         const aTs = this.timestampOrZero(a.last_date);
         const bTs = this.timestampOrZero(b.last_date);
@@ -207,6 +170,7 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
           return bTs - aTs;
         }
       }
+
       const labelA = this.getDisplayName(a);
       const labelB = this.getDisplayName(b);
       const cmp = labelA.localeCompare(labelB, this.lang);
@@ -228,17 +192,10 @@ export class V2MetricSelectorComponent implements OnInit, OnChanges {
     return 'A -> Z';
   }
 
-  private pushRecent(metric: string): void {
-    this.recentAnalytes = [metric, ...this.recentAnalytes.filter((key) => key !== metric)].slice(0, this.maxRecent);
-    this.persistArray(this.recentsStorageKey, this.recentAnalytes);
-  }
-
   private reconcileStoredKeys(): void {
     const availableKeys = new Set(this.items.map((item) => item.analyte_key));
     this.favorites = this.favorites.filter((key) => availableKeys.has(key));
-    this.recentAnalytes = this.recentAnalytes.filter((key) => availableKeys.has(key));
     this.persistArray(this.favoritesStorageKey, this.favorites);
-    this.persistArray(this.recentsStorageKey, this.recentAnalytes);
   }
 
   private timestampOrZero(value: string | null | undefined): number {

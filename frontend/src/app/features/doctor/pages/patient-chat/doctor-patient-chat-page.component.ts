@@ -30,7 +30,7 @@ export class DoctorPatientChatPageComponent implements OnInit, OnDestroy {
   errorMessage = '';
   quickPrompts: string[] = [];
 
-  private language: V2DashboardLang = 'en';
+  private language: V2DashboardLang = 'es';
   private readonly promptCopy: Record<V2DashboardLang, string[]> = {
     en: [
       'Summarize kidney function trends.',
@@ -158,7 +158,7 @@ export class DoctorPatientChatPageComponent implements OnInit, OnDestroy {
     if (current.startsWith('en')) {
       return 'en';
     }
-    return 'en';
+    return 'es';
   }
 
   private appendPendingMessage(question: string): number {

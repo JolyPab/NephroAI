@@ -40,6 +40,11 @@
       <span>{{ errorMessage }}</span>
     </div>
 
+    <div class="upload-hint glass glass-soft" role="note">
+      <span class="material-symbols-rounded">info</span>
+      <span>{{ uploadAccuracyHint }}</span>
+    </div>
+
     <button type="button" appGlassButton (click)="submit()" [glassBlock]="true" [disabled]="isUploading">
       <span *ngIf="isUploading" class="loader-dot"></span>
       <span>{{ isUploading ? ('UPLOAD.PROCESSING' | translate) : ('UPLOAD.UPLOAD_PARSE' | translate) }}</span>

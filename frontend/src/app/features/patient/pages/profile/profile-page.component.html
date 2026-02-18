@@ -49,6 +49,46 @@
       <p class="text-sm text-[var(--text-dim)]">{{ 'share.noGrants' | translate }}</p>
     </app-glass-card>
 
+    <app-glass-card [extraClass]="'glass-strong space-y-3'">
+      <div>
+        <h3 class="text-lg font-semibold text-[var(--text)]">{{ documentsHeading() }}</h3>
+        <p class="text-sm text-[var(--text-dim)]">{{ documentsSubtitle() }}</p>
+      </div>
+
+      <div class="documents-state" *ngIf="documentsLoading">
+        <span class="loader-dot"></span>
+        <span class="text-sm text-[var(--text-dim)]">{{ currentLang === 'es' ? 'Cargando documentos...' : 'Loading documents...' }}</span>
+      </div>
+
+      <div class="text-sm text-[var(--danger)]" *ngIf="documentsError">{{ documentsError }}</div>
+      <div class="text-sm text-[var(--text-dim)]" *ngIf="documentsMessage && !documentsError">{{ documentsMessage }}</div>
+
+      <div class="documents-list scrollable" *ngIf="!documentsLoading && documents.length; else noDocuments">
+        <div class="documents-row glass glass-soft" *ngFor="let document of documents">
+          <div class="documents-row__meta">
+            <p class="documents-row__title">{{ documentName(document) }}</p>
+            <p class="documents-row__info">
+              {{ documentDate(document) | date: 'd MMM yyyy' }} · {{ document.num_metrics }} {{ currentLang === 'es' ? 'métricas' : 'metrics' }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="documents-row__delete"
+            [disabled]="deletingDocumentId === document.id"
+            (click)="deleteDocument(document)"
+          >
+            {{ deletingDocumentId === document.id ? (currentLang === 'es' ? 'Eliminando...' : 'Deleting...') : (currentLang === 'es' ? 'Eliminar' : 'Delete') }}
+          </button>
+        </div>
+      </div>
+
+      <ng-template #noDocuments>
+        <p class="text-sm text-[var(--text-dim)]">
+          {{ currentLang === 'es' ? 'Aún no has cargado documentos.' : 'No documents uploaded yet.' }}
+        </p>
+      </ng-template>
+    </app-glass-card>
+
     <div class="preferences space-y-4">
       <div class="preferences__header">
         <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'PATIENT.PROFILE.PREFERENCES_TITLE' | translate }}</h3>

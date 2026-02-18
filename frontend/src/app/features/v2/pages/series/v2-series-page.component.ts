@@ -89,7 +89,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
   allNumericPoints: V2SeriesPointResponse[] = [];
   selectedPointIndex: number | null = null;
   selectedPointKey = '';
-  language: V2DashboardLang = 'en';
+  language: V2DashboardLang = 'es';
   abnormalOnly = false;
   positivesOnly = false;
   headerAbnormalCount: number | null = null;
@@ -615,7 +615,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
 
   private loadV2Language(): V2DashboardLang {
     const stored = localStorage.getItem('v2_lang');
-    return stored === 'es' || stored === 'en' ? stored : 'en';
+    return stored === 'es' || stored === 'en' ? stored : 'es';
   }
 
   private loadDoctorNotes(analyteKey: string): void {
