@@ -4,6 +4,14 @@ from backend.v2.llm_client import extract_import_v2_from_pdf_bytes
 from backend.v2.schemas import ImportV2
 
 
+def _use_raw_names_as_analyte_keys(payload: ImportV2) -> ImportV2:
+    for metric in payload.metrics:
+        raw_name = (metric.raw_name or "").strip()
+        if raw_name:
+            metric.analyte_key = raw_name
+    return payload
+
+
 def _normalize_scientific_units(payload: ImportV2) -> ImportV2:
     for metric in payload.metrics:
         unit = metric.unit
@@ -41,5 +49,6 @@ def _normalize_scientific_units(payload: ImportV2) -> ImportV2:
 async def extract(pdf_bytes: bytes) -> ImportV2:
     raw_dict = await extract_import_v2_from_pdf_bytes(pdf_bytes)
     payload = ImportV2.model_validate(raw_dict)
+    payload = _use_raw_names_as_analyte_keys(payload)
     payload = _normalize_scientific_units(payload)
     return payload

@@ -24,9 +24,11 @@ from backend.v2.schemas import (
     V2AnalyteItemResponse,
     V2CreateDocumentDuplicateResponse,
     V2CreateDocumentResponse,
+    V2DeleteDocumentResponse,
     V2DoctorNoteResponse,
     V2DoctorPatientResponse,
     V2DocumentDetailResponse,
+    V2DocumentListItemResponse,
     V2UpsertDoctorNoteRequest,
     V2SeriesResponse,
 )
@@ -1270,6 +1272,47 @@ async def list_v2_analytes(
     return _query_v2_analytes_for_user(db, user_id)
 
 
+@app.get("/api/v2/documents", response_model=List[V2DocumentListItemResponse])
+async def list_v2_documents(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """List uploaded V2 documents for the authenticated user."""
+    dt_expr = func.coalesce(V2Document.analysis_date, V2Document.created_at)
+    rows = (
+        db.query(
+            V2Document.id.label("id"),
+            V2Document.source_filename.label("source_filename"),
+            V2Document.analysis_date.label("analysis_date"),
+            V2Document.report_date.label("report_date"),
+            V2Document.created_at.label("created_at"),
+            func.count(V2Metric.id).label("num_metrics"),
+        )
+        .outerjoin(V2Metric, V2Metric.document_id == V2Document.id)
+        .filter(V2Document.user_id == user_id)
+        .group_by(
+            V2Document.id,
+            V2Document.source_filename,
+            V2Document.analysis_date,
+            V2Document.report_date,
+            V2Document.created_at,
+        )
+        .order_by(dt_expr.desc(), V2Document.id.desc())
+        .all()
+    )
+    return [
+        {
+            "id": row.id,
+            "source_filename": row.source_filename,
+            "analysis_date": _iso_or_none(row.analysis_date),
+            "report_date": _iso_or_none(row.report_date),
+            "created_at": _iso_or_none(row.created_at),
+            "num_metrics": int(row.num_metrics or 0),
+        }
+        for row in rows
+    ]
+
+
 @app.get("/api/v2/series", response_model=V2SeriesResponse)
 async def get_v2_series(
     analyte_key: str,
@@ -1309,6 +1352,45 @@ async def get_v2_series(
         "unit": latest_unit,
         "reference": latest_reference,
         "points": points,
+    }
+
+
+@app.delete("/api/v2/documents/{document_id}", response_model=V2DeleteDocumentResponse)
+async def delete_v2_document(
+    document_id: str,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Delete a V2 document and its linked metrics for the authenticated user."""
+    document = (
+        db.query(V2Document)
+        .filter(
+            V2Document.id == document_id,
+            V2Document.user_id == user_id,
+        )
+        .first()
+    )
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    num_metrics = (
+        db.query(func.count(V2Metric.id))
+        .filter(V2Metric.document_id == document.id)
+        .scalar()
+        or 0
+    )
+    try:
+        db.delete(document)
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Failed to delete V2 document user_id=%s document_id=%s", user_id, document_id)
+        raise HTTPException(status_code=500, detail=f"Failed to delete document: {type(exc).__name__}")
+
+    return {
+        "status": "deleted",
+        "document_id": document_id,
+        "num_metrics_deleted": int(num_metrics),
     }
 
 
@@ -2752,8 +2834,6 @@ async def get_advice(
         raise HTTPException(status_code=404, detail="User not found")
 
     patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
 
     days = req.days or 180
     metrics_summary = _summarize_metrics_v2(
@@ -2762,7 +2842,7 @@ async def get_advice(
         metric_names=req.metric_names,
         days=days,
     )
-    if not metrics_summary:
+    if not metrics_summary and patient:
         # Legacy fallback for older imported records.
         metrics_summary = _summarize_metrics(
             db,
@@ -2778,7 +2858,7 @@ async def get_advice(
             metric_names=req.metric_names,
             days=36500,
         )
-    if not metrics_summary:
+    if not metrics_summary and patient:
         metrics_summary = _summarize_metrics(
             db,
             patient_id=patient.id,
@@ -2802,13 +2882,15 @@ async def get_advice(
         .limit(5)
         .all()
     )
-    legacy_notes = (
-        db.query(DoctorNote)
-        .filter(DoctorNote.patient_id == patient.id)
-        .order_by(DoctorNote.created_at.desc())
-        .limit(5)
-        .all()
-    )
+    legacy_notes = []
+    if patient:
+        legacy_notes = (
+            db.query(DoctorNote)
+            .filter(DoctorNote.patient_id == patient.id)
+            .order_by(DoctorNote.created_at.desc())
+            .limit(5)
+            .all()
+        )
     notes_lines = []
     for n in v2_notes:
         meta_parts = [n.analyte_key or ""]

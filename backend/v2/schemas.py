@@ -201,6 +201,21 @@ class V2DocumentDetailResponse(BaseModel):
     metrics: list[V2DocumentMetricResponse]
 
 
+class V2DocumentListItemResponse(BaseModel):
+    id: str
+    source_filename: str | None
+    analysis_date: str | None
+    report_date: str | None
+    created_at: str | None
+    num_metrics: int
+
+
+class V2DeleteDocumentResponse(BaseModel):
+    status: Literal["deleted"]
+    document_id: str
+    num_metrics_deleted: int
+
+
 class V2DoctorPatientResponse(BaseModel):
     patient_id: int
     display_name: str | None
