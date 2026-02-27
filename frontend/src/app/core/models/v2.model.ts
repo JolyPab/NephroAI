@@ -55,6 +55,7 @@ export interface V2SeriesPointResponse {
 
 export interface V2SeriesResponse {
   analyte_key: string;
+  raw_name?: string | null;
   series_type: 'numeric' | 'text' | 'binary' | 'ordinal';
   unit: string | null;
   reference: Record<string, unknown> | null;

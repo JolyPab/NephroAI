@@ -1125,6 +1125,7 @@ def _query_v2_analytes_for_user(db: Session, scoped_user_id: int) -> list[V2Anal
     subq = (
         db.query(
             V2Metric.analyte_key.label("analyte_key"),
+            V2Metric.raw_name.label("raw_name"),
             V2Metric.value_numeric.label("last_value_numeric"),
             V2Metric.value_text.label("last_value_text"),
             V2Metric.unit.label("unit"),
@@ -1139,6 +1140,7 @@ def _query_v2_analytes_for_user(db: Session, scoped_user_id: int) -> list[V2Anal
     rows = (
         db.query(
             subq.c.analyte_key,
+            subq.c.raw_name,
             subq.c.last_value_numeric,
             subq.c.last_value_text,
             subq.c.unit,
@@ -1152,6 +1154,7 @@ def _query_v2_analytes_for_user(db: Session, scoped_user_id: int) -> list[V2Anal
     return [
         V2AnalyteItemResponse(
             analyte_key=row.analyte_key,
+            raw_name=row.raw_name,
             last_value_numeric=row.last_value_numeric,
             last_value_text=row.last_value_text,
             last_date=_iso_or_none(row.dt),
@@ -1324,14 +1327,17 @@ async def get_v2_series(
 
     series_type = _classify_v2_series_type(rows)
 
+    latest_raw_name = None
     latest_unit = None
     latest_reference = None
     for metric, _doc, _dt in reversed(rows):
+        if latest_raw_name is None and metric.raw_name is not None:
+            latest_raw_name = metric.raw_name
         if latest_unit is None and metric.unit is not None:
             latest_unit = metric.unit
         if latest_reference is None and metric.reference_json is not None:
             latest_reference = metric.reference_json
-        if latest_unit is not None and latest_reference is not None:
+        if latest_raw_name is not None and latest_unit is not None and latest_reference is not None:
             break
 
     points = []
@@ -1348,6 +1354,7 @@ async def get_v2_series(
 
     return {
         "analyte_key": analyte_key,
+        "raw_name": latest_raw_name,
         "series_type": series_type,
         "unit": latest_unit,
         "reference": latest_reference,
@@ -1554,14 +1561,17 @@ async def get_v2_doctor_patient_series(
 
     series_type = _classify_v2_series_type(rows)
 
+    latest_raw_name = None
     latest_unit = None
     latest_reference = None
     for metric, _doc, _dt in reversed(rows):
+        if latest_raw_name is None and metric.raw_name is not None:
+            latest_raw_name = metric.raw_name
         if latest_unit is None and metric.unit is not None:
             latest_unit = metric.unit
         if latest_reference is None and metric.reference_json is not None:
             latest_reference = metric.reference_json
-        if latest_unit is not None and latest_reference is not None:
+        if latest_raw_name is not None and latest_unit is not None and latest_reference is not None:
             break
 
     points = []
@@ -1578,6 +1588,7 @@ async def get_v2_doctor_patient_series(
 
     return {
         "analyte_key": analyte_key,
+        "raw_name": latest_raw_name,
         "series_type": series_type,
         "unit": latest_unit,
         "reference": latest_reference,

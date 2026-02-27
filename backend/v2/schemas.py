@@ -149,6 +149,7 @@ class V2CreateDocumentDuplicateResponse(BaseModel):
 
 class V2AnalyteItemResponse(BaseModel):
     analyte_key: str
+    raw_name: str | None = None
     last_value_numeric: float | None
     last_value_text: str | None
     last_date: str | None
@@ -165,6 +166,7 @@ class V2SeriesPointResponse(BaseModel):
 
 class V2SeriesResponse(BaseModel):
     analyte_key: str
+    raw_name: str | None = None
     series_type: Literal["numeric", "text", "binary", "ordinal"]
     unit: str | None
     reference: dict[str, Any] | None

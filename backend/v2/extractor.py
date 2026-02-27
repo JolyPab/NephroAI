@@ -1,14 +1,36 @@
 from __future__ import annotations
 
+import re
+import unicodedata
+
 from backend.v2.llm_client import extract_import_v2_from_pdf_bytes
 from backend.v2.schemas import ImportV2
 
 
-def _use_raw_names_as_analyte_keys(payload: ImportV2) -> ImportV2:
+def _normalize_key_chunk(value: str) -> str:
+    text = unicodedata.normalize("NFKD", value or "")
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = text.upper().strip()
+    text = re.sub(r"[^A-Z0-9]+", "_", text)
+    text = re.sub(r"_+", "_", text).strip("_")
+    return text
+
+
+def _assign_series_keys(payload: ImportV2) -> ImportV2:
     for metric in payload.metrics:
-        raw_name = (metric.raw_name or "").strip()
-        if raw_name:
-            metric.analyte_key = raw_name
+        raw_chunk = _normalize_key_chunk(metric.raw_name or "")
+        specimen_chunk = _normalize_key_chunk(
+            metric.specimen.value if hasattr(metric.specimen, "value") else str(metric.specimen)
+        )
+        value_kind = "NUM" if metric.value_numeric is not None else "TEXT"
+        if raw_chunk and specimen_chunk:
+            metric.analyte_key = f"{raw_chunk}__{specimen_chunk}__{value_kind}"
+        elif raw_chunk:
+            metric.analyte_key = f"{raw_chunk}__{value_kind}"
+        elif specimen_chunk:
+            metric.analyte_key = f"UNKNOWN__{specimen_chunk}__{value_kind}"
+        else:
+            metric.analyte_key = f"UNKNOWN__{value_kind}"
     return payload
 
 
@@ -49,6 +71,6 @@ def _normalize_scientific_units(payload: ImportV2) -> ImportV2:
 async def extract(pdf_bytes: bytes) -> ImportV2:
     raw_dict = await extract_import_v2_from_pdf_bytes(pdf_bytes)
     payload = ImportV2.model_validate(raw_dict)
-    payload = _use_raw_names_as_analyte_keys(payload)
+    payload = _assign_series_keys(payload)
     payload = _normalize_scientific_units(payload)
     return payload

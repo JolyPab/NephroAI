@@ -57,7 +57,7 @@
         <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'line'" (chartClick)="onChartClick($event)"></canvas>
       </div>
       <p class="text-xs text-[var(--text-dim)] mt-2 series-chart-footnote">
-        Reference: {{ formatReferenceRangeLabel(referenceBounds) }} | Click selects point | Ctrl/Cmd + click opens evidence
+        Reference: {{ getActiveReferenceLabel() }} | Click selects point | Ctrl/Cmd + click opens evidence
       </p>
       <p *ngIf="!chartData.datasets?.[0]?.data?.length" class="text-sm text-[var(--text-dim)] text-center mt-3">
         No numeric points available.

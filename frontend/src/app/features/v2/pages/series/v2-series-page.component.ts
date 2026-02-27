@@ -125,12 +125,11 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
             const unit = this.series?.unit ? ` ${this.series.unit}` : '';
             const valueLabel = `Value: ${this.formatNumber(value)}${unit}`;
             const statusLabel = this.getPointStatusLabel(point);
-            const hasMin = this.referenceBounds.refMin !== undefined && this.referenceBounds.refMin !== null;
-            const hasMax = this.referenceBounds.refMax !== undefined && this.referenceBounds.refMax !== null;
-            if (!hasMin && !hasMax) {
+            const referenceLabel = this.getActiveReferenceLabel();
+            if (referenceLabel === '-') {
               return `${valueLabel} | Status: ${statusLabel}`;
             }
-            return `${valueLabel} | Status: ${statusLabel} | Ref: ${this.formatReferenceRangeLabel(this.referenceBounds)}`;
+            return `${valueLabel} | Status: ${statusLabel} | Ref: ${referenceLabel}`;
           },
         },
       },
@@ -251,7 +250,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
   }
 
   get analyteDisplayName(): string {
-    return getAnalyteDisplayName(this.analyteKey, this.language);
+    return getAnalyteDisplayName(this.analyteKey, this.language, this.series?.raw_name);
   }
 
   get zoneLegendItems(): ZoneLegendItem[] {
@@ -530,8 +529,8 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
     this.detailValueLabel = this.getPointValueLabel(point);
     if (this.isNumeric) {
       const status = this.getPointStatusLabel(point);
-      const hasRef = this.hasReferenceBounds;
-      this.detailStatusLabel = hasRef ? `${status} | Ref: ${this.formatReferenceRangeLabel(this.referenceBounds)}` : status;
+      const referenceLabel = this.getActiveReferenceLabel();
+      this.detailStatusLabel = referenceLabel === '-' ? status : `${status} | Ref: ${referenceLabel}`;
     } else {
       this.detailStatusLabel = null;
     }
@@ -874,6 +873,26 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
     return '-';
   }
 
+  getActiveReferenceLabel(): string {
+    const rawText = this.series?.reference?.['ref_text_raw'];
+    if (this.hasCategoricalReference) {
+      if (typeof rawText === 'string' && rawText.trim()) {
+        return rawText.trim();
+      }
+      const labels = this.categoricalReferenceBands
+        .map((band) => `${band.label}: ${this.formatBandRangeLabel(band)}`)
+        .filter((label) => label.trim());
+      if (labels.length) {
+        return labels.join('; ');
+      }
+      return '-';
+    }
+    if (typeof rawText === 'string' && rawText.trim()) {
+      return rawText.trim();
+    }
+    return this.formatReferenceRangeLabel(this.referenceBounds);
+  }
+
   private getNumericStatus(point: V2SeriesPointResponse | undefined): NumericStatus {
     if (!point || point.y === null || point.y === undefined) {
       return 'unknown';
@@ -960,6 +979,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
     }
 
     if (this.hasCategoricalReference) {
+      const { xMin, xMax } = this.getCategoryBandXBounds(labelsLength);
       this.categoricalReferenceBands.forEach((band, index) => {
         const yMin = band.min !== null ? band.min : axisBounds.axisMin;
         const yMax = band.max !== null ? band.max : axisBounds.axisMax;
@@ -968,8 +988,8 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
         }
         annotations[`catBand_${index}`] = {
           type: 'box',
-          xMin: 0,
-          xMax: Math.max(labelsLength - 1, 0),
+          xMin,
+          xMax,
           yMin,
           yMax,
           backgroundColor: band.backgroundColor,
@@ -1003,6 +1023,16 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       };
     }
     return annotations;
+  }
+
+  private getCategoryBandXBounds(labelsLength: number): { xMin: number; xMax: number } {
+    // Category scale indexes are centered on integers.
+    // Using +/- 0.5 keeps shaded zones visible even with a single point.
+    const safeLength = Math.max(labelsLength, 1);
+    return {
+      xMin: -0.5,
+      xMax: safeLength - 0.5,
+    };
   }
 
   private computeAxisBounds(
@@ -1090,13 +1120,14 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
     if (!reference) {
       return [];
     }
-    const typeRaw = reference['type'];
-    const type = typeof typeRaw === 'string' ? typeRaw.trim().toLowerCase() : '';
-    if (type !== 'categorical') {
-      return [];
-    }
-    const categoriesRaw = reference['categories'];
-    if (!Array.isArray(categoriesRaw)) {
+    const stagedRaw = reference['stages'];
+    const categoricalRaw = reference['categories'];
+    const categoriesRaw = Array.isArray(stagedRaw)
+      ? stagedRaw
+      : Array.isArray(categoricalRaw)
+        ? categoricalRaw
+        : null;
+    if (!categoriesRaw) {
       return [];
     }
     const palette = this.getCategoricalZonePalette();
@@ -1123,6 +1154,21 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
         };
       })
       .filter((item): item is CategoricalReferenceBand => item !== null);
+  }
+
+  private formatBandRangeLabel(band: CategoricalReferenceBand): string {
+    const hasMin = band.min !== null;
+    const hasMax = band.max !== null;
+    if (hasMin && hasMax) {
+      return `${this.formatNumber(band.min as number)} - ${this.formatNumber(band.max as number)}`;
+    }
+    if (hasMin) {
+      return `>= ${this.formatNumber(band.min as number)}`;
+    }
+    if (hasMax) {
+      return `<= ${this.formatNumber(band.max as number)}`;
+    }
+    return '-';
   }
 
   private getCategoricalZonePalette(): { fills: string[]; border: string } {
