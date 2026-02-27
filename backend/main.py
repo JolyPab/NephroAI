@@ -2880,7 +2880,7 @@ async def get_advice(
     if not metrics_summary:
         raise HTTPException(status_code=400, detail="No lab data available for advice.")
 
-    language = req.language or "es"
+    language = "es"
 
     # Pull latest doctor notes for context (V2 + legacy)
     v2_notes = (
