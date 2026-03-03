@@ -26,9 +26,9 @@ export class PatientChatPageComponent implements OnInit {
   patientSnapshot = '';
   language: V2DashboardLang = 'es';
   quickPrompts: string[] = [
-    'Summarize my recent lab trends.',
-    'Which metrics are out of range?',
-    'What should I discuss with my doctor?'
+    'Resume mis tendencias recientes de laboratorio.',
+    'Que metricas estan fuera de rango?',
+    'Que deberia hablar con mi medico?',
   ];
   private readonly promptCopy: Record<
     V2DashboardLang,
@@ -215,17 +215,6 @@ export class PatientChatPageComponent implements OnInit {
   }
 
   private loadV2Language(): V2DashboardLang {
-    const stored = localStorage.getItem('v2_lang');
-    if (stored === 'es' || stored === 'en') {
-      return stored;
-    }
-    const current = (document.documentElement.lang || '').toLowerCase();
-    if (current.startsWith('es')) {
-      return 'es';
-    }
-    if (current.startsWith('en')) {
-      return 'en';
-    }
     return 'es';
   }
 
