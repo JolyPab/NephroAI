@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 
 import { AdviceClientService } from '../../../../core/services/advice.service';
 import { AdviceResponseModel } from '../../../../core/models/advice.model';
@@ -92,12 +93,17 @@ export class PatientChatPageComponent implements OnInit {
         days,
         this.language,
       )
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.chatForm.patchValue({ question: '' });
+        }),
+      )
       .subscribe({
         next: (response) => this.handleResponse(question, response, pendingIndex),
         error: (err) => {
           this.removePendingMessage(pendingIndex);
           this.errorMessage = err?.error?.detail ?? 'Failed to get advice. Please try again.';
-          this.isLoading = false;
         },
       });
   }
@@ -112,9 +118,6 @@ export class PatientChatPageComponent implements OnInit {
       timestamp: this.history[pendingIndex]?.timestamp ?? new Date(),
     };
     this.upsertPendingMessage(pendingIndex, updatedMessage);
-
-    this.isLoading = false;
-    this.chatForm.patchValue({ question: '' });
   }
 
   private appendPendingMessage(question: string): number {
