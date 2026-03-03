@@ -4,12 +4,22 @@
       <div>
         <h1 class="text-2xl sm:text-3xl font-semibold text-[var(--text)]">{{ 'COMMON.APP_NAME' | translate }}</h1>
         <p class="text-sm text-[var(--text-dim)]">
-          {{ mode === 'login' ? ('AUTH.WELCOME_LOGIN' | translate) : ('AUTH.WELCOME_REGISTER' | translate) }}
+          {{
+            mode === 'login'
+              ? ('AUTH.WELCOME_LOGIN' | translate)
+              : mode === 'register'
+                ? ('AUTH.WELCOME_REGISTER' | translate)
+                : ('AUTH.WELCOME_VERIFY' | translate)
+          }}
         </p>
       </div>
-      <button type="button" appGlassButton (click)="toggleMode()">
+      <button type="button" appGlassButton (click)="toggleMode()" *ngIf="mode !== 'verify'">
         <span class="material-symbols-rounded">{{ mode === 'login' ? 'person_add' : 'login' }}</span>
         <span>{{ mode === 'login' ? ('AUTH.SWITCH_TO_REGISTER' | translate) : ('AUTH.SWITCH_TO_LOGIN' | translate) }}</span>
+      </button>
+      <button type="button" appGlassButton (click)="mode='login'; errorMessage=''; infoMessage=''" *ngIf="mode === 'verify'">
+        <span class="material-symbols-rounded">login</span>
+        <span>{{ 'AUTH.SWITCH_TO_LOGIN' | translate }}</span>
       </button>
     </div>
 
@@ -80,6 +90,40 @@
       <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
         <span *ngIf="isSubmitting" class="loader-dot"></span>
         <span>{{ isSubmitting ? ('AUTH.CREATING' | translate) : ('AUTH.CREATE_BUTTON' | translate) }}</span>
+      </button>
+    </form>
+
+    <form *ngIf="mode === 'verify'" [formGroup]="verifyForm" (ngSubmit)="submitVerify()" class="space-y-5">
+      <div class="flex flex-col gap-2">
+        <label class="text-xs uppercase tracking-[0.2em] text-[var(--text-dim)]">{{ 'AUTH.EMAIL' | translate }}</label>
+        <div class="input-glass">{{ pendingVerificationEmail }}</div>
+      </div>
+
+      <app-glass-input
+        [label]="'AUTH.EMAIL_CODE' | translate"
+        [placeholder]="'AUTH.EMAIL_CODE_PLACEHOLDER' | translate"
+        type="text"
+        formControlName="code">
+      </app-glass-input>
+
+      <div *ngIf="infoMessage" class="toast-glass success" role="status">
+        <span class="material-symbols-rounded">info</span>
+        <span>{{ infoMessage }}</span>
+      </div>
+
+      <div *ngIf="errorMessage" class="toast-glass error" role="alert">
+        <span class="material-symbols-rounded">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
+        <span *ngIf="isSubmitting" class="loader-dot"></span>
+        <span>{{ isSubmitting ? ('AUTH.VERIFYING' | translate) : ('AUTH.VERIFY_BUTTON' | translate) }}</span>
+      </button>
+
+      <button type="button" appGlassButton [glassBlock]="true" [disabled]="isSubmitting" (click)="resendCode()">
+        <span *ngIf="isSubmitting" class="loader-dot"></span>
+        <span>{{ 'AUTH.RESEND_CODE' | translate }}</span>
       </button>
     </form>
   </app-glass-card>

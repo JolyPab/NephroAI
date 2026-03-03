@@ -44,6 +44,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+    email_verified_at = Column(DateTime, nullable=True)
     is_doctor = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
@@ -249,6 +250,23 @@ class V2DoctorNote(Base):
     doctor_user = relationship("User", foreign_keys=[doctor_user_id])
 
 
+class EmailVerificationCode(Base):
+    """One-time email verification code for account activation."""
+
+    __tablename__ = "email_verification_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    email = Column(String, nullable=False, index=True)
+    code_hash = Column(String, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    attempts = Column(Integer, nullable=False, default=0)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id])
+
+
 def get_database_url(default_sqlite: Optional[str] = None) -> str:
     """Get database URL from environment or fallback to local SQLite."""
     if default_sqlite is None:
@@ -278,8 +296,11 @@ def init_db(engine):
     """Initialize database tables."""
     Base.metadata.create_all(bind=engine)
     added_columns = ensure_lab_results_columns(engine)
+    user_added_columns = ensure_users_columns(engine)
     if added_columns:
         print(f"[DB] added columns: {', '.join(added_columns)}")
+    if user_added_columns:
+        print(f"[DB] added user columns: {', '.join(user_added_columns)}")
 
 
 def ensure_lab_results_columns(engine) -> list[str]:
@@ -310,6 +331,29 @@ def ensure_lab_results_columns(engine) -> list[str]:
         return [name for name, _ in additions]
     except Exception as exc:
         print(f"[WARN] Could not ensure lab_results columns: {exc}")
+        return []
+
+
+def ensure_users_columns(engine) -> list[str]:
+    """Add missing users columns without full migrations."""
+    try:
+        inspector = inspect(engine)
+        if "users" not in inspector.get_table_names():
+            return []
+        existing = {col["name"] for col in inspector.get_columns("users")}
+        additions: list[tuple[str, str]] = []
+        if "email_verified_at" not in existing:
+            additions.append(("email_verified_at", "TIMESTAMP"))
+
+        if not additions:
+            return []
+
+        with engine.begin() as conn:
+            for name, col_type in additions:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN {name} {col_type}"))
+        return [name for name, _ in additions]
+    except Exception as exc:
+        print(f"[WARN] Could not ensure users columns: {exc}")
         return []
 
 

@@ -3147,6 +3147,7 @@ async def update_me(
         full_name=user.full_name,
         is_doctor=user.is_doctor,
         is_active=user.is_active,
+        email_verified=user.email_verified_at is not None,
         role="DOCTOR" if user.is_doctor else "PATIENT",
     )
 
