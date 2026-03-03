@@ -18,9 +18,11 @@ export class AuthPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
-  mode: 'login' | 'register' = 'login';
+  mode: 'login' | 'register' | 'verify' = 'login';
   isSubmitting = false;
   errorMessage = '';
+  infoMessage = '';
+  pendingVerificationEmail = '';
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -35,6 +37,10 @@ export class AuthPageComponent implements OnInit {
     role: ['PATIENT'],
   });
 
+  readonly verifyForm = this.fb.nonNullable.group({
+    code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  });
+
   ngOnInit(): void {
     this.auth.loadProfile().subscribe((user) => {
       if (user) {
@@ -46,6 +52,9 @@ export class AuthPageComponent implements OnInit {
   toggleMode(): void {
     this.mode = this.mode === 'login' ? 'register' : 'login';
     this.errorMessage = '';
+    this.infoMessage = '';
+    this.pendingVerificationEmail = '';
+    this.verifyForm.reset();
   }
 
   submitLogin(): void {
@@ -56,6 +65,7 @@ export class AuthPageComponent implements OnInit {
 
     this.isSubmitting = true;
     this.errorMessage = '';
+    this.infoMessage = '';
     this.auth.login(this.loginForm.getRawValue()).subscribe({
       next: (user) => this.redirectAfterAuth(user),
       error: (err) => {
@@ -77,12 +87,56 @@ export class AuthPageComponent implements OnInit {
 
     this.isSubmitting = true;
     this.errorMessage = '';
+    this.infoMessage = '';
     const { email, password, role, full_name } = this.registerForm.getRawValue();
     this.auth.register({ email, password, role, full_name }).subscribe({
-      next: (user) => this.redirectAfterAuth(user),
+      next: (response) => {
+        this.pendingVerificationEmail = response.email;
+        this.mode = 'verify';
+        this.verifyForm.reset();
+        this.infoMessage = this.translate.instant('AUTH.VERIFICATION_CODE_SENT', { email: response.email });
+      },
       error: (err) => {
         this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_REGISTER_FAILED');
         this.isSubmitting = false;
+      },
+      complete: () => (this.isSubmitting = false),
+    });
+  }
+
+  submitVerify(): void {
+    if (this.verifyForm.invalid || !this.pendingVerificationEmail) {
+      this.verifyForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    const { code } = this.verifyForm.getRawValue();
+    this.auth.verifyEmail({ email: this.pendingVerificationEmail, code }).subscribe({
+      next: (user) => this.redirectAfterAuth(user),
+      error: (err) => {
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_VERIFY_FAILED');
+        this.isSubmitting = false;
+      },
+      complete: () => (this.isSubmitting = false),
+    });
+  }
+
+  resendCode(): void {
+    if (!this.pendingVerificationEmail || this.isSubmitting) {
+      return;
+    }
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    this.auth.resendEmailCode({ email: this.pendingVerificationEmail }).subscribe({
+      next: (response) => {
+        this.infoMessage = this.translate.instant('AUTH.VERIFICATION_CODE_SENT', { email: response.email });
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_RESEND_FAILED');
       },
       complete: () => (this.isSubmitting = false),
     });

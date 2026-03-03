@@ -12,6 +12,12 @@ export interface AuthResponse {
   refreshToken?: string;
 }
 
+export interface RegisterInitResponse {
+  status: 'verification_required';
+  email: string;
+  message: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(ApiService);
@@ -32,21 +38,28 @@ export class AuthService {
     );
   }
 
-  register(payload: { email: string; password: string; role?: string; full_name?: string }): Observable<User> {
+  register(payload: { email: string; password: string; role?: string; full_name?: string }): Observable<RegisterInitResponse> {
     const body: any = {
       email: payload.email,
       password: payload.password,
       is_doctor: payload.role === 'DOCTOR',
       full_name: payload.full_name,
     };
-    return this.api.post<AuthResponse>('/auth/register', body).pipe(
+    return this.api.post<RegisterInitResponse>('/auth/register', body);
+  }
+
+  verifyEmail(payload: { email: string; code: string }): Observable<User> {
+    return this.api.post<AuthResponse>('/auth/verify-email', payload).pipe(
       tap((response) => {
-        console.log('[DEBUG] Register response:', response);
         this.handleAuthSuccess(response);
         this.userSignal.set(this.normalizeUser(response.user));
       }),
       map((response) => this.normalizeUser(response.user)),
     );
+  }
+
+  resendEmailCode(payload: { email: string }): Observable<RegisterInitResponse> {
+    return this.api.post<RegisterInitResponse>('/auth/resend-email-code', payload);
   }
 
   logout(): Observable<void> {
