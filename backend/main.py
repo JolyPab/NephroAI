@@ -967,6 +967,7 @@ class UserUpdate(BaseModel):
 async def preview_import(
     file: UploadFile = File(...),
     patient_id: str = Form(...),
+    user_id: int = Depends(get_current_user_id),
 ):
     """
     Preview raw text extraction without saving to database.
@@ -1000,7 +1001,10 @@ async def preview_import(
 
 
 @app.post("/api/v2/preview", response_model=ImportV2)
-async def preview_import_v2(file: UploadFile = File(...)):
+async def preview_import_v2(
+    file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
+):
     """Preview v2 extraction from uploaded PDF via GPT-5.2 structured output."""
     pdf_bytes = await file.read()
     if not pdf_bytes:
@@ -1857,32 +1861,29 @@ async def get_upload_status(
 async def import_lab_results(
     file: UploadFile = File(...),
     patient_id: int = Form(...),
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
     """
     Extract raw text from PDF and save parsed lab results.
     Patient_id must be ID of patient belonging to authenticated user.
-
-    For testing without auth, just pass patient_id.
-    For production, add user_id: int = Depends(get_current_user_id) parameter.
 
     Returns status and number of items imported.
     """
     try:
         # Read PDF file
         pdf_bytes = await file.read()
-        
+
         if not pdf_bytes:
             raise HTTPException(status_code=400, detail="Empty file")
-        
-        # Verify patient exists (comment out for testing without auth)
-        # db_session = SessionLocal()
-        # patient = db_session.query(Patient).filter(
-        #     Patient.id == patient_id,
-        #     Patient.user_id == user_id  # uncomment when using auth
-        # ).first()
-        # db_session.close()
-        # if not patient:
-        #     raise HTTPException(status_code=404, detail="Patient not found")
+
+        # Verify patient belongs to authenticated user
+        patient = db.query(Patient).filter(
+            Patient.id == patient_id,
+            Patient.user_id == user_id,
+        ).first()
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
         
         # Extract raw text and parse into minimal records
         try:
