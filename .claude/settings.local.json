@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh -o StrictHostKeyChecking=no root@209.50.54.90 \"openssl rand -hex 32\")",
+      "Bash(ssh -o:*)"
+    ]
+  }
+}
