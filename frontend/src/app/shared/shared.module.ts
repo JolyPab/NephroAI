@@ -14,6 +14,7 @@ import { GlassToolbarComponent } from './components/glass-toolbar/glass-toolbar.
 import { GlassTabbarComponent } from './components/glass-tabbar/glass-tabbar.component';
 import { LatestReportSummaryComponent } from './components/latest-report-summary/latest-report-summary.component';
 import { ChatShellComponent } from './components/chat-shell/chat-shell.component';
+import { OtpInputComponent } from './components/otp-input/otp-input.component';
 
 @NgModule({
   imports: [
@@ -32,6 +33,7 @@ import { ChatShellComponent } from './components/chat-shell/chat-shell.component
     GlassTabbarComponent,
     LatestReportSummaryComponent,
     ChatShellComponent,
+    OtpInputComponent,
   ],
   exports: [
     CommonModule,
@@ -49,6 +51,7 @@ import { ChatShellComponent } from './components/chat-shell/chat-shell.component
     GlassTabbarComponent,
     LatestReportSummaryComponent,
     ChatShellComponent,
+    OtpInputComponent,
   ],
 })
 export class SharedModule {}

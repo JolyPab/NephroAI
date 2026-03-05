@@ -3,6 +3,41 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { format } from 'date-fns';
 
 import { V2DoctorNoteResponse, V2SeriesPointResponse } from '../../../../core/models/v2.model';
+import { V2DashboardLang } from '../../i18n/analyte-display';
+
+interface PanelCopy {
+  dateLabel: string;
+  valueLabel: string;
+  statusLabel: string;
+  pageLabel: string;
+  evidenceLabel: string;
+  doctorNotesLabel: string;
+  doctorFallback: string;
+  emptyNotes: string;
+}
+
+const PANEL_COPY: Record<V2DashboardLang, PanelCopy> = {
+  en: {
+    dateLabel: 'Date',
+    valueLabel: 'Value',
+    statusLabel: 'Status',
+    pageLabel: 'Page',
+    evidenceLabel: 'Evidence',
+    doctorNotesLabel: 'Doctor notes',
+    doctorFallback: 'Doctor',
+    emptyNotes: 'No doctor notes for this point.',
+  },
+  es: {
+    dateLabel: 'Fecha',
+    valueLabel: 'Valor',
+    statusLabel: 'Estado',
+    pageLabel: 'Página',
+    evidenceLabel: 'Evidencia',
+    doctorNotesLabel: 'Notas del médico',
+    doctorFallback: 'Médico',
+    emptyNotes: 'No hay notas del médico para este punto.',
+  },
+};
 
 @Component({
   selector: 'app-v2-point-detail-panel',
@@ -20,7 +55,18 @@ export class V2PointDetailPanelComponent {
   @Input() valueLabel: string | null = null;
   @Input() statusLabel: string | null = null;
   @Input() doctorNotes: V2DoctorNoteResponse[] = [];
-  @Input() emptyDoctorNotesLabel = 'No doctor notes for this point.';
+  @Input() language: V2DashboardLang = 'es';
+
+  /** @deprecated pass language instead */
+  @Input() emptyDoctorNotesLabel: string | null = null;
+
+  get copy(): PanelCopy {
+    return PANEL_COPY[this.language];
+  }
+
+  get resolvedEmptyDoctorNotesLabel(): string {
+    return this.emptyDoctorNotesLabel ?? this.copy.emptyNotes;
+  }
 
   @Output() closePanel = new EventEmitter<void>();
 

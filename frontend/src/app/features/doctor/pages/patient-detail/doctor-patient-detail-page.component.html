@@ -58,19 +58,19 @@
 
     <div class="note-island glass glass-soft" *ngIf="!loading && !errorMessage">
       <div>
-        <h3 class="text-base font-semibold text-[var(--text)]">Doctor note for selected point</h3>
+        <h3 class="text-base font-semibold text-[var(--text)]">{{ noteIslandCopy.title }}</h3>
         <p class="text-xs text-[var(--text-dim)]" *ngIf="selectedSeriesPoint; else noPointSelected">
           {{ selectedMetric }} • {{ selectedPointDateLabel }}
         </p>
         <ng-template #noPointSelected>
-          <p class="text-xs text-[var(--text-dim)]">Select a point in the chart to write or edit note.</p>
+          <p class="text-xs text-[var(--text-dim)]">{{ noteIslandCopy.subtitle }}</p>
         </ng-template>
       </div>
 
       <textarea
         class="input-glass"
         rows="3"
-        placeholder="Write note for this point"
+        [placeholder]="noteIslandCopy.placeholder"
         [(ngModel)]="pointNoteText"
         [disabled]="!selectedSeriesPoint || noteSaving || notesLoading"
       ></textarea>
@@ -83,10 +83,10 @@
           (click)="savePointNote()"
           [disabled]="!canSaveContext || noteSaving || !pointNoteText.trim()"
         >
-          {{ noteSaving ? 'Saving...' : 'Save note' }}
+          {{ noteSaving ? noteIslandCopy.saving : noteIslandCopy.save }}
         </button>
-        <span class="text-xs text-[var(--text-dim)]" *ngIf="!canSaveContext">Select a patient point first.</span>
-        <span class="text-xs text-[var(--text-dim)]" *ngIf="notesLoading">Loading notes...</span>
+        <span class="text-xs text-[var(--text-dim)]" *ngIf="!canSaveContext">{{ noteIslandCopy.noPoint }}</span>
+        <span class="text-xs text-[var(--text-dim)]" *ngIf="notesLoading">{{ noteIslandCopy.loadingNotes }}</span>
         <span class="text-xs text-[var(--success)]" *ngIf="noteSaved">{{ noteSaved }}</span>
         <span class="text-xs text-[var(--danger)]" *ngIf="noteError">{{ noteError }}</span>
       </div>

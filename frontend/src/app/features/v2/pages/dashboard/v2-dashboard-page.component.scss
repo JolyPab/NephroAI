@@ -52,7 +52,12 @@
 }
 
 .glass-input-basic:focus {
-  border-color: rgba(118, 168, 255, 0.55);
+  border-color: rgba(var(--accent-rgb), 0.55);
+}
+
+:host-context([data-theme='light']) .glass-input-basic {
+  border-color: rgba(79, 70, 229, 0.22);
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .filter-chip {
@@ -82,7 +87,7 @@
 
 .analyte-row:hover {
   transform: translateY(-1px);
-  border-color: rgba(118, 168, 255, 0.35);
+  border-color: rgba(var(--accent-rgb), 0.35);
 }
 
 @media (max-width: 900px) {

@@ -94,6 +94,7 @@ export class V2DashboardPageComponent implements OnInit {
 
   readonly langStorageKey = 'v2_lang';
   readonly sortModes: SortMode[] = ['recent', 'az', 'za'];
+  readonly skeletonItems = Array(6);
 
   selectedFile: File | null = null;
   isUploading = false;

@@ -57,7 +57,7 @@
 }
 
 .timeline-row:hover {
-  border-color: rgba(118, 168, 255, 0.3);
+  border-color: rgba(var(--accent-rgb), 0.3);
 }
 
 .timeline-row--selected {
@@ -85,12 +85,17 @@
 }
 
 .details-btn:hover {
-  border-color: rgba(118, 168, 255, 0.45);
+  border-color: rgba(var(--accent-rgb), 0.45);
 }
 
 .details-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+:host-context([data-theme='light']) .details-btn {
+  border-color: rgba(79, 70, 229, 0.28);
+  background: rgba(79, 70, 229, 0.06);
 }
 
 .zone-legend {
@@ -130,4 +135,9 @@
   color: var(--text);
   font-size: 0.75rem;
   line-height: 1;
+}
+
+.series-skeleton {
+  display: flex;
+  flex-direction: column;
 }
