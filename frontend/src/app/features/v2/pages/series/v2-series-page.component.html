@@ -3,18 +3,25 @@
     <div>
       <h3 class="text-xl font-semibold text-[var(--text)] break-all">{{ analyteDisplayName }}</h3>
       <p class="text-xs text-[var(--text-dim)] break-words">{{ analyteKey }}</p>
-      <p class="text-sm text-[var(--text-dim)]">Series type: {{ series?.series_type ?? '-' }}</p>
+      <p class="text-sm text-[var(--text-dim)]">{{ copy.seriesTypeLabel }}: {{ series?.series_type ?? '-' }}</p>
       <p class="text-sm text-[var(--text-dim)]">
-        Unit: {{ headerUnit }} | Points: {{ headerPointCount }} | Dates: {{ headerDateRange }}
-        <span *ngIf="isNumeric && hasReferenceBounds"> | Abnormal: {{ headerAbnormalCount ?? 0 }}</span>
+        {{ copy.unitLabel }}: {{ headerUnit }} | {{ copy.pointsLabel }}: {{ headerPointCount }} | {{ copy.datesLabel }}: {{ headerDateRange }}
+        <span *ngIf="isNumeric && hasReferenceBounds"> | {{ copy.abnormalLabel }}: {{ headerAbnormalCount ?? 0 }}</span>
       </p>
     </div>
-    <a appGlassButton [routerLink]="['/v2']">Back to dashboard</a>
+    <a appGlassButton [routerLink]="['/v2']">{{ copy.backToDashboard }}</a>
   </app-glass-card>
 
-  <div *ngIf="isLoading" class="glass glass-strong flex flex-col items-center justify-center gap-3 min-h-[280px]">
-    <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
-    <p class="text-sm text-[var(--text-dim)]">Loading series...</p>
+  <div *ngIf="isLoading" class="glass glass-strong min-h-[280px] series-skeleton">
+    <div class="flex flex-col gap-3 p-6">
+      <span class="skeleton-line h-6" style="width: 45%"></span>
+      <span class="skeleton-line h-4" style="width: 30%"></span>
+      <span class="skeleton-line h-3" style="width: 55%"></span>
+    </div>
+    <div class="px-6 pb-6 flex flex-col gap-2">
+      <span class="skeleton-line" style="width: 100%; height: 11rem"></span>
+      <span class="skeleton-line h-3" style="width: 60%"></span>
+    </div>
   </div>
 
   <div *ngIf="!isLoading && errorMessage" class="glass glass-strong p-4 text-[var(--danger)] border border-[var(--danger)]/40">
@@ -25,27 +32,27 @@
     <div *ngIf="isNumeric && hasReferenceBounds && !hasCategoricalReference" class="inline-flex">
       <label class="glass chip filter-chip">
         <input type="checkbox" [checked]="abnormalOnly" (change)="onAbnormalOnlyChange($any($event.target).checked)" />
-        <span>Abnormal only</span>
+        <span>{{ copy.abnormalOnly }}</span>
       </label>
     </div>
 
     <div *ngIf="isBinary" class="inline-flex">
       <label class="glass chip filter-chip">
         <input type="checkbox" [checked]="positivesOnly" (change)="onPositivesOnlyChange($any($event.target).checked)" />
-        <span>Positives only</span>
+        <span>{{ copy.positivesOnly }}</span>
       </label>
     </div>
 
     <div *ngIf="isNumeric" class="inline-flex gap-2">
-      <button type="button" class="details-btn" (click)="onResetView()">Reset view</button>
+      <button type="button" class="details-btn" (click)="onResetView()">{{ copy.resetView }}</button>
       <button type="button" class="details-btn" (click)="openSelectedEvidence()" [disabled]="!selectedPointKey">
-        View evidence
+        {{ copy.viewEvidence }}
       </button>
     </div>
 
     <div *ngIf="isNumeric; else textTimeline" class="series-chart-shell">
       <div *ngIf="zoneLegendItems.length" class="zone-legend">
-        <span class="zone-legend__title">Zones:</span>
+        <span class="zone-legend__title">{{ copy.zonesLabel }}:</span>
         <div class="zone-legend__items">
           <div class="zone-legend__item" *ngFor="let item of zoneLegendItems">
             <span class="zone-legend__swatch" [style.background]="item.color" [style.borderColor]="item.borderColor"></span>
@@ -57,10 +64,10 @@
         <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'line'" (chartClick)="onChartClick($event)"></canvas>
       </div>
       <p class="text-xs text-[var(--text-dim)] mt-2 series-chart-footnote">
-        Reference: {{ getActiveReferenceLabel() }} | Click selects point | Ctrl/Cmd + click opens evidence
+        {{ copy.referenceLabel }}: {{ getActiveReferenceLabel() }} | {{ copy.clickHint }}
       </p>
       <p *ngIf="!chartData.datasets?.[0]?.data?.length" class="text-sm text-[var(--text-dim)] text-center mt-3">
-        No numeric points available.
+        {{ copy.noNumericPoints }}
       </p>
     </div>
 
@@ -79,13 +86,13 @@
           <div class="text-right shrink-0">
             <p class="text-xs text-[var(--text-dim)]">{{ formatPointDate(point.t) }}</p>
             <p class="text-xs text-[var(--text-dim)]" *ngIf="point.page !== null && point.page !== undefined">
-              Page {{ point.page }}
+              p. {{ point.page }}
             </p>
-            <button type="button" class="details-btn mt-1" (click)="openDetail(point); $event.stopPropagation()">Details</button>
+            <button type="button" class="details-btn mt-1" (click)="openDetail(point); $event.stopPropagation()">{{ copy.viewEvidence }}</button>
           </div>
         </div>
       </div>
-      <p *ngIf="!timelinePoints.length" class="text-sm text-[var(--text-dim)] text-center">No points available.</p>
+      <p *ngIf="!timelinePoints.length" class="text-sm text-[var(--text-dim)] text-center">{{ copy.noPoints }}</p>
     </ng-template>
   </app-glass-card>
 </div>
@@ -99,6 +106,6 @@
   [valueLabel]="detailValueLabel"
   [statusLabel]="detailStatusLabel"
   [doctorNotes]="detailDoctorNotes"
-  [emptyDoctorNotesLabel]="language === 'es' ? 'No hay notas del doctor para este punto.' : 'No doctor notes for this point.'"
+  [language]="language"
   (closePanel)="closeDetail()"
 ></app-v2-point-detail-panel>

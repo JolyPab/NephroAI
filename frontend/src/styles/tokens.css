@@ -4,9 +4,9 @@
   --r-xl: 32px;
   --radius-brand: 24px;
   --radius-pill: 999px;
-  --blur-sm: 8px;
-  --blur-md: 16px;
-  --blur-lg: 24px;
+  --blur-sm: 10px;
+  --blur-md: 20px;
+  --blur-lg: 32px;
   --transition-fast: 160ms ease;
   --transition-base: 220ms ease;
   --shadow-brand: 0 18px 38px -18px rgba(8, 12, 24, 0.55);
@@ -14,88 +14,119 @@
 
 :root,
 [data-theme='dark'] {
-  --bg: radial-gradient(circle at 20% 20%, rgba(118, 168, 255, 0.16) 0%, rgba(15, 18, 32, 0) 45%), linear-gradient(135deg, #0f1220 0%, #131626 45%, #1a1f33 100%);
-  --bg-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
-  --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  --glass-strong: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
-  --border: rgba(255, 255, 255, 0.18);
-  --ring: rgba(255, 255, 255, 0.3);
-  --text: #e8ecf8;
-  --text-dim: #b9c0d4;
-  --accent: #76a8ff;
+  --accent: #818cf8;
+  --accent-rgb: 129, 140, 248;
+
+  /* Override Bootstrap so it uses our theme colors */
+  --bs-body-color: #eef0ff;
+  --bs-body-bg: transparent;
+  --bs-card-bg: transparent;
+  --bs-card-border-color: rgba(255, 255, 255, 0.16);
+
+  /* Deep space background — large vivid orbs on near-black */
+  --bg:
+    radial-gradient(ellipse 75% 60% at var(--orb1-x) var(--orb1-y), rgba(124, 58,  237, 0.60) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at var(--orb2-x) var(--orb2-y), rgba(59,  130, 246, 0.40) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 40% at var(--orb3-x) var(--orb3-y), rgba(236, 72,  153, 0.30) 0%, transparent 55%),
+    #06060f;
+
+  --bg-noise: none;
+
+  /* Frosted dark glass — matte, readable */
+  --glass: rgba(255, 255, 255, 0.07);
+  --glass-strong: rgba(255, 255, 255, 0.11);
+
+  --border: rgba(255, 255, 255, 0.16);
+  --ring: rgba(255, 255, 255, 0.32);
+  --text: #eef0ff;
+  --text-dim: #a5b4fc;
+
   --danger: #ff6b6b;
-  --color-primary: #76a8ff;
-  --color-secondary: #9aa7cf;
+  --color-primary: #818cf8;
+  --color-secondary: #a5b4fc;
   --color-accent: var(--accent);
-  --color-surface: rgba(20, 24, 42, 0.82);
-  --color-muted: rgba(185, 192, 212, 0.65);
-  --color-success: #4ade80;
+  --color-surface: rgba(12, 13, 30, 0.82);
+  --color-muted: rgba(165, 180, 252, 0.6);
+  --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-danger: #f87171;
-  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.37);
-  --shadow-glow: 0 20px 60px -24px rgba(118, 168, 255, 0.55), 0 8px 24px -8px rgba(118, 168, 255, 0.3);
+
+  --shadow-soft: 0 8px 40px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 24px 60px -20px rgba(var(--accent-rgb), 0.65), 0 8px 24px -8px rgba(var(--accent-rgb), 0.35);
   --shadow-inner: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --chart-text: #e8ecf8;
-  --chart-grid: rgba(255, 255, 255, 0.12);
-  --chart-tooltip-bg: rgba(14, 18, 30, 0.94);
-  --chart-tooltip-text: #e8ecf8;
-  --chart-tooltip-border: rgba(255, 255, 255, 0.2);
-  --chart-zone-low: rgba(34, 197, 94, 0.12);
-  --chart-zone-mid: rgba(59, 130, 246, 0.12);
-  --chart-zone-high: rgba(245, 158, 11, 0.12);
-  --chart-zone-alt-1: rgba(239, 68, 68, 0.12);
-  --chart-zone-alt-2: rgba(168, 85, 247, 0.12);
-  --chart-zone-border: rgba(255, 255, 255, 0.2);
-  --scroll-thumb: rgba(185, 192, 212, 0.34);
-  --scroll-thumb-hover: rgba(185, 192, 212, 0.54);
+
+  --chart-text: #eef0ff;
+  --chart-grid: rgba(255, 255, 255, 0.10);
+  --chart-tooltip-bg: rgba(10, 11, 28, 0.96);
+  --chart-tooltip-text: #eef0ff;
+  --chart-tooltip-border: rgba(255, 255, 255, 0.18);
+  --chart-zone-low: rgba(52, 211, 153, 0.14);
+  --chart-zone-mid: rgba(129, 140, 248, 0.14);
+  --chart-zone-high: rgba(245, 158, 11, 0.14);
+  --chart-zone-alt-1: rgba(239, 68, 68, 0.14);
+  --chart-zone-alt-2: rgba(168, 85, 247, 0.14);
+  --chart-zone-border: rgba(255, 255, 255, 0.18);
+
+  --scroll-thumb: rgba(165, 180, 252, 0.28);
+  --scroll-thumb-hover: rgba(165, 180, 252, 0.48);
 }
 
 [data-theme='light'] {
   color-scheme: light;
-  --bg: radial-gradient(circle at 15% 20%, rgba(118, 168, 255, 0.22) 0%, rgba(255, 255, 255, 0) 45%), linear-gradient(140deg, #f4f7ff 0%, #e7ecff 48%, #dbe3ff 100%);
-  --bg-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E");
-  --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
-  --glass-strong: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.7) 100%);
-  --border: rgba(118, 138, 182, 0.25);
-  --ring: rgba(118, 168, 255, 0.5);
-  --text: #1a1f33;
-  --text-dim: #4c5470;
-  --accent: #3f7eff;
-  --danger: #e35c66;
-  --color-primary: #3f7eff;
-  --color-secondary: #7a8bb7;
+  --accent: #4f46e5;
+  --accent-rgb: 79, 70, 229;
+
+  /* Override Bootstrap so it uses our theme colors */
+  --bs-body-color: #0f0e2a;
+  --bs-body-bg: transparent;
+  --bs-card-bg: transparent;
+  --bs-card-border-color: rgba(79, 70, 229, 0.28);
+
+  /* Light mode — same orb structure, more vivid */
+  --bg:
+    radial-gradient(ellipse 75% 60% at var(--orb1-x) var(--orb1-y), rgba(124, 58,  237, 0.26) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at var(--orb2-x) var(--orb2-y), rgba(59,  130, 246, 0.20) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 40% at var(--orb3-x) var(--orb3-y), rgba(236, 72,  153, 0.16) 0%, transparent 55%),
+    #eef0ff;
+
+  --bg-noise: none;
+
+  /* Frosted glass with visible depth */
+  --glass: rgba(255, 255, 255, 0.58);
+  --glass-strong: rgba(255, 255, 255, 0.76);
+
+  --border: rgba(79, 70, 229, 0.28);
+  --ring: rgba(79, 70, 229, 0.55);
+  --text: #0f0e2a;
+  --text-dim: #4338ca;
+
+  --danger: #dc2626;
+  --color-primary: #4f46e5;
+  --color-secondary: #6366f1;
   --color-accent: var(--accent);
-  --color-surface: rgba(255, 255, 255, 0.9);
-  --color-muted: rgba(76, 84, 112, 0.58);
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --shadow-glow: 0 20px 45px -24px rgba(118, 168, 255, 0.45), 0 8px 24px -8px rgba(118, 168, 255, 0.25);
-  --shadow-inner: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-  --chart-text: #1a1f33;
-  --chart-grid: rgba(76, 84, 112, 0.2);
-  --chart-tooltip-bg: rgba(255, 255, 255, 0.96);
-  --chart-tooltip-text: #1a1f33;
-  --chart-tooltip-border: rgba(118, 138, 182, 0.35);
-  --chart-zone-low: rgba(34, 197, 94, 0.2);
-  --chart-zone-mid: rgba(59, 130, 246, 0.2);
-  --chart-zone-high: rgba(245, 158, 11, 0.2);
-  --chart-zone-alt-1: rgba(239, 68, 68, 0.2);
-  --chart-zone-alt-2: rgba(168, 85, 247, 0.2);
-  --chart-zone-border: rgba(76, 84, 112, 0.35);
-  --scroll-thumb: rgba(76, 84, 112, 0.3);
-  --scroll-thumb-hover: rgba(76, 84, 112, 0.5);
+  --color-surface: rgba(255, 255, 255, 0.88);
+  --color-muted: rgba(67, 56, 202, 0.55);
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+
+  --shadow-soft: 0 8px 32px rgba(79, 70, 229, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 24px 56px -20px rgba(79, 70, 229, 0.45), 0 8px 24px -8px rgba(79, 70, 229, 0.28);
+  --shadow-inner: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+
+  --chart-text: #1e1b4b;
+  --chart-grid: rgba(79, 70, 229, 0.12);
+  --chart-tooltip-bg: rgba(255, 255, 255, 0.97);
+  --chart-tooltip-text: #1e1b4b;
+  --chart-tooltip-border: rgba(79, 70, 229, 0.25);
+  --chart-zone-low: rgba(5, 150, 105, 0.18);
+  --chart-zone-mid: rgba(79, 70, 229, 0.18);
+  --chart-zone-high: rgba(217, 119, 6, 0.18);
+  --chart-zone-alt-1: rgba(220, 38, 38, 0.18);
+  --chart-zone-alt-2: rgba(168, 85, 247, 0.18);
+  --chart-zone-border: rgba(79, 70, 229, 0.28);
+
+  --scroll-thumb: rgba(79, 70, 229, 0.22);
+  --scroll-thumb-hover: rgba(79, 70, 229, 0.42);
 }
 
-body {
-  background:
-    var(--bg-noise),
-    var(--bg);
-  background-attachment: fixed;
-  color: var(--text);
-  transition:
-    background-color var(--transition-base),
-    background-image var(--transition-base),
-    color var(--transition-fast);
-}

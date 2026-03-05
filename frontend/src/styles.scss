@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap&subset=latin,cyrillic');
+﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,15 +8,54 @@
 @import 'bootstrap/scss/bootstrap';
 @import './styles/glass.css';
 
+/* Force theme text/bg colors after Bootstrap — Bootstrap loads after tokens.css and would override */
+body {
+  color: var(--text);
+  background: var(--bg);
+  background-attachment: fixed;
+}
+
+/* ─── Animated background orbs via @property ──────────────────────────────── */
+
+@property --orb1-x { syntax: '<percentage>'; initial-value: 15%; inherits: true; }
+@property --orb1-y { syntax: '<percentage>'; initial-value: 45%; inherits: true; }
+@property --orb2-x { syntax: '<percentage>'; initial-value: 80%; inherits: true; }
+@property --orb2-y { syntax: '<percentage>'; initial-value: 72%; inherits: true; }
+@property --orb3-x { syntax: '<percentage>'; initial-value: 82%; inherits: true; }
+@property --orb3-y { syntax: '<percentage>'; initial-value: 12%; inherits: true; }
+
+@keyframes orb-1 {
+  0%   { --orb1-x: 15%; --orb1-y: 45%; }
+  35%  { --orb1-x: 22%; --orb1-y: 38%; }
+  65%  { --orb1-x: 10%; --orb1-y: 52%; }
+  100% { --orb1-x: 15%; --orb1-y: 45%; }
+}
+@keyframes orb-2 {
+  0%   { --orb2-x: 80%; --orb2-y: 72%; }
+  40%  { --orb2-x: 88%; --orb2-y: 62%; }
+  75%  { --orb2-x: 76%; --orb2-y: 80%; }
+  100% { --orb2-x: 80%; --orb2-y: 72%; }
+}
+@keyframes orb-3 {
+  0%   { --orb3-x: 82%; --orb3-y: 12%; }
+  50%  { --orb3-x: 90%; --orb3-y: 20%; }
+  100% { --orb3-x: 82%; --orb3-y: 12%; }
+}
+
+html {
+  animation:
+    orb-1 18s ease-in-out infinite,
+    orb-2 23s ease-in-out infinite,
+    orb-3 20s ease-in-out infinite;
+}
+
 :root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
   body {
-    background:
-      var(--bg-noise),
-      var(--bg);
+    background: var(--bg);
     background-attachment: fixed;
     background-color: var(--color-surface);
     color: var(--text);
@@ -72,10 +111,24 @@
   }
 
   .toast-glass.success {
-    border-color: rgba(118, 168, 255, 0.45);
+    border-color: rgba(var(--accent-rgb), 0.45);
   }
 
   .toast-glass.error {
     border-color: rgba(255, 107, 107, 0.45);
+  }
+
+  [data-theme='light'] .toast-glass {
+    background: rgba(255, 255, 255, 0.90);
+    border-color: rgba(79, 70, 229, 0.25);
+    box-shadow: 0 4px 20px -6px rgba(79, 70, 229, 0.14), 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+
+  [data-theme='light'] .toast-glass.error {
+    border-color: rgba(220, 38, 38, 0.40);
+  }
+
+  [data-theme='light'] .toast-glass.success {
+    border-color: rgba(5, 150, 105, 0.40);
   }
 }

@@ -12,37 +12,37 @@
 
     <div class="panel-body" *ngIf="point as selectedPoint">
       <div class="row">
-        <span class="label">Date</span>
+        <span class="label">{{ copy.dateLabel }}</span>
         <span class="value">{{ formatDate(selectedPoint.t) }}</span>
       </div>
       <div class="row">
-        <span class="label">Value</span>
+        <span class="label">{{ copy.valueLabel }}</span>
         <span class="value">{{ formatValue(selectedPoint) }}</span>
       </div>
       <div class="row" *ngIf="statusLabel">
-        <span class="label">Status</span>
+        <span class="label">{{ copy.statusLabel }}</span>
         <span class="value">{{ statusLabel }}</span>
       </div>
       <div class="row">
-        <span class="label">Page</span>
+        <span class="label">{{ copy.pageLabel }}</span>
         <span class="value">{{ selectedPoint.page ?? '-' }}</span>
       </div>
       <div class="row row-column">
-        <span class="label">Evidence</span>
+        <span class="label">{{ copy.evidenceLabel }}</span>
         <pre class="evidence">{{ selectedPoint.evidence || '-' }}</pre>
       </div>
       <div class="row row-column">
-        <span class="label">Doctor notes</span>
+        <span class="label">{{ copy.doctorNotesLabel }}</span>
         <div *ngIf="doctorNotes.length; else noDoctorNotes" class="notes-list">
           <div class="note-item" *ngFor="let note of doctorNotes">
             <p class="note-meta">
-              {{ note.doctor_name || ('Doctor #' + note.doctor_id) }} • {{ formatDate(note.updated_at) }}
+              {{ note.doctor_name || (copy.doctorFallback + ' #' + note.doctor_id) }} • {{ formatDate(note.updated_at) }}
             </p>
             <p class="note-text">{{ note.note }}</p>
           </div>
         </div>
         <ng-template #noDoctorNotes>
-          <p class="notes-empty">{{ emptyDoctorNotesLabel }}</p>
+          <p class="notes-empty">{{ resolvedEmptyDoctorNotesLabel }}</p>
         </ng-template>
       </div>
     </div>

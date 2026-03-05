@@ -43,6 +43,67 @@ interface ChartThemeColors {
   tooltipBorder: string;
 }
 
+interface SeriesCopy {
+  backToDashboard: string;
+  resetView: string;
+  viewEvidence: string;
+  abnormalOnly: string;
+  positivesOnly: string;
+  noNumericPoints: string;
+  noPoints: string;
+  seriesTypeLabel: string;
+  unitLabel: string;
+  pointsLabel: string;
+  datesLabel: string;
+  abnormalLabel: string;
+  zonesLabel: string;
+  referenceLabel: string;
+  clickHint: string;
+  missingKey: string;
+  loadFailed: string;
+}
+
+const SERIES_COPY: Record<V2DashboardLang, SeriesCopy> = {
+  en: {
+    backToDashboard: 'Back to dashboard',
+    resetView: 'Reset view',
+    viewEvidence: 'View evidence',
+    abnormalOnly: 'Abnormal only',
+    positivesOnly: 'Positives only',
+    noNumericPoints: 'No numeric points available.',
+    noPoints: 'No points available.',
+    seriesTypeLabel: 'Series type',
+    unitLabel: 'Unit',
+    pointsLabel: 'Points',
+    datesLabel: 'Dates',
+    abnormalLabel: 'Abnormal',
+    zonesLabel: 'Zones',
+    referenceLabel: 'Reference',
+    clickHint: 'Click selects point · Ctrl/Cmd+click opens evidence',
+    missingKey: 'Missing analyte key.',
+    loadFailed: 'Failed to load V2 series.',
+  },
+  es: {
+    backToDashboard: 'Volver al panel',
+    resetView: 'Restablecer vista',
+    viewEvidence: 'Ver evidencia',
+    abnormalOnly: 'Solo anormales',
+    positivesOnly: 'Solo positivos',
+    noNumericPoints: 'No hay puntos numéricos disponibles.',
+    noPoints: 'No hay puntos disponibles.',
+    seriesTypeLabel: 'Tipo de serie',
+    unitLabel: 'Unidad',
+    pointsLabel: 'Puntos',
+    datesLabel: 'Fechas',
+    abnormalLabel: 'Anormales',
+    zonesLabel: 'Zonas',
+    referenceLabel: 'Referencia',
+    clickHint: 'Clic selecciona punto · Ctrl/Cmd+clic abre evidencia',
+    missingKey: 'Clave de analito faltante.',
+    loadFailed: 'No se pudo cargar la serie V2.',
+  },
+};
+
 const STATUS_LABELS: Record<V2DashboardLang, Record<NumericStatus, string>> = {
   en: { normal: 'Normal', low: 'Low', high: 'High', unknown: 'Unknown' },
   es: { normal: 'Normal', low: 'Bajo', high: 'Alto', unknown: 'Desconocido' },
@@ -196,7 +257,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const analyteKey = params.get('analyteKey');
       if (!analyteKey) {
-        this.errorMessage = 'Missing analyte key.';
+        this.errorMessage = this.copy.missingKey;
         this.series = null;
         this.isLoading = false;
         return;
@@ -219,6 +280,10 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
     if ('doctorPatientId' in changes && this.analyteKey) {
       this.loadSeries(this.analyteKey);
     }
+  }
+
+  get copy(): SeriesCopy {
+    return SERIES_COPY[this.language];
   }
 
   get isNumeric(): boolean {
@@ -296,7 +361,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       error: (err) => {
         this.series = null;
         this.isLoading = false;
-        this.errorMessage = err?.error?.detail ?? 'Failed to load V2 series.';
+        this.errorMessage = err?.error?.detail ?? this.copy.loadFailed;
       },
     });
   }

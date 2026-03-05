@@ -134,6 +134,21 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
       });
   }
 
+  get noteIslandCopy() {
+    const es = this.language === 'es';
+    return {
+      title: es ? 'Nota del médico para el punto seleccionado' : 'Doctor note for selected point',
+      subtitle: es ? 'Selecciona un punto en el gráfico para escribir o editar la nota.' : 'Select a point in the chart to write or edit note.',
+      placeholder: es ? 'Escribe una nota para este punto' : 'Write note for this point',
+      saving: es ? 'Guardando...' : 'Saving...',
+      save: es ? 'Guardar nota' : 'Save note',
+      noPoint: es ? 'Selecciona primero un punto del paciente.' : 'Select a patient point first.',
+      loadingNotes: es ? 'Cargando notas...' : 'Loading notes...',
+      noMetrics: es ? 'No hay métricas disponibles para este paciente aún.' : 'No metrics available for this patient yet.',
+      loadFailed: es ? 'No se pudieron cargar las métricas.' : 'Failed to load metrics list.',
+    };
+  }
+
   get canSaveContext(): boolean {
     return Boolean(this.patientId && this.selectedMetric && this.selectedSeriesPoint?.t);
   }
@@ -151,7 +166,7 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
         const availableKeys = new Set(this.analytes.map((item) => item.analyte_key));
         if (!availableKeys.size) {
           this.selectedMetric = '';
-          this.errorMessage = 'No metrics available for this patient yet.';
+          this.errorMessage = this.noteIslandCopy.noMetrics;
           this.loading = false;
           return;
         }
@@ -164,7 +179,7 @@ export class DoctorPatientDetailPageComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.analytes = [];
-        this.errorMessage = err?.error?.detail ?? 'Failed to load metrics list.';
+        this.errorMessage = err?.error?.detail ?? this.noteIslandCopy.loadFailed;
         this.loading = false;
       },
     });

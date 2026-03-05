@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.otp-root {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.otp-box {
+  width: 2.75rem;
+  height: 3.25rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--r-lg);
+  outline: none;
+  caret-color: var(--accent);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.otp-box:focus {
+  border-color: rgba(var(--accent-rgb), 0.7);
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 0 0 3px rgba(var(--accent-rgb), 0.18),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.12);
+}
+
+.otp-box:not(:placeholder-shown):not(:focus) {
+  border-color: rgba(var(--accent-rgb), 0.35);
+  background: rgba(var(--accent-rgb), 0.06);
+}
+
+.otp-disabled .otp-box {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
