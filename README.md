@@ -81,8 +81,8 @@ We believe every patient deserves to understand their own health data, regardles
 - [x] Interactive health charts
 - [x] Patient & Doctor dashboards
 - [x] Doctor-patient access sharing
+- [x] Multi-language support (ES/EN)
 - [ ] Mobile app
-- [ ] Multi-language support (ES/EN)
 - [ ] Integration with local lab providers
 - [ ] Latin America expansion
 
