@@ -25,7 +25,7 @@ NephroAI transforms unstructured PDF lab results into interactive charts, tracki
 | Backend | Python (FastAPI) |
 | Styling | SCSS |
 | Infrastructure | Docker + Nginx |
-| Database | SQLite (dev) |
+| Database | PostgreSQL |
 
 ---
 
