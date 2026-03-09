@@ -9,8 +9,8 @@
 }
 
 .doctor-tabs .btn-glass.is-active {
-  box-shadow: 0 8px 24px rgba(118, 168, 255, 0.35);
-  border-color: rgba(118, 168, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.35);
+  border-color: rgba(var(--accent-rgb), 0.35);
 }
 
 .note-island {

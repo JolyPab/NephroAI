@@ -165,5 +165,5 @@
 
 .status-pill--categorical {
   color: var(--accent);
-  border-color: rgba(118, 168, 255, 0.45);
+  border-color: rgba(var(--accent-rgb), 0.45);
 }

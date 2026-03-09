@@ -26,8 +26,8 @@
 
 .badge-accent {
   color: var(--accent);
-  border-color: rgba(118, 168, 255, 0.45);
-  background: rgba(118, 168, 255, 0.12);
+  border-color: rgba(var(--accent-rgb), 0.45);
+  background: rgba(var(--accent-rgb), 0.12);
 }
 
 .chip i {
@@ -188,7 +188,7 @@
 }
 
 .sort-trigger:hover {
-  border-color: rgba(118, 168, 255, 0.45);
+  border-color: rgba(var(--accent-rgb), 0.45);
 }
 
 .sort-menu {
@@ -220,11 +220,11 @@
 }
 
 .sort-option:hover {
-  background: rgba(118, 168, 255, 0.12);
+  background: rgba(var(--accent-rgb), 0.12);
 }
 
 .sort-option--active {
-  background: rgba(118, 168, 255, 0.16);
+  background: rgba(var(--accent-rgb), 0.16);
   color: var(--accent);
 }
 
@@ -261,7 +261,7 @@
 }
 
 .favorite-btn:hover {
-  border-color: rgba(118, 168, 255, 0.45);
+  border-color: rgba(var(--accent-rgb), 0.45);
   color: var(--text);
 }
 

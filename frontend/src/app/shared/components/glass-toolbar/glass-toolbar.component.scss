@@ -8,7 +8,7 @@
 }
 
 :host(.glass-toolbar--accent-doctor) .glass-toolbar__subtitle {
-  color: rgba(118, 168, 255, 0.75);
+  color: rgba(var(--accent-rgb), 0.75);
 }
 
 .glass-toolbar-shell {
@@ -143,8 +143,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  border: 1px solid rgba(118, 168, 255, 0.4);
-  background: rgba(118, 168, 255, 0.14);
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
+  background: rgba(var(--accent-rgb), 0.14);
 }
 
 .glass-toolbar__subtitle {

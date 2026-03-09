@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(ssh -o StrictHostKeyChecking=no root@209.50.54.90 \"openssl rand -hex 32\")",
-      "Bash(ssh -o:*)"
+      "Bash(ssh -o:*)",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot"
     ]
   }
 }
