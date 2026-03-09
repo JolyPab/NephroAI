@@ -55,6 +55,29 @@ class ReferenceV2(BaseModel):
     stages: list[ReferenceStage] | None
     ref_text_raw: str | None
 
+    @model_validator(mode="before")
+    @classmethod
+    def _autocorrect_reference(cls, data: dict) -> dict:
+        """Fix common LLM mistakes before strict validation."""
+        if not isinstance(data, dict):
+            return data
+        ref_type = data.get("type")
+        # LLM returned type=min/max with min/max fields instead of threshold
+        if ref_type in ("min", "max"):
+            if data.get("threshold") is None:
+                # Extract threshold from whichever numeric field has a value
+                threshold_val = data.get("max") if data.get("max") is not None else data.get("min")
+                if threshold_val is not None:
+                    data["threshold"] = threshold_val
+                else:
+                    # No numeric value at all — fall back to type=none
+                    data["type"] = "none"
+            data["min"] = None
+            data["max"] = None
+            data["categories"] = None
+            data["stages"] = None
+        return data
+
     @model_validator(mode="after")
     def _validate_reference_consistency(self) -> "ReferenceV2":
         ref_type = self.type
