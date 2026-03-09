@@ -85,10 +85,10 @@
 }
 
 .theme-chip.active {
-  background: rgba(118, 168, 255, 0.14);
-  border-color: rgba(118, 168, 255, 0.45);
+  background: rgba(var(--accent-rgb), 0.14);
+  border-color: rgba(var(--accent-rgb), 0.45);
   color: var(--accent);
-  box-shadow: 0 14px 30px -20px rgba(118, 168, 255, 0.55);
+  box-shadow: 0 14px 30px -20px rgba(var(--accent-rgb), 0.55);
 }
 
 @media (min-width: 640px) {
