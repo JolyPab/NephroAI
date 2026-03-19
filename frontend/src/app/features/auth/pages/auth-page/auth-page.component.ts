@@ -18,11 +18,13 @@ export class AuthPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
-  mode: 'login' | 'register' | 'verify' = 'login';
+  mode: 'login' | 'register' | 'verify' | 'forgot' | 'reset-verify' | 'reset-password' = 'login';
   isSubmitting = false;
   errorMessage = '';
   infoMessage = '';
   pendingVerificationEmail = '';
+  pendingResetEmail = '';
+  resetToken = '';
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -39,6 +41,15 @@ export class AuthPageComponent implements OnInit {
 
   readonly verifyForm = this.fb.nonNullable.group({
     code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  });
+
+  readonly forgotForm = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+  });
+
+  readonly resetPasswordForm = this.fb.nonNullable.group({
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    confirmPassword: ['', [Validators.required]],
   });
 
   ngOnInit(): void {
@@ -137,6 +148,115 @@ export class AuthPageComponent implements OnInit {
       },
       error: (err) => {
         this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_RESEND_FAILED');
+      },
+      complete: () => (this.isSubmitting = false),
+    });
+  }
+
+  goToForgot(): void {
+    this.mode = 'forgot';
+    this.errorMessage = '';
+    this.infoMessage = '';
+    this.forgotForm.reset();
+  }
+
+  backToLogin(): void {
+    this.mode = 'login';
+    this.errorMessage = '';
+    this.infoMessage = '';
+    this.pendingResetEmail = '';
+    this.resetToken = '';
+    this.forgotForm.reset();
+    this.verifyForm.reset();
+    this.resetPasswordForm.reset();
+  }
+
+  submitForgot(): void {
+    if (this.forgotForm.invalid) {
+      this.forgotForm.markAllAsTouched();
+      return;
+    }
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    const { email } = this.forgotForm.getRawValue();
+    this.auth.forgotPassword({ email }).subscribe({
+      next: () => {
+        this.pendingResetEmail = email;
+        this.mode = 'reset-verify';
+        this.verifyForm.reset();
+        this.infoMessage = this.translate.instant('AUTH.RESET_CODE_SENT', { email });
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_FORGOT_FAILED');
+        this.isSubmitting = false;
+      },
+      complete: () => (this.isSubmitting = false),
+    });
+  }
+
+  submitResetVerify(): void {
+    if (this.verifyForm.invalid || !this.pendingResetEmail) {
+      this.verifyForm.markAllAsTouched();
+      return;
+    }
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    const { code } = this.verifyForm.getRawValue();
+    this.auth.verifyResetCode({ email: this.pendingResetEmail, code }).subscribe({
+      next: (resp) => {
+        this.resetToken = resp.reset_token;
+        this.mode = 'reset-password';
+        this.resetPasswordForm.reset();
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_RESET_VERIFY_FAILED');
+        this.isSubmitting = false;
+      },
+      complete: () => (this.isSubmitting = false),
+    });
+  }
+
+  resendResetCode(): void {
+    if (!this.pendingResetEmail || this.isSubmitting) return;
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    this.auth.forgotPassword({ email: this.pendingResetEmail }).subscribe({
+      next: () => {
+        this.infoMessage = this.translate.instant('AUTH.RESET_CODE_SENT', { email: this.pendingResetEmail });
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_FORGOT_FAILED');
+      },
+      complete: () => (this.isSubmitting = false),
+    });
+  }
+
+  submitResetPassword(): void {
+    if (this.resetPasswordForm.invalid || !this.resetToken) {
+      this.resetPasswordForm.markAllAsTouched();
+      return;
+    }
+    const { password, confirmPassword } = this.resetPasswordForm.getRawValue();
+    if (password !== confirmPassword) {
+      this.errorMessage = this.translate.instant('ERRORS.RESET_PASSWORD_MISMATCH');
+      return;
+    }
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    this.auth.resetPassword({ reset_token: this.resetToken, new_password: password }).subscribe({
+      next: () => {
+        this.pendingResetEmail = '';
+        this.resetToken = '';
+        this.mode = 'login';
+        this.infoMessage = this.translate.instant('AUTH.RESET_PASSWORD_SUCCESS');
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_RESET_PASSWORD_FAILED');
+        this.isSubmitting = false;
       },
       complete: () => (this.isSubmitting = false),
     });
