@@ -46,8 +46,6 @@ from backend.database import (
     Patient,
     LabResult,
     User,
-    Subscription,
-    Payment,
     UploadStatus,
     V2DoctorNote,
     V2Document,
@@ -148,23 +146,19 @@ async def lifespan(app: FastAPI):
     # Cleanup if needed
 
 
+_env_value_pre = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").lower()
+_docs_url = None if _env_value_pre in {"prod", "production"} else "/docs"
+_redoc_url = None if _env_value_pre in {"prod", "production"} else "/redoc"
+
 app = FastAPI(
     title="Lab Import API",
     description="API for importing laboratory test results from PDF files",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
 )
 
-# Request logging middleware
-class LoggingMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        print(f"[DEBUG] {request.method} {request.url.path}")
-        print(f"[DEBUG] Headers: {dict(request.headers)}")
-        response = await call_next(request)
-        print(f"[DEBUG] Response status: {response.status_code}")
-        return response
-
-app.add_middleware(LoggingMiddleware)
 
 _env_value = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").lower()
 _is_production = _env_value in {"prod", "production"}
@@ -783,152 +777,6 @@ class DoctorChatRequest(BaseModel):
 class DoctorChatResponse(BaseModel):
     reply: str
     disclaimer: bool = False
-
-class SubscriptionStatus(BaseModel):
-    active: bool
-    status: str
-    period_end: Optional[dt.datetime] = None
-    subscription_id: Optional[str] = None
-    plan_id: Optional[str] = None
-
-class CreateSubscriptionRequest(BaseModel):
-    plan_id: Optional[str] = None
-    return_url: Optional[str] = None
-    cancel_url: Optional[str] = None
-
-class CreateSubscriptionResponse(BaseModel):
-    approval_url: str
-    subscription_id: Optional[str] = None
-
-# PayPal helpers
-PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
-PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
-PAYPAL_BASE_URL = os.getenv("PAYPAL_BASE_URL", "https://api-m.sandbox.paypal.com")
-PAYPAL_PLAN_ID = os.getenv("PAYPAL_PLAN_ID", "")
-
-
-def _paypal_get_token() -> str:
-    """Fetch OAuth token from PayPal."""
-    if not PAYPAL_CLIENT_ID or not PAYPAL_CLIENT_SECRET:
-        raise HTTPException(status_code=500, detail="PayPal credentials not configured")
-    token_url = urljoin(PAYPAL_BASE_URL, "/v1/oauth2/token")
-    resp = requests.post(
-        token_url,
-        headers={"Accept": "application/json", "Accept-Language": "en_US"},
-        data={"grant_type": "client_credentials"},
-        auth=(PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET),
-    )
-    if resp.status_code >= 400:
-        raise HTTPException(status_code=502, detail=f"PayPal token error: {resp.text}")
-    return resp.json().get("access_token")
-
-
-def _paypal_create_subscription(plan_id: str, return_url: str, cancel_url: str) -> dict:
-    """Create a PayPal subscription and return response JSON."""
-    token = _paypal_get_token()
-    sub_url = urljoin(PAYPAL_BASE_URL, "/v1/billing/subscriptions")
-    payload = {
-        "plan_id": plan_id,
-        "application_context": {
-            "brand_name": "Medic Insight",
-            "user_action": "SUBSCRIBE_NOW",
-            "return_url": return_url,
-            "cancel_url": cancel_url,
-        },
-    }
-    resp = requests.post(
-        sub_url,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}",
-        },
-        data=json.dumps(payload),
-    )
-    if resp.status_code >= 400:
-        raise HTTPException(status_code=502, detail=f"PayPal create error: {resp.text}")
-    return resp.json()
-
-
-def _paypal_get_subscription(sub_id: str) -> dict:
-    token = _paypal_get_token()
-    url = urljoin(PAYPAL_BASE_URL, f"/v1/billing/subscriptions/{sub_id}")
-    resp = requests.get(url, headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-    if resp.status_code >= 400:
-        raise HTTPException(status_code=502, detail=f"PayPal fetch error: {resp.text}")
-    return resp.json()
-
-class SubscriptionStatus(BaseModel):
-    active: bool
-    status: str
-    period_end: Optional[dt.datetime] = None
-    subscription_id: Optional[str] = None
-    plan_id: Optional[str] = None
-
-class CreateSubscriptionRequest(BaseModel):
-    plan_id: Optional[str] = None
-    return_url: Optional[str] = None
-    cancel_url: Optional[str] = None
-
-class CreateSubscriptionResponse(BaseModel):
-    approval_url: str
-    subscription_id: Optional[str] = None
-
-# PayPal helpers
-PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
-PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
-PAYPAL_BASE_URL = os.getenv("PAYPAL_BASE_URL", "https://api-m.sandbox.paypal.com")
-PAYPAL_PLAN_ID = os.getenv("PAYPAL_PLAN_ID", "")
-
-
-def _paypal_get_token() -> str:
-    """Fetch OAuth token from PayPal."""
-    if not PAYPAL_CLIENT_ID or not PAYPAL_CLIENT_SECRET:
-        raise HTTPException(status_code=500, detail="PayPal credentials not configured")
-    token_url = urljoin(PAYPAL_BASE_URL, "/v1/oauth2/token")
-    resp = requests.post(
-        token_url,
-        headers={"Accept": "application/json", "Accept-Language": "en_US"},
-        data={"grant_type": "client_credentials"},
-        auth=(PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET),
-    )
-    if resp.status_code >= 400:
-        raise HTTPException(status_code=502, detail=f"PayPal token error: {resp.text}")
-    return resp.json().get("access_token")
-
-
-def _paypal_create_subscription(plan_id: str, return_url: str, cancel_url: str) -> dict:
-    """Create a PayPal subscription and return response JSON."""
-    token = _paypal_get_token()
-    sub_url = urljoin(PAYPAL_BASE_URL, "/v1/billing/subscriptions")
-    payload = {
-        "plan_id": plan_id,
-        "application_context": {
-            "brand_name": "Medic Insight",
-            "user_action": "SUBSCRIBE_NOW",
-            "return_url": return_url,
-            "cancel_url": cancel_url,
-        },
-    }
-    resp = requests.post(
-        sub_url,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}",
-        },
-        data=json.dumps(payload),
-    )
-    if resp.status_code >= 400:
-        raise HTTPException(status_code=502, detail=f"PayPal create error: {resp.text}")
-    return resp.json()
-
-
-def _paypal_get_subscription(sub_id: str) -> dict:
-    token = _paypal_get_token()
-    url = urljoin(PAYPAL_BASE_URL, f"/v1/billing/subscriptions/{sub_id}")
-    resp = requests.get(url, headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-    if resp.status_code >= 400:
-        raise HTTPException(status_code=502, detail=f"PayPal fetch error: {resp.text}")
-    return resp.json()
 
 
 class ShareGrantRequest(BaseModel):
@@ -2994,129 +2842,6 @@ async def get_me_shortcut(user_id: int = Depends(get_current_user_id)):
         db.close()
 
 
-@app.get("/api/billing/status", response_model=SubscriptionStatus)
-async def billing_status(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    """Return subscription status for current user."""
-    sub = (
-        db.query(Subscription)
-        .filter(Subscription.user_id == user_id)
-        .order_by(Subscription.updated_at.desc())
-        .first()
-    )
-    if not sub:
-        return SubscriptionStatus(active=False, status="inactive")
-    active = sub.status == "active" and (sub.period_end is None or sub.period_end > dt.datetime.utcnow())
-    return SubscriptionStatus(
-        active=active,
-        status=sub.status,
-        period_end=sub.period_end,
-        subscription_id=sub.paypal_subscription_id,
-        plan_id=sub.plan_id,
-    )
-
-
-@app.post("/api/billing/paypal/create", response_model=CreateSubscriptionResponse)
-async def billing_create(
-    req: CreateSubscriptionRequest,
-    user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
-):
-    """Create PayPal subscription and return approval URL."""
-    plan_id = req.plan_id or PAYPAL_PLAN_ID
-    if not plan_id:
-        raise HTTPException(status_code=500, detail="PayPal plan_id not configured")
-    # Fallback return/cancel URLs (frontend should pass its own)
-    base_app_url = os.getenv("APP_URL", "http://localhost:4200")
-    return_url = req.return_url or f"{base_app_url}/billing/return"
-    cancel_url = req.cancel_url or f"{base_app_url}/billing/cancel"
-
-    data = _paypal_create_subscription(plan_id, return_url, cancel_url)
-    approval_url = ""
-    sub_id = data.get("id")
-    for link in data.get("links", []):
-        if link.get("rel") == "approve":
-            approval_url = link.get("href")
-            break
-    if not approval_url:
-        raise HTTPException(status_code=502, detail="PayPal approval URL not found")
-
-    # Create or update local subscription record
-    sub = (
-        db.query(Subscription)
-        .filter(Subscription.user_id == user_id)
-        .first()
-    )
-    now = dt.datetime.utcnow()
-    if sub:
-        sub.status = "pending"
-        sub.plan_id = plan_id
-        sub.paypal_subscription_id = sub_id
-        sub.updated_at = now
-    else:
-        sub = Subscription(
-            user_id=user_id,
-            status="pending",
-            plan_id=plan_id,
-            paypal_subscription_id=sub_id,
-            created_at=now,
-            updated_at=now,
-        )
-        db.add(sub)
-    db.commit()
-
-    return CreateSubscriptionResponse(approval_url=approval_url, subscription_id=sub_id)
-
-
-@app.post("/api/billing/paypal/confirm", response_model=SubscriptionStatus)
-async def billing_confirm(
-    subscription_id: str,
-    user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
-):
-    """Confirm subscription after PayPal redirect."""
-    if not subscription_id:
-        raise HTTPException(status_code=400, detail="subscription_id required")
-
-    data = _paypal_get_subscription(subscription_id)
-    status = (data.get("status") or "").lower()
-    now = dt.datetime.utcnow()
-    billing_info = data.get("billing_info", {})
-    next_billing_time = billing_info.get("next_billing_time")
-    period_end = None
-    if next_billing_time:
-        try:
-            period_end = dt.datetime.fromisoformat(next_billing_time.replace("Z", "+00:00"))
-        except Exception:
-            period_end = None
-
-    sub = (
-        db.query(Subscription)
-        .filter(Subscription.user_id == user_id)
-        .first()
-    )
-    if not sub:
-        sub = Subscription(
-            user_id=user_id,
-            paypal_subscription_id=subscription_id,
-            plan_id=data.get("plan_id"),
-            created_at=now,
-        )
-        db.add(sub)
-
-    sub.status = "active" if status == "active" else status or "pending"
-    sub.period_start = now
-    sub.period_end = period_end
-    sub.updated_at = now
-    db.commit()
-    db.refresh(sub)
-
-    return SubscriptionStatus(
-        active=sub.status == "active",
-        status=sub.status,
-        period_end=sub.period_end,
-        subscription_id=sub.paypal_subscription_id,
-        plan_id=sub.plan_id,
-    )
 
 @app.patch("/api/me", response_model=AuthUserResponse)
 async def update_me(

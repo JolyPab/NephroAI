@@ -20,7 +20,6 @@ if not SECRET_KEY:
     if _is_production:
         raise ValueError("JWT_SECRET is required in production.")
     SECRET_KEY = "dev-secret-change-me"
-    print("[WARN] JWT_SECRET not set; using dev fallback.")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
@@ -40,31 +39,25 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Create JWT access token."""
     to_encode = data.copy()
-    
+
     # Ensure 'sub' is a string (jose library requirement)
     if "sub" in to_encode and isinstance(to_encode["sub"], int):
         to_encode["sub"] = str(to_encode["sub"])
-    
+
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    print(f"[DEBUG] Token created for: {data}")
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def decode_token(token: str) -> dict:
     """Decode JWT token."""
     try:
-        print(f"[DEBUG] Decoding token with SECRET_KEY={SECRET_KEY[:10]}..., ALGORITHM={ALGORITHM}")
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print(f"[DEBUG] Token decoded OK: {payload}")
-        return payload
-    except JWTError as e:
-        print(f"[DEBUG] JWT decode failed: {e}")
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -74,29 +67,18 @@ def decode_token(token: str) -> dict:
 
 async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(security)) -> int:
     """Get current user ID from JWT token."""
-    print(f"[DEBUG] get_current_user_id: token received (first 20 chars): {credentials.credentials[:20]}...")
-    
     try:
-        token = credentials.credentials
-        payload = decode_token(token)
-        print(f"[DEBUG] Token decoded successfully: {payload}")
-        
+        payload = decode_token(credentials.credentials)
         sub = payload.get("sub")
         if sub is None:
-            print(f"[DEBUG] ERROR: No 'sub' in token payload!")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
             )
-        
-        # Convert string to int (jose stores sub as string)
-        user_id: int = int(sub) if isinstance(sub, str) else sub
-        print(f"[DEBUG] User ID from token: {user_id}")
-        return user_id
+        return int(sub) if isinstance(sub, str) else sub
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[DEBUG] Unexpected error in get_current_user_id: {e}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Authorization error: {str(e)}",
