@@ -9,17 +9,31 @@
               ? ('AUTH.WELCOME_LOGIN' | translate)
               : mode === 'register'
                 ? ('AUTH.WELCOME_REGISTER' | translate)
-                : ('AUTH.WELCOME_VERIFY' | translate)
+                : mode === 'verify'
+                  ? ('AUTH.WELCOME_VERIFY' | translate)
+                  : mode === 'forgot'
+                    ? ('AUTH.WELCOME_FORGOT' | translate)
+                    : mode === 'reset-verify'
+                      ? ('AUTH.WELCOME_RESET_VERIFY' | translate)
+                      : ('AUTH.WELCOME_RESET_PASSWORD' | translate)
           }}
         </p>
       </div>
-      <button type="button" appGlassButton (click)="toggleMode()" *ngIf="mode !== 'verify'">
-        <span class="material-symbols-rounded">{{ mode === 'login' ? 'person_add' : 'login' }}</span>
-        <span>{{ mode === 'login' ? ('AUTH.SWITCH_TO_REGISTER' | translate) : ('AUTH.SWITCH_TO_LOGIN' | translate) }}</span>
-      </button>
-      <button type="button" appGlassButton (click)="mode='login'; errorMessage=''; infoMessage=''" *ngIf="mode === 'verify'">
+      <button
+        type="button"
+        appGlassButton
+        (click)="backToLogin()"
+        *ngIf="mode === 'verify' || mode === 'forgot' || mode === 'reset-verify' || mode === 'reset-password'">
         <span class="material-symbols-rounded">login</span>
         <span>{{ 'AUTH.SWITCH_TO_LOGIN' | translate }}</span>
+      </button>
+      <button
+        type="button"
+        appGlassButton
+        (click)="toggleMode()"
+        *ngIf="mode === 'login' || mode === 'register'">
+        <span class="material-symbols-rounded">{{ mode === 'login' ? 'person_add' : 'login' }}</span>
+        <span>{{ mode === 'login' ? ('AUTH.SWITCH_TO_REGISTER' | translate) : ('AUTH.SWITCH_TO_LOGIN' | translate) }}</span>
       </button>
     </div>
 
@@ -37,9 +51,20 @@
         formControlName="password">
       </app-glass-input>
 
+      <div class="flex justify-end">
+        <button type="button" class="text-xs text-[var(--text-dim)] hover:text-[var(--text)] underline underline-offset-2 transition-colors" (click)="goToForgot()">
+          {{ 'AUTH.FORGOT_LINK' | translate }}
+        </button>
+      </div>
+
       <div *ngIf="errorMessage" class="toast-glass error" role="alert">
         <span class="material-symbols-rounded">error</span>
         <span>{{ errorMessage }}</span>
+      </div>
+
+      <div *ngIf="infoMessage" class="toast-glass success" role="status">
+        <span class="material-symbols-rounded">check_circle</span>
+        <span>{{ infoMessage }}</span>
       </div>
 
       <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
@@ -90,6 +115,81 @@
       <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
         <span *ngIf="isSubmitting" class="loader-dot"></span>
         <span>{{ isSubmitting ? ('AUTH.CREATING' | translate) : ('AUTH.CREATE_BUTTON' | translate) }}</span>
+      </button>
+    </form>
+
+    <form *ngIf="mode === 'forgot'" [formGroup]="forgotForm" (ngSubmit)="submitForgot()" class="space-y-5">
+      <app-glass-input
+        [label]="'AUTH.EMAIL' | translate"
+        [placeholder]="'AUTH.EMAIL_PLACEHOLDER' | translate"
+        type="email"
+        formControlName="email">
+      </app-glass-input>
+
+      <div *ngIf="errorMessage" class="toast-glass error" role="alert">
+        <span class="material-symbols-rounded">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
+        <span *ngIf="isSubmitting" class="loader-dot"></span>
+        <span>{{ isSubmitting ? ('AUTH.FORGOT_SENDING' | translate) : ('AUTH.FORGOT_BUTTON' | translate) }}</span>
+      </button>
+    </form>
+
+    <form *ngIf="mode === 'reset-verify'" [formGroup]="verifyForm" (ngSubmit)="submitResetVerify()" class="space-y-5">
+      <div class="flex flex-col gap-2">
+        <label class="text-xs uppercase tracking-[0.2em] text-[var(--text-dim)]">{{ 'AUTH.EMAIL' | translate }}</label>
+        <div class="input-glass">{{ pendingResetEmail }}</div>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <label class="text-xs uppercase tracking-[0.2em] text-[var(--text-dim)]">{{ 'AUTH.EMAIL_CODE' | translate }}</label>
+        <app-otp-input formControlName="code"></app-otp-input>
+      </div>
+
+      <div *ngIf="infoMessage" class="toast-glass success" role="status">
+        <span class="material-symbols-rounded">info</span>
+        <span>{{ infoMessage }}</span>
+      </div>
+
+      <div *ngIf="errorMessage" class="toast-glass error" role="alert">
+        <span class="material-symbols-rounded">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
+        <span *ngIf="isSubmitting" class="loader-dot"></span>
+        <span>{{ isSubmitting ? ('AUTH.RESET_VERIFYING' | translate) : ('AUTH.RESET_VERIFY_BUTTON' | translate) }}</span>
+      </button>
+
+      <button type="button" appGlassButton [glassBlock]="true" [disabled]="isSubmitting" (click)="resendResetCode()">
+        <span>{{ 'AUTH.RESEND_CODE' | translate }}</span>
+      </button>
+    </form>
+
+    <form *ngIf="mode === 'reset-password'" [formGroup]="resetPasswordForm" (ngSubmit)="submitResetPassword()" class="space-y-5">
+      <app-glass-input
+        [label]="'AUTH.RESET_PASSWORD_NEW' | translate"
+        [placeholder]="'AUTH.PASSWORD_MIN_PLACEHOLDER' | translate"
+        type="password"
+        formControlName="password">
+      </app-glass-input>
+      <app-glass-input
+        [label]="'AUTH.RESET_PASSWORD_CONFIRM' | translate"
+        [placeholder]="'AUTH.CONFIRM_PASSWORD_PLACEHOLDER' | translate"
+        type="password"
+        formControlName="confirmPassword">
+      </app-glass-input>
+
+      <div *ngIf="errorMessage" class="toast-glass error" role="alert">
+        <span class="material-symbols-rounded">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
+        <span *ngIf="isSubmitting" class="loader-dot"></span>
+        <span>{{ isSubmitting ? ('AUTH.RESET_PASSWORD_SAVING' | translate) : ('AUTH.RESET_PASSWORD_BUTTON' | translate) }}</span>
       </button>
     </form>
 
