@@ -30,7 +30,6 @@ export class AuthService {
   login(credentials: { email: string; password: string }): Observable<User> {
     return this.api.post<AuthResponse>('/auth/login', credentials).pipe(
       tap((response) => {
-        console.log('[DEBUG] Login response:', response);
         this.handleAuthSuccess(response);
         this.userSignal.set(this.normalizeUser(response.user));
       }),
@@ -62,6 +61,18 @@ export class AuthService {
     return this.api.post<RegisterInitResponse>('/auth/resend-email-code', payload);
   }
 
+  forgotPassword(payload: { email: string }): Observable<{ status: string }> {
+    return this.api.post<{ status: string }>('/auth/forgot-password', payload);
+  }
+
+  verifyResetCode(payload: { email: string; code: string }): Observable<{ reset_token: string }> {
+    return this.api.post<{ reset_token: string }>('/auth/verify-reset-code', payload);
+  }
+
+  resetPassword(payload: { reset_token: string; new_password: string }): Observable<{ status: string }> {
+    return this.api.post<{ status: string }>('/auth/reset-password', payload);
+  }
+
   logout(): Observable<void> {
     this.tokens.clear();
     this.userSignal.set(null);
@@ -83,13 +94,8 @@ export class AuthService {
   }
 
   private handleAuthSuccess(response: AuthResponse): void {
-    console.log('[DEBUG] handleAuthSuccess:', response);
     if (response.accessToken) {
-      console.log('[DEBUG] Saving accessToken to localStorage');
       this.tokens.accessToken = response.accessToken;
-      console.log('[DEBUG] Token saved, now in localStorage:', this.tokens.accessToken ? 'YES' : 'NO');
-    } else {
-      console.warn('[DEBUG] No accessToken in response!');
     }
     if (response.refreshToken) {
       this.tokens.refreshToken = response.refreshToken;
