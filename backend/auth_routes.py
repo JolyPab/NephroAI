@@ -15,6 +15,7 @@ from backend.auth import (
     get_password_hash,
     verify_password,
     create_access_token,
+    decode_token,
     get_current_user_id,
 )
 from backend.email_service import send_verification_code_email
@@ -112,6 +113,45 @@ class ResendEmailCodeRequest(BaseModel):
     email: EmailStr
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class VerifyResetCodeRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+    @field_validator("code")
+    @classmethod
+    def validate_code(cls, value: str) -> str:
+        code = value.strip()
+        if not code.isdigit() or len(code) != 6:
+            raise ValueError("Code must be exactly 6 digits.")
+        return code
+
+
+class ResetPasswordRequest(BaseModel):
+    reset_token: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters.")
+        if len(value.encode("utf-8")) > 1024:
+            raise ValueError("Password must be at most 1024 bytes.")
+        return value
+
+
+class ResetTokenResponse(BaseModel):
+    reset_token: str
+
+
+class StatusResponse(BaseModel):
+    status: str
+
+
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -131,7 +171,7 @@ def _generate_email_code() -> str:
     return f"{generator.randint(0, 999999):06d}"
 
 
-def _create_verification_code(db: Session, user: User) -> EmailVerificationCode:
+def _create_verification_code(db: Session, user: User, purpose: str = "email_verification") -> EmailVerificationCode:
     now = dt.datetime.utcnow()
     one_hour_ago = now - dt.timedelta(hours=1)
     recent_sends = (
@@ -139,6 +179,7 @@ def _create_verification_code(db: Session, user: User) -> EmailVerificationCode:
         .filter(
             EmailVerificationCode.email == user.email,
             EmailVerificationCode.created_at >= one_hour_ago,
+            EmailVerificationCode.purpose == purpose,
         )
         .count()
     )
@@ -153,6 +194,7 @@ def _create_verification_code(db: Session, user: User) -> EmailVerificationCode:
         .filter(
             EmailVerificationCode.email == user.email,
             EmailVerificationCode.used_at.is_(None),
+            EmailVerificationCode.purpose == purpose,
         )
         .order_by(EmailVerificationCode.created_at.desc())
         .first()
@@ -174,6 +216,7 @@ def _create_verification_code(db: Session, user: User) -> EmailVerificationCode:
         code_hash=_hash_email_code(code),
         expires_at=now + dt.timedelta(minutes=EMAIL_CODE_TTL_MINUTES),
         attempts=0,
+        purpose=purpose,
     )
     db.add(code_row)
     db.flush()
@@ -362,6 +405,106 @@ async def resend_email_code(payload: ResendEmailCodeRequest, db: Session = Depen
     )
 
 
+@router.post("/forgot-password", response_model=StatusResponse)
+async def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Send password-reset code. Always returns 200 to prevent account enumeration."""
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        return StatusResponse(status="ok")
+    try:
+        _create_verification_code(db, user, purpose="password_reset")
+        db.commit()
+    except HTTPException as exc:
+        db.rollback()
+        if exc.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+            return StatusResponse(status="ok")
+        raise
+    except Exception:
+        db.rollback()
+        logger.exception("forgot_password failed for email=%s", payload.email)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Failed to send reset email. Please try again.",
+        )
+    return StatusResponse(status="ok")
+
+
+@router.post("/verify-reset-code", response_model=ResetTokenResponse)
+async def verify_reset_code(payload: VerifyResetCodeRequest, db: Session = Depends(get_db)):
+    """Verify the password-reset OTP and return a short-lived reset_token JWT."""
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    code_row = (
+        db.query(EmailVerificationCode)
+        .filter(
+            EmailVerificationCode.user_id == user.id,
+            EmailVerificationCode.used_at.is_(None),
+            EmailVerificationCode.purpose == "password_reset",
+        )
+        .order_by(EmailVerificationCode.created_at.desc())
+        .first()
+    )
+    if not code_row:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset code not found. Request a new one.")
+
+    now = dt.datetime.utcnow()
+    if code_row.expires_at < now:
+        code_row.used_at = now
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset code expired. Request a new one.")
+
+    if code_row.attempts >= EMAIL_CODE_MAX_ATTEMPTS:
+        code_row.used_at = now
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Request a new code.")
+
+    expected_hash = _hash_email_code(payload.code)
+    if not hmac.compare_digest(expected_hash, code_row.code_hash):
+        code_row.attempts = code_row.attempts + 1
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset code.")
+
+    code_row.used_at = now
+    db.commit()
+
+    reset_token = create_access_token(
+        data={"sub": str(user.id), "purpose": "password_reset"},
+        expires_delta=dt.timedelta(minutes=15),
+    )
+    return ResetTokenResponse(reset_token=reset_token)
+
+
+@router.post("/reset-password", response_model=StatusResponse)
+async def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Set new password using a valid reset_token JWT."""
+    try:
+        token_payload = decode_token(payload.reset_token)
+    except HTTPException:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token.")
+
+    if token_payload.get("purpose") != "password_reset":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token.")
+
+    user_id = int(token_payload["sub"])
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    user.hashed_password = get_password_hash(payload.new_password)
+
+    now = dt.datetime.utcnow()
+    db.query(EmailVerificationCode).filter(
+        EmailVerificationCode.user_id == user_id,
+        EmailVerificationCode.purpose == "password_reset",
+        EmailVerificationCode.used_at.is_(None),
+    ).update({"used_at": now})
+
+    db.commit()
+    return StatusResponse(status="ok")
+
+
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(
     user_id: int = Depends(get_current_user_id),
@@ -383,7 +526,10 @@ async def upgrade_to_doctor(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ):
-    """Mark current user as doctor (helper endpoint)."""
+    """Mark current user as doctor. Only available in non-production environments."""
+    _env = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").lower()
+    if _env in {"prod", "production"}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not available in production.")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(

@@ -31,13 +31,13 @@ def test_register_verify_and_login_flow(monkeypatch):
     sent_codes: list[str] = []
 
     def _fake_send(email: str, code: str):
-        assert email == "verify@test.local"
+        assert email == "verify@example.com"
         sent_codes.append(code)
 
     monkeypatch.setattr(auth_routes, "send_verification_code_email", _fake_send)
 
     reg_payload = UserRegister(
-        email="verify@test.local",
+        email="verify@example.com",
         password="super-secret-123",
         full_name="Verify User",
         is_doctor=False,
@@ -46,27 +46,27 @@ def test_register_verify_and_login_flow(monkeypatch):
     assert reg_response.status == "verification_required"
     assert len(sent_codes) == 1
 
-    user = db.query(User).filter(User.email == "verify@test.local").first()
+    user = db.query(User).filter(User.email == "verify@example.com").first()
     assert user is not None
     assert user.is_active is False
     assert user.email_verified_at is None
 
     with pytest.raises(HTTPException) as login_exc:
-        asyncio.run(login(UserLogin(email="verify@test.local", password="super-secret-123"), db=db))
+        asyncio.run(login(UserLogin(email="verify@example.com", password="super-secret-123"), db=db))
     assert login_exc.value.status_code == 403
 
     with pytest.raises(HTTPException) as wrong_code_exc:
-        asyncio.run(verify_email(VerifyEmailRequest(email="verify@test.local", code="000000"), db=db))
+        asyncio.run(verify_email(VerifyEmailRequest(email="verify@example.com", code="000000"), db=db))
     assert wrong_code_exc.value.status_code == 400
 
     verify_response = asyncio.run(
-        verify_email(VerifyEmailRequest(email="verify@test.local", code=sent_codes[0]), db=db)
+        verify_email(VerifyEmailRequest(email="verify@example.com", code=sent_codes[0]), db=db)
     )
     assert verify_response.accessToken
     assert verify_response.user.email_verified is True
     assert verify_response.user.is_active is True
 
-    login_response = asyncio.run(login(UserLogin(email="verify@test.local", password="super-secret-123"), db=db))
+    login_response = asyncio.run(login(UserLogin(email="verify@example.com", password="super-secret-123"), db=db))
     assert login_response.accessToken
     assert login_response.user.email_verified is True
     db.close()
@@ -78,7 +78,7 @@ def test_resend_email_code_cooldown(monkeypatch):
     monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda _email, code: sent_codes.append(code))
 
     reg_payload = UserRegister(
-        email="cooldown@test.local",
+        email="cooldown@example.com",
         password="super-secret-123",
         full_name="Cooldown User",
         is_doctor=False,
@@ -86,7 +86,7 @@ def test_resend_email_code_cooldown(monkeypatch):
     asyncio.run(register(reg_payload, db=db))
 
     with pytest.raises(HTTPException) as resend_exc:
-        asyncio.run(resend_email_code(ResendEmailCodeRequest(email="cooldown@test.local"), db=db))
+        asyncio.run(resend_email_code(ResendEmailCodeRequest(email="cooldown@example.com"), db=db))
     assert resend_exc.value.status_code == 429
     assert len(sent_codes) == 1
     assert db.query(EmailVerificationCode).count() == 1
