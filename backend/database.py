@@ -263,6 +263,7 @@ class EmailVerificationCode(Base):
     attempts = Column(Integer, nullable=False, default=0)
     used_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    purpose = Column(String(32), nullable=False, default="email_verification")
 
     user = relationship("User", foreign_keys=[user_id])
 
@@ -292,15 +293,38 @@ def get_session_factory(engine):
     return sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def ensure_email_code_purpose_column(engine) -> list[str]:
+    """Add purpose column to email_verification_codes if missing."""
+    try:
+        inspector = inspect(engine)
+        if "email_verification_codes" not in inspector.get_table_names():
+            return []
+        existing = {col["name"] for col in inspector.get_columns("email_verification_codes")}
+        if "purpose" in existing:
+            return []
+        with engine.begin() as conn:
+            conn.execute(text(
+                "ALTER TABLE email_verification_codes "
+                "ADD COLUMN purpose VARCHAR(32) NOT NULL DEFAULT 'email_verification'"
+            ))
+        return ["purpose"]
+    except Exception as exc:
+        print(f"[WARN] Could not ensure email_verification_codes.purpose: {exc}")
+        return []
+
+
 def init_db(engine):
     """Initialize database tables."""
     Base.metadata.create_all(bind=engine)
     added_columns = ensure_lab_results_columns(engine)
     user_added_columns = ensure_users_columns(engine)
+    code_added_columns = ensure_email_code_purpose_column(engine)
     if added_columns:
         print(f"[DB] added columns: {', '.join(added_columns)}")
     if user_added_columns:
         print(f"[DB] added user columns: {', '.join(user_added_columns)}")
+    if code_added_columns:
+        print(f"[DB] added email_code columns: {', '.join(code_added_columns)}")
 
 
 def ensure_lab_results_columns(engine) -> list[str]:
