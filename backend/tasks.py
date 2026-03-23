@@ -1,6 +1,7 @@
 """Celery tasks for PDF processing."""
 
 import os
+import json
 import hashlib
 from typing import Optional
 
@@ -11,7 +12,7 @@ except ImportError:  # pragma: no cover - optional dependency
     Celery = None
     CELERY_AVAILABLE = False
 
-from backend.database import SessionLocal, UploadStatus, save_parsed_records
+from backend.database import SessionLocal, UploadStatus, save_parsed_records, ChatMessageRecord, PatientMemory
 from backend.pdf_parser import extract_raw_text
 from backend.parsing.pipeline import coerce_raw_text, parse_with_ocr_fallback
 
@@ -120,11 +121,72 @@ def _run_process_pdf_task(file_id: int):
         session.close()
 
 
+def _run_extract_patient_memory(session_id: int, user_id: int) -> None:
+    """Extract patient facts from the last exchange and save to PatientMemory."""
+    from backend.main import _openai_chat_completion  # import here to avoid circular
+    session = SessionLocal()
+    try:
+        msgs = (
+            session.query(ChatMessageRecord)
+            .filter(ChatMessageRecord.session_id == session_id)
+            .order_by(ChatMessageRecord.created_at.desc())
+            .limit(2)
+            .all()
+        )
+        if len(msgs) < 2:
+            return
+        msgs = list(reversed(msgs))
+        exchange = f"Paciente: {msgs[0].content}\nAsistente: {msgs[1].content}"
+
+        existing = session.query(PatientMemory).filter(PatientMemory.user_id == user_id).all()
+        existing_facts = "\n".join(f"- {m.fact}" for m in existing) if existing else "Ninguno."
+
+        system = "Eres un extractor de hechos médicos. Responde solo con JSON válido."
+        user_prompt = (
+            f"Analiza este intercambio y extrae hechos nuevos que valga la pena recordar sobre el paciente: "
+            f"datos médicos, preferencias, o recomendaciones dadas. "
+            f"No dupliques hechos ya existentes.\n\n"
+            f"Hechos ya guardados:\n{existing_facts}\n\n"
+            f"Intercambio:\n{exchange}\n\n"
+            f"Devuelve un JSON array con objetos {{\"fact\": str, \"category\": str}} "
+            f"donde category es 'medical', 'preference', o 'recommendation'. "
+            f"Si no hay nada nuevo, devuelve []."
+        )
+        raw = _openai_chat_completion(system, user_prompt)
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = "\n".join(raw.split("\n")[1:])
+        if raw.endswith("```"):
+            raw = raw.rsplit("```", 1)[0]
+        facts = json.loads(raw.strip())
+        if not isinstance(facts, list):
+            return
+        for item in facts:
+            if not isinstance(item, dict):
+                continue
+            fact = item.get("fact", "").strip()
+            category = item.get("category", "medical").strip()
+            if not fact or category not in ("medical", "preference", "recommendation"):
+                continue
+            session.add(PatientMemory(
+                user_id=user_id, fact=fact, category=category, source_session_id=session_id
+            ))
+        session.commit()
+    except Exception:
+        pass
+    finally:
+        session.close()
+
+
 if CELERY_ENABLED:
 
     @celery.task(name="process_pdf_task")
     def process_pdf_task(file_id: int):
         return _run_process_pdf_task(file_id)
+
+    @celery.task(name="extract_patient_memory")
+    def extract_patient_memory(session_id: int, user_id: int):
+        return _run_extract_patient_memory(session_id, user_id)
 
 else:
 
@@ -140,4 +202,12 @@ else:
         def __call__(self, *args, **kwargs):
             return _run_process_pdf_task(*args, **kwargs)
 
+    class _ExtractMemoryTaskStub:
+        def delay(self, *args, **kwargs):
+            _missing_celery()
+
+        def __call__(self, *args, **kwargs):
+            return _run_extract_patient_memory(*args, **kwargs)
+
     process_pdf_task = _CeleryTaskStub()
+    extract_patient_memory = _ExtractMemoryTaskStub()
