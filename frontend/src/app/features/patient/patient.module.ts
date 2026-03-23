@@ -11,6 +11,8 @@ import { PatientChatPageComponent } from './pages/chat/chat-page.component';
 import { PatientProfilePageComponent } from './pages/profile/profile-page.component';
 import { V2SeriesPageComponent } from '../v2/pages/series/v2-series-page.component';
 import { V2MetricSelectorComponent } from '../v2/components/metric-selector/v2-metric-selector.component';
+import { ChatSidebarComponent } from './components/chat-sidebar/chat-sidebar.component';
+import { ChatMemoryPanelComponent } from './components/chat-memory-panel/chat-memory-panel.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +24,8 @@ import { V2MetricSelectorComponent } from '../v2/components/metric-selector/v2-m
     PatientChatPageComponent,
     PatientProfilePageComponent,
   ],
-  imports: [SharedModule, PatientRoutingModule, V2SeriesPageComponent, V2MetricSelectorComponent],
+  imports: [SharedModule, PatientRoutingModule, V2SeriesPageComponent, V2MetricSelectorComponent,
+            ChatSidebarComponent, ChatMemoryPanelComponent],
 })
 export class PatientModule {}
 
