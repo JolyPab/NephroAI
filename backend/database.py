@@ -250,6 +250,38 @@ class V2DoctorNote(Base):
     doctor_user = relationship("User", foreign_keys=[doctor_user_id])
 
 
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    title = Column(String(200), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    is_archived = Column(Boolean, default=False, nullable=False)
+    messages = relationship("ChatMessageRecord", back_populates="session", cascade="all, delete-orphan")
+
+
+class ChatMessageRecord(Base):
+    __tablename__ = "chat_message_records"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("chat_sessions.id"), nullable=False, index=True)
+    role = Column(String(20), nullable=False)   # "user" or "assistant"
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    session = relationship("ChatSession", back_populates="messages")
+
+
+class PatientMemory(Base):
+    __tablename__ = "patient_memory"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    fact = Column(Text, nullable=False)
+    category = Column(String(30), nullable=False)  # "medical" | "preference" | "recommendation"
+    source_session_id = Column(Integer, ForeignKey("chat_sessions.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
 class EmailVerificationCode(Base):
     """One-time email verification code for account activation."""
 
@@ -313,12 +345,18 @@ def ensure_email_code_purpose_column(engine) -> list[str]:
         return []
 
 
+def ensure_chat_tables(engine) -> None:
+    """Create chat_sessions, chat_message_records, patient_memory if not present."""
+    Base.metadata.create_all(bind=engine)
+
+
 def init_db(engine):
     """Initialize database tables."""
     Base.metadata.create_all(bind=engine)
     added_columns = ensure_lab_results_columns(engine)
     user_added_columns = ensure_users_columns(engine)
     code_added_columns = ensure_email_code_purpose_column(engine)
+    ensure_chat_tables(engine)
     if added_columns:
         print(f"[DB] added columns: {', '.join(added_columns)}")
     if user_added_columns:
