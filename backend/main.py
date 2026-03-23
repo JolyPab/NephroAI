@@ -52,6 +52,7 @@ from backend.database import (
     V2Metric,
     ChatSession,
     ChatMessageRecord,
+    PatientMemory,
     save_parsed_records,
 )
 from backend.auth import get_current_user_id
@@ -2865,6 +2866,44 @@ async def delete_chat_session(
     db.delete(session)
     db.commit()
     return {"deleted": session_id}
+
+
+class PatientMemoryItem(BaseModel):
+    id: int
+    fact: str
+    category: str
+    created_at: str
+
+
+@app.get("/api/chat/memory", response_model=List[PatientMemoryItem])
+async def list_patient_memory(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    facts = (
+        db.query(PatientMemory)
+        .filter(PatientMemory.user_id == user_id)
+        .order_by(PatientMemory.created_at.desc())
+        .all()
+    )
+    return [PatientMemoryItem(id=f.id, fact=f.fact, category=f.category,
+                              created_at=f.created_at.isoformat()) for f in facts]
+
+
+@app.delete("/api/chat/memory/{memory_id}")
+async def delete_patient_memory(
+    memory_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    mem = db.query(PatientMemory).filter(
+        PatientMemory.id == memory_id, PatientMemory.user_id == user_id
+    ).first()
+    if not mem:
+        raise HTTPException(status_code=404, detail="Memory fact not found")
+    db.delete(mem)
+    db.commit()
+    return {"deleted": memory_id}
 
 
 @app.post("/api/advice", response_model=AdviceResponse)
