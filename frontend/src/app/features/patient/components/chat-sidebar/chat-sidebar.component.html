@@ -1,0 +1,23 @@
+<aside class="sidebar">
+  <button class="new-chat-btn" (click)="onNew()">
+    <i class="bi bi-plus-lg"></i>
+    <span>{{ 'chat.newChat' | translate }}</span>
+  </button>
+
+  <nav class="session-list">
+    <ng-container *ngFor="let group of groups">
+      <p class="group-label">{{ group.labelKey | translate }}</p>
+      <button
+        class="session-item"
+        *ngFor="let session of group.sessions"
+        [class.active]="session.id === activeSessionId"
+        (click)="onSelect(session.id)"
+      >
+        <span class="session-title">{{ displayTitle(session) }}</span>
+        <button class="delete-btn" (click)="onDelete($event, session.id)" title="{{ 'chat.deleteSession' | translate }}">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </button>
+    </ng-container>
+  </nav>
+</aside>
