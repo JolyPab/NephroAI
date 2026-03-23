@@ -159,6 +159,21 @@
     "METRICS_LOAD_FAILED": "Failed to load metrics list.",
     "SERIES_LOAD_FAILED": "Failed to load time series."
   },
+  "chat": {
+    "newChat": "Новый чат",
+    "today": "Сегодня",
+    "thisWeek": "На этой неделе",
+    "thisMonth": "В этом месяце",
+    "earlier": "Ранее",
+    "deleteSession": "Удалить разговор",
+    "memory": "Память",
+    "memoryTitle": "Что помнит ассистент",
+    "memoryEmpty": "Ассистент ещё не сохранил информацию о вас.",
+    "memoryDeleteFact": "Забыть",
+    "memoryMedical": "Медицинские данные",
+    "memoryPreference": "Предпочтения",
+    "memoryRecommendation": "Рекомендации"
+  },
   "DOCTOR": {
     "CHARTS_TAB": "Charts",
     "ASSISTANT_TAB": "AI Assistant",
