@@ -832,7 +832,7 @@ class AdviceResponse(BaseModel):
     answer: str
     usedMetrics: List[AdviceMetric]
     disclaimer: bool = True
-    session_id: int = 0
+    session_id: Optional[int] = None
 
 
 class DoctorChatHistoryItem(BaseModel):
