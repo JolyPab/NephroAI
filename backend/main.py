@@ -814,6 +814,24 @@ def _openai_chat_completion_with_history(system_prompt: str, messages: list[dict
         raise HTTPException(status_code=502, detail="Malformed response from OpenAI.")
 
 
+class ChatSessionCreate(BaseModel):
+    title: Optional[str] = None
+
+
+class ChatSessionItem(BaseModel):
+    id: int
+    title: Optional[str]
+    updated_at: Optional[str]
+    preview: Optional[str] = None
+
+
+class ChatSessionMessageItem(BaseModel):
+    id: int
+    role: str
+    content: str
+    created_at: str
+
+
 class AdviceRequest(BaseModel):
     question: str
     metric_names: Optional[List[str]] = None
@@ -2758,6 +2776,96 @@ async def revoke_grant(
         granted_at=grant.granted_at,
         revoked_at=grant.revoked_at,
     )
+
+
+@app.get("/api/chat/sessions", response_model=List[ChatSessionItem])
+async def list_chat_sessions(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.user_id == user_id, ChatSession.is_archived == False)
+        .order_by(ChatSession.updated_at.desc())
+        .limit(50)
+        .all()
+    )
+    result = []
+    for s in sessions:
+        last_msg = (
+            db.query(ChatMessageRecord)
+            .filter(ChatMessageRecord.session_id == s.id)
+            .order_by(ChatMessageRecord.created_at.desc())
+            .first()
+        )
+        result.append(ChatSessionItem(
+            id=s.id,
+            title=s.title,
+            updated_at=s.updated_at.isoformat() if s.updated_at else None,
+            preview=(last_msg.content[:80] if last_msg else None),
+        ))
+    return result
+
+
+@app.post("/api/chat/sessions", response_model=ChatSessionItem)
+async def create_chat_session(
+    body: ChatSessionCreate,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    session = ChatSession(user_id=user_id, title=body.title or "")
+    db.add(session)
+    db.flush()  # assign id + defaults without closing the connection
+    session_id = session.id
+    session_title = session.title
+    session_updated_at = session.updated_at
+    db.commit()
+    return ChatSessionItem(
+        id=session_id,
+        title=session_title,
+        updated_at=session_updated_at.isoformat() if session_updated_at else None,
+    )
+
+
+@app.get("/api/chat/sessions/{session_id}/messages", response_model=List[ChatSessionMessageItem])
+async def get_session_messages(
+    session_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    session = db.query(ChatSession).filter(
+        ChatSession.id == session_id, ChatSession.user_id == user_id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    msgs = (
+        db.query(ChatMessageRecord)
+        .filter(ChatMessageRecord.session_id == session_id)
+        .order_by(ChatMessageRecord.created_at.asc())
+        .all()
+    )
+    return [ChatSessionMessageItem(
+        id=m.id, role=m.role, content=m.content,
+        created_at=m.created_at.isoformat(),
+    ) for m in msgs]
+
+
+@app.delete("/api/chat/sessions/{session_id}")
+async def delete_chat_session(
+    session_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    session = db.query(ChatSession).filter(
+        ChatSession.id == session_id, ChatSession.user_id == user_id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    db.query(ChatMessageRecord).filter(ChatMessageRecord.session_id == session_id).delete()
+    db.delete(session)
+    db.commit()
+    return {"deleted": session_id}
+
 
 @app.post("/api/advice", response_model=AdviceResponse)
 async def get_advice(
