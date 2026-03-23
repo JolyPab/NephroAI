@@ -1,0 +1,22 @@
+<div class="memory-panel">
+  <div class="memory-header">
+    <h4>{{ 'chat.memoryTitle' | translate }}</h4>
+    <button class="close-btn" (click)="onClose()"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="memory-empty" *ngIf="facts.length === 0">
+    {{ 'chat.memoryEmpty' | translate }}
+  </div>
+
+  <ng-container *ngFor="let cat of categories">
+    <ng-container *ngIf="factsForCategory(cat).length > 0">
+      <p class="cat-label">{{ categoryKey(cat) | translate }}</p>
+      <div class="fact-item" *ngFor="let fact of factsForCategory(cat)">
+        <span class="fact-text">{{ fact.fact }}</span>
+        <button class="forget-btn" (click)="onDelete(fact.id)">
+          {{ 'chat.memoryDeleteFact' | translate }}
+        </button>
+      </div>
+    </ng-container>
+  </ng-container>
+</div>
