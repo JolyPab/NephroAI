@@ -1,3 +1,88 @@
 :host {
   display: block;
+  height: 100%;
+}
+
+.chat-page {
+  display: flex;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────
+.sidebar-wrapper {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    position: absolute;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    background: var(--surface-bg, #1a1a2e);
+    transition: left 0.25s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+
+    &.open { left: 0; }
+  }
+}
+
+.sidebar-backdrop {
+  display: none;
+  @media (max-width: 768px) {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 99;
+    background: rgba(0, 0, 0, 0.4);
+  }
+}
+
+// ── Main area ──────────────────────────────────────────────────────────────
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+}
+
+.chat-topbar {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.5rem;
+}
+
+.topbar-spacer { flex: 1; }
+
+.topbar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  font-size: 1rem;
+  &:hover { opacity: 1; background: rgba(255, 255, 255, 0.07); }
+}
+
+// ── Memory overlay ─────────────────────────────────────────────────────────
+.memory-overlay {
+  position: absolute;
+  top: 2.75rem;
+  right: 0.75rem;
+  z-index: 50;
+  background: var(--surface-bg, #1a1a2e);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  max-height: calc(100% - 4rem);
+  overflow-y: auto;
 }

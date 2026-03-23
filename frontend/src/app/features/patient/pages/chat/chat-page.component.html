@@ -1,17 +1,57 @@
-<app-chat-shell
-  [titleKey]="'chat.title'"
-  [subtitleKey]="'chat.subtitle'"
-  [secureKey]="'chat.secure'"
-  [emptyKey]="'chat.empty'"
-  [placeholderKey]="'chat.questionPh'"
-  [minCharsKey]="'chat.minChars'"
-  [youKey]="'chat.you'"
-  [aiKey]="'chat.ai'"
-  [disclaimerKey]="'chat.disclaimer'"
-  [history]="history"
-  [isLoading]="isLoading"
-  [form]="chatForm"
-  [quickPrompts]="quickPrompts"
-  (submitMessage)="submit()"
-  (selectPrompt)="setPrompt($event)"
-></app-chat-shell>
+<div class="chat-page" [class.sidebar-open]="sidebarOpen">
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-backdrop" *ngIf="sidebarOpen" (click)="sidebarOpen = false"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar-wrapper" [class.open]="sidebarOpen">
+    <app-chat-sidebar
+      [sessions]="sessions"
+      [activeSessionId]="activeSessionId"
+      (selectSession)="selectSession($event)"
+      (newChat)="startNewChat()"
+      (deleteSession)="deleteSession($event)"
+    ></app-chat-sidebar>
+  </div>
+
+  <!-- Main chat area -->
+  <div class="chat-main">
+    <!-- Top bar (mobile toggle + memory button) -->
+    <div class="chat-topbar">
+      <button class="topbar-btn" (click)="sidebarOpen = !sidebarOpen" title="Historial">
+        <i class="bi bi-layout-sidebar"></i>
+      </button>
+      <div class="topbar-spacer"></div>
+      <button class="topbar-btn" (click)="toggleMemoryPanel()" title="{{ 'chat.memory' | translate }}">
+        <i class="bi bi-brain"></i>
+      </button>
+    </div>
+
+    <!-- Memory panel (overlay) -->
+    <div class="memory-overlay" *ngIf="memoryPanelOpen">
+      <app-chat-memory-panel
+        [facts]="memoryFacts"
+        (deleteFact)="deleteMemoryFact($event)"
+        (close)="closeMemoryPanel()"
+      ></app-chat-memory-panel>
+    </div>
+
+    <!-- Chat shell -->
+    <app-chat-shell
+      [titleKey]="'chat.title'"
+      [subtitleKey]="'chat.subtitle'"
+      [secureKey]="'chat.secure'"
+      [emptyKey]="'chat.empty'"
+      [placeholderKey]="'chat.questionPh'"
+      [minCharsKey]="'chat.minChars'"
+      [youKey]="'chat.you'"
+      [aiKey]="'chat.ai'"
+      [disclaimerKey]="'chat.disclaimer'"
+      [history]="history"
+      [isLoading]="isLoading"
+      [form]="chatForm"
+      [quickPrompts]="quickPrompts"
+      (submitMessage)="submit()"
+      (selectPrompt)="setPrompt($event)"
+    ></app-chat-shell>
+  </div>
+</div>
