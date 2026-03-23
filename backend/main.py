@@ -50,6 +50,8 @@ from backend.database import (
     V2DoctorNote,
     V2Document,
     V2Metric,
+    ChatSession,
+    ChatMessageRecord,
     save_parsed_records,
 )
 from backend.auth import get_current_user_id
@@ -61,8 +63,22 @@ import re
 import requests
 import unicodedata
 from urllib.parse import urljoin
+import redis as redis_lib
 
 logger = logging.getLogger(__name__)
+
+_redis_client: Optional[redis_lib.Redis] = None
+
+def _get_redis() -> Optional[redis_lib.Redis]:
+    global _redis_client
+    if _redis_client is None:
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        try:
+            _redis_client = redis_lib.from_url(redis_url, socket_connect_timeout=2)
+            _redis_client.ping()
+        except Exception:
+            _redis_client = None
+    return _redis_client
 
 def get_db():
     """Database session dependency."""
@@ -745,11 +761,65 @@ def _openai_chat_completion(system_prompt: str, user_prompt: str):
         raise HTTPException(status_code=502, detail="Malformed response from OpenAI.")
 
 
+def _openai_chat_completion_with_history(system_prompt: str, messages: list[dict]) -> str:
+    """Call OpenAI chat completion with a full messages list.
+
+    `messages` is a list of {role, content} dicts in chronological order.
+    Uses same retry logic as _openai_chat_completion.
+    """
+    key = os.getenv("OPENAI_API_KEY")
+    model = os.getenv("OPENAI_MODEL", "gpt-4o")
+    if not key:
+        raise HTTPException(status_code=500, detail="OpenAI API key is missing.")
+
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
+    base_payload = {"model": model, "messages": full_messages, "temperature": 0.4}
+
+    preferred_token_param = "max_tokens"
+    model_lc = model.lower()
+    if model_lc.startswith(("gpt-5", "o1", "o3", "o4")):
+        preferred_token_param = "max_completion_tokens"
+    token_params = [preferred_token_param, "max_completion_tokens", "max_tokens"]
+
+    resp = None
+    last_error_text = ""
+    for token_param in dict.fromkeys(token_params):
+        payload = dict(base_payload)
+        payload[token_param] = 800
+        resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=120)
+        if resp.status_code < 400:
+            break
+        last_error_text = resp.text
+        error_text_lc = last_error_text.lower()
+        can_retry = (resp.status_code == 400 and
+                     ("max_tokens" in error_text_lc or "max_completion_tokens" in error_text_lc))
+        if not can_retry:
+            raise HTTPException(status_code=502, detail=f"OpenAI error: {last_error_text}")
+
+    if resp is None or resp.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"OpenAI error: {last_error_text}")
+
+    data = resp.json()
+    try:
+        content = data["choices"][0]["message"]["content"]
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            chunks = [item.get("text", "") if isinstance(item, dict) else str(item) for item in content]
+            return "\n".join(c for c in chunks if c).strip()
+        return str(content)
+    except Exception:
+        raise HTTPException(status_code=502, detail="Malformed response from OpenAI.")
+
+
 class AdviceRequest(BaseModel):
     question: str
     metric_names: Optional[List[str]] = None
     days: Optional[int] = 180
     language: Optional[str] = None
+    session_id: Optional[int] = None
 
 
 class AdviceMetric(BaseModel):
@@ -762,6 +832,7 @@ class AdviceResponse(BaseModel):
     answer: str
     usedMetrics: List[AdviceMetric]
     disclaimer: bool = True
+    session_id: int = 0
 
 
 class DoctorChatHistoryItem(BaseModel):
@@ -1098,6 +1169,12 @@ async def create_v2_document(
             )
 
         db.commit()
+        r = _get_redis()
+        if r:
+            try:
+                r.delete(f"analyte_snapshot:{user_id}")
+            except Exception:
+                pass
         db.refresh(doc)
         return {
             "document_id": doc.id,
