@@ -267,7 +267,20 @@
     "metricsHint": "Mark key metrics to include in the answer.",
     "minChars": "Minimum 10 characters.",
     "btn": "Get AI advice",
-    "btnLoading": "Generating answer..."
+    "btnLoading": "Generating answer...",
+    "newChat": "New chat",
+    "today": "Today",
+    "thisWeek": "This week",
+    "thisMonth": "This month",
+    "earlier": "Earlier",
+    "deleteSession": "Delete conversation",
+    "memory": "Memory",
+    "memoryTitle": "What the assistant remembers",
+    "memoryEmpty": "The assistant hasn't saved any information about you yet.",
+    "memoryDeleteFact": "Forget",
+    "memoryMedical": "Medical data",
+    "memoryPreference": "Preferences",
+    "memoryRecommendation": "Recommendations"
   },
   "doctor": {
     "profileTitle": "Your profile",

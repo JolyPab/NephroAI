@@ -267,7 +267,20 @@
     "metricsHint": "Marca metricas clave para incluir en la respuesta.",
     "minChars": "Minimo 10 caracteres.",
     "btn": "Obtener consejo de IA",
-    "btnLoading": "Generando respuesta..."
+    "btnLoading": "Generando respuesta...",
+    "newChat": "Nuevo chat",
+    "today": "Hoy",
+    "thisWeek": "Esta semana",
+    "thisMonth": "Este mes",
+    "earlier": "Anterior",
+    "deleteSession": "Eliminar conversacion",
+    "memory": "Memoria",
+    "memoryTitle": "Lo que recuerda el asistente",
+    "memoryEmpty": "El asistente aun no ha guardado informacion sobre ti.",
+    "memoryDeleteFact": "Olvidar",
+    "memoryMedical": "Datos medicos",
+    "memoryPreference": "Preferencias",
+    "memoryRecommendation": "Recomendaciones"
   },
   "doctor": {
     "profileTitle": "Tu perfil",
