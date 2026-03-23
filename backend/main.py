@@ -2912,133 +2912,191 @@ async def get_advice(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    """Generate wellness-style advice based on recent labs using Azure OpenAI."""
+    """Generate wellness-style advice based on recent labs with conversation memory."""
     current_user = db.query(User).filter(User.id == user_id).first()
     if not current_user:
         raise HTTPException(status_code=404, detail="User not found")
 
     patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
-
     days = req.days or 180
-    metrics_summary = _summarize_metrics_v2(
-        db,
-        user_id=current_user.id,
-        metric_names=req.metric_names,
-        days=days,
+
+    # ── 1. Session management ──────────────────────────────────────────────
+    if req.session_id:
+        session = db.query(ChatSession).filter(
+            ChatSession.id == req.session_id,
+            ChatSession.user_id == user_id,
+        ).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+    else:
+        session = ChatSession(user_id=user_id, title="")
+        db.add(session)
+        db.commit()
+        db.refresh(session)
+
+    # ── 2. Save user message ───────────────────────────────────────────────
+    db.add(ChatMessageRecord(session_id=session.id, role="user", content=req.question))
+    db.commit()
+
+    # ── 3. Load conversation history (last 10 messages) ───────────────────
+    history_records = (
+        db.query(ChatMessageRecord)
+        .filter(ChatMessageRecord.session_id == session.id)
+        .order_by(ChatMessageRecord.created_at.asc())
+        .limit(10)
+        .all()
     )
-    if not metrics_summary and patient:
-        # Legacy fallback for older imported records.
-        metrics_summary = _summarize_metrics(
-            db,
-            patient_id=patient.id,
-            metric_names=req.metric_names,
-            days=days,
-        )
-    if not metrics_summary:
-        # If there is no recent window data, use full history as fallback.
-        metrics_summary = _summarize_metrics_v2(
-            db,
-            user_id=current_user.id,
-            metric_names=req.metric_names,
-            days=36500,
-        )
-    if not metrics_summary and patient:
-        metrics_summary = _summarize_metrics(
-            db,
-            patient_id=patient.id,
-            metric_names=req.metric_names,
-            days=36500,
-        )
+    history_messages = [{"role": m.role, "content": m.content} for m in history_records]
+
+    # ── 4. Patient memory ─────────────────────────────────────────────────
+    memory_facts = (
+        db.query(PatientMemory)
+        .filter(PatientMemory.user_id == user_id)
+        .order_by(PatientMemory.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    if memory_facts:
+        memory_lines = [f"- [{f.category}] {f.fact}" for f in memory_facts]
+        patient_memory_text = "\n".join(memory_lines)
+    else:
+        patient_memory_text = "Aún no tienes información guardada sobre este paciente."
+
+    # ── 5. Analyte snapshot (Redis cache) ─────────────────────────────────
+    cache_key = f"analyte_snapshot:{user_id}"
+    r = _get_redis()
+    metrics_summary = None
+    if r:
+        try:
+            cached = r.get(cache_key)
+            if cached:
+                metrics_summary = json.loads(cached)
+        except Exception:
+            pass
+
+    if metrics_summary is None:
+        metrics_summary = _summarize_metrics_v2(db, user_id=user_id, metric_names=None, days=days)
+        if not metrics_summary and patient:
+            metrics_summary = _summarize_metrics(db, patient_id=patient.id, metric_names=None, days=days)
+        if not metrics_summary:
+            metrics_summary = _summarize_metrics_v2(db, user_id=user_id, metric_names=None, days=36500)
+        if not metrics_summary and patient:
+            metrics_summary = _summarize_metrics(db, patient_id=patient.id, metric_names=None, days=36500)
+        if r and metrics_summary:
+            try:
+                r.setex(cache_key, 3 * 3600, json.dumps(metrics_summary, ensure_ascii=False))
+            except Exception:
+                pass
 
     if not metrics_summary:
         raise HTTPException(status_code=400, detail="No lab data available for advice.")
 
-    language = "es"
+    # ── 5b. Select top-5 relevant metrics ─────────────────────────────────
+    question_lower = req.question.lower()
 
-    # Pull latest doctor notes for context (V2 + legacy)
+    def _relevance_score(name: str) -> int:
+        words = name.lower().replace("_", " ").replace("__", " ").split()
+        return sum(1 for w in words if w in question_lower)
+
+    sorted_names = sorted(metrics_summary.keys(), key=_relevance_score, reverse=True)
+    top_names = sorted_names[:5] if len(sorted_names) > 5 else sorted_names
+    relevant_metrics = {k: metrics_summary[k] for k in top_names}
+    all_analyte_names = ", ".join(sorted_names)
+
+    # ── 6. Doctor notes ───────────────────────────────────────────────────
     v2_notes = (
         db.query(V2DoctorNote)
-        .filter(
-            V2DoctorNote.patient_user_id == current_user.id,
-            V2DoctorNote.visibility == "patient",
-        )
-        .order_by(V2DoctorNote.updated_at.desc(), V2DoctorNote.created_at.desc())
+        .filter(V2DoctorNote.patient_user_id == user_id, V2DoctorNote.visibility == "patient")
+        .order_by(V2DoctorNote.updated_at.desc())
         .limit(5)
         .all()
     )
-    legacy_notes = []
+    notes_lines = []
+    for n in v2_notes:
+        meta = " · ".join(p for p in [n.analyte_key or "", n.t.isoformat() if n.t else ""] if p)
+        notes_lines.append(f"- [{meta}] {n.note}" if meta else f"- {n.note}")
     if patient:
         legacy_notes = (
             db.query(DoctorNote)
             .filter(DoctorNote.patient_id == patient.id)
             .order_by(DoctorNote.created_at.desc())
-            .limit(5)
+            .limit(3)
             .all()
         )
-    notes_lines = []
-    for n in v2_notes:
-        meta_parts = [n.analyte_key or ""]
-        if n.t:
-            meta_parts.append(n.t.isoformat())
-        prefix = f"[{' · '.join([part for part in meta_parts if part])}] " if meta_parts else ""
-        notes_lines.append(f"- {prefix}{n.note}")
-    for n in legacy_notes:
-        meta_parts = []
-        if n.metric_name:
-            meta_parts.append(n.metric_name)
-        if n.metric_time:
-            meta_parts.append(n.metric_time)
-        elif n.created_at:
-            meta_parts.append(n.created_at.isoformat())
-        prefix = f"[{' · '.join(meta_parts)}] " if meta_parts else ""
-        notes_lines.append(f"- {prefix}{n.text}")
-    notes_text = "\n".join(notes_lines) if notes_lines else ""
+        for n in legacy_notes:
+            meta_parts = [p for p in [n.metric_name or "", n.metric_time or ""] if p]
+            prefix = f"[{' · '.join(meta_parts)}] " if meta_parts else ""
+            notes_lines.append(f"- {prefix}{n.text}")
 
+    # ── 7. Build prompts ──────────────────────────────────────────────────
+    patient_name = current_user.full_name or "el paciente"
     system_prompt = (
-        "Eres un asistente de un nefrólogo y dietólogo experto en problemas renales y enfermedad renal crónica. "
-        "No eres el médico del paciente y no das diagnósticos ni prescribes fármacos. "
-        "Ofreces consejos generales de bienestar, alimentación y hábitos, y sugieres consultar a su médico. "
-        "Responde en el idioma solicitado, sé breve y práctico. Usa solo los datos de laboratorio proporcionados. "
-        "No respondas solo con disclaimer: incluye un resumen útil con datos concretos del contexto."
+        f"Eres NephroAI, un asistente personal de salud especializado en nefrología y "
+        f"nutrición renal. Acompañas al paciente {patient_name} en el seguimiento de sus "
+        f"análisis de laboratorio.\n\n"
+        "No eres médico, no diagnosticas ni prescribes medicamentos. Pero sí puedes:\n"
+        "- Explicar qué significan sus valores de laboratorio en lenguaje sencillo\n"
+        "- Dar consejos prácticos de alimentación y estilo de vida\n"
+        "- Recordar lo que el paciente ha compartido contigo antes\n"
+        "- Notar mejoras o cambios en sus tendencias\n\n"
+        "Adapta tu tono y formato según el tipo de pregunta:\n"
+        "- Pregunta simple o conversacional → respuesta corta y directa, sin estructura rígida\n"
+        "- Pregunta de revisión general → usa estructura clara con puntos clave\n"
+        "- Conversación continua → tono cercano, usa el nombre del paciente cuando sea natural\n\n"
+        f"Lo que recuerdas del paciente:\n{patient_memory_text}\n\n"
+        "Siempre responde en español."
     )
 
-    metrics_text = json.dumps(metrics_summary, ensure_ascii=False, indent=2)
-    parts = [
-        f"Idioma de respuesta: {language}",
-        f"Pregunta del usuario: {req.question}",
-        f"Periodo considerado: últimos {days} días.",
-        "Datos de laboratorio recientes (hasta 5 puntos por métrica):",
-        metrics_text,
+    user_prompt_parts = [
+        f"Pregunta: {req.question}",
+        f"Período considerado: últimos {days} días.",
+        "Métricas relevantes (hasta 5):",
+        json.dumps(relevant_metrics, ensure_ascii=False, indent=2),
+        f"Todos los análisis disponibles del paciente: {all_analyte_names}",
     ]
-    if notes_text:
-        parts.append("Notas del médico (recientes):")
-        parts.append(notes_text)
-    parts.append(
-        "Instrucciones: responde de forma concisa, con puntos claros. "
-        "Si algún valor está fuera de rango, menciónalo brevemente y da consejos generales de estilo de vida/alimentación. "
-        "No hagas diagnósticos ni ajustes de medicación. "
-        "Estructura sugerida: 1) Resumen breve de tendencia, 2) Hallazgos clave (2-4 viñetas con métricas), "
-        "3) Qué comentar con el médico (2-3 preguntas concretas)."
-    )
-    user_prompt = "\n".join(parts)
+    if notes_lines:
+        user_prompt_parts.append("Notas del médico (recientes):")
+        user_prompt_parts.extend(notes_lines)
+    user_prompt = "\n".join(user_prompt_parts)
 
-    answer = _openai_chat_completion(system_prompt, user_prompt)
+    # Replace last history entry's content with enriched user_prompt
+    if history_messages and history_messages[-1]["role"] == "user":
+        history_messages[-1]["content"] = user_prompt
+    else:
+        history_messages.append({"role": "user", "content": user_prompt})
+
+    # ── 8. Call OpenAI ────────────────────────────────────────────────────
+    answer = _openai_chat_completion_with_history(system_prompt, history_messages)
     if isinstance(answer, str):
         answer = answer.strip()
     if not answer or _is_low_signal_advice(answer):
-        answer = _build_deterministic_advice(metrics_summary, language, days)
+        answer = _build_deterministic_advice(metrics_summary, "es", days)
 
+    # ── 9. Save assistant message ─────────────────────────────────────────
+    db.add(ChatMessageRecord(session_id=session.id, role="assistant", content=answer))
+    if not session.title:
+        session.title = req.question[:60]
+    session.updated_at = dt.datetime.utcnow()
+    db.commit()
+
+    # ── 10. Async memory extraction ───────────────────────────────────────
+    from backend.tasks import extract_patient_memory, CELERY_ENABLED as _CELERY_ENABLED
+    if _CELERY_ENABLED:
+        extract_patient_memory.delay(session.id, user_id)
+    else:
+        try:
+            from backend.tasks import _run_extract_patient_memory
+            _run_extract_patient_memory(session.id, user_id)
+        except Exception:
+            pass
+
+    # ── 11. Build response ────────────────────────────────────────────────
     used_metrics = [
         AdviceMetric(name=name, value=values[0].get("value"), unit=values[0].get("unit"))
         for name, values in metrics_summary.items()
         if values
     ]
-
-    return AdviceResponse(
-        answer=answer,
-        usedMetrics=used_metrics,
-        disclaimer=True,
-    )
+    return AdviceResponse(answer=answer, usedMetrics=used_metrics, disclaimer=True, session_id=session.id)
 
 
 @app.get("/api/me")
