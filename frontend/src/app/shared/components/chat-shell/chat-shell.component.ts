@@ -38,6 +38,7 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
 
   @Input() history: ChatMessage[] = [];
   @Input() isLoading = false;
+  @Input() animateLastMessage = false;
   @Input() form!: FormGroup;
   @Input() quickPrompts: string[] = [];
   displayedAnswers: string[] = [];
@@ -49,6 +50,7 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
   private typingInterval: ReturnType<typeof setInterval> | null = null;
   private typingTargetIndex: number | null = null;
   private readonly typedMessageKeys = new Set<string>();
+  private prevHistoryLength = 0;
 
   onSubmit(): void {
     this.submitMessage.emit();
@@ -170,6 +172,7 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
     if (!this.history.length) {
       this.stopTyping();
       this.displayedAnswers = [];
+      this.prevHistoryLength = 0;
       return;
     }
 
@@ -198,6 +201,14 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
     const key = this.messageKey(lastIndex);
     if (this.typedMessageKeys.has(key) || this.displayedAnswers[lastIndex] === finalAnswer) {
       this.displayedAnswers[lastIndex] = finalAnswer;
+      this.prevHistoryLength = this.history.length;
+      return;
+    }
+
+    this.prevHistoryLength = this.history.length;
+    if (!this.animateLastMessage) {
+      this.displayedAnswers[lastIndex] = finalAnswer;
+      this.typedMessageKeys.add(key);
       return;
     }
 

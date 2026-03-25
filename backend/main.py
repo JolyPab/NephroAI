@@ -788,7 +788,7 @@ def _openai_chat_completion_with_history(system_prompt: str, messages: list[dict
     last_error_text = ""
     for token_param in dict.fromkeys(token_params):
         payload = dict(base_payload)
-        payload[token_param] = 800
+        payload[token_param] = 1500
         resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=120)
         if resp.status_code < 400:
             break
@@ -804,7 +804,10 @@ def _openai_chat_completion_with_history(system_prompt: str, messages: list[dict
 
     data = resp.json()
     try:
-        content = data["choices"][0]["message"]["content"]
+        choice = data["choices"][0]
+        content = choice["message"].get("content")
+        if not isinstance(content, (str, list)) or not content:
+            content = choice["message"].get("refusal") or ""
         if isinstance(content, str):
             return content
         if isinstance(content, list):
@@ -2995,13 +2998,20 @@ async def get_advice(
     question_lower = req.question.lower()
 
     def _relevance_score(name: str) -> int:
+        # Match against analyte key (English)
         words = name.lower().replace("_", " ").replace("__", " ").split()
-        return sum(1 for w in words if w in question_lower)
+        score = sum(1 for w in words if len(w) > 2 and w in question_lower)
+        # Also match against raw_name (Spanish) if available
+        entries = metrics_summary.get(name) or []
+        raw = (entries[0].get("raw_name") or "") if entries else ""
+        raw_words = raw.lower().split()
+        score += sum(1 for w in raw_words if len(w) > 2 and w in question_lower)
+        return score
 
     sorted_names = sorted(metrics_summary.keys(), key=_relevance_score, reverse=True)
     top_names = sorted_names[:5] if len(sorted_names) > 5 else sorted_names
     relevant_metrics = {k: metrics_summary[k] for k in top_names}
-    all_analyte_names = ", ".join(sorted_names)
+    all_analyte_names = ", ".join(sorted_names[:30])
 
     # ── 6. Doctor notes ───────────────────────────────────────────────────
     v2_notes = (
