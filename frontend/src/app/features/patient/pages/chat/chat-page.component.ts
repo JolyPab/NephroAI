@@ -23,6 +23,7 @@ export class PatientChatPageComponent implements OnInit {
 
   // ── Chat state ─────────────────────────────────────────────────────────
   isLoading = false;
+  animateLastMessage = false;
   availableMetrics: string[] = [];
   history: ChatMessage[] = [];
   errorMessage = '';
@@ -81,6 +82,7 @@ export class PatientChatPageComponent implements OnInit {
 
   selectSession(id: number): void {
     this.activeSessionId = id;
+    this.animateLastMessage = false;
     this.history = [];
     this.sidebarOpen = false;
     this.adviceService.getMessages(id).subscribe({
@@ -201,6 +203,7 @@ export class PatientChatPageComponent implements OnInit {
       disclaimer: response.disclaimer,
       timestamp: this.history[pendingIndex]?.timestamp ?? new Date(),
     };
+    this.animateLastMessage = true;
     this.upsertPendingMessage(pendingIndex, updatedMessage);
   }
 

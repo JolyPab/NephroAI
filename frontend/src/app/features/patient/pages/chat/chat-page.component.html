@@ -15,14 +15,14 @@
 
   <!-- Main chat area -->
   <div class="chat-main">
-    <!-- Top bar (mobile toggle + memory button) -->
+    <!-- Top bar -->
     <div class="chat-topbar">
       <button class="topbar-btn" (click)="sidebarOpen = !sidebarOpen" title="Historial">
         <i class="bi bi-layout-sidebar"></i>
       </button>
-      <div class="topbar-spacer"></div>
+      <span class="topbar-title">{{ 'chat.title' | translate }}</span>
       <button class="topbar-btn" (click)="toggleMemoryPanel()" title="{{ 'chat.memory' | translate }}">
-        <i class="bi bi-brain"></i>
+        <i class="bi bi-stars"></i>
       </button>
     </div>
 
@@ -47,6 +47,7 @@
       [aiKey]="'chat.ai'"
       [disclaimerKey]="'chat.disclaimer'"
       [history]="history"
+      [animateLastMessage]="animateLastMessage"
       [isLoading]="isLoading"
       [form]="chatForm"
       [quickPrompts]="quickPrompts"

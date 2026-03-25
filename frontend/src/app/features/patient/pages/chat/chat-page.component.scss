@@ -1,6 +1,10 @@
 :host {
-  display: block;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-top: -2rem;
+  margin-bottom: -8rem;
+  height: calc(100dvh - 116px);
+  min-height: 400px;
 }
 
 .chat-page {
@@ -8,24 +12,50 @@
   height: 100%;
   position: relative;
   overflow: hidden;
+  gap: 0.5rem;
+  // Нет padding — острова управляют своими отступами через margin
 }
 
-// ── Sidebar ───────────────────────────────────────────────────────────────
+// ── Sidebar — glass island ────────────────────────────────────────────────
 .sidebar-wrapper {
-  width: 260px;
+  width: 256px;
   flex-shrink: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  position: relative;
+  border-radius: var(--r-xl);
+  margin: 0.4rem 0 5.5rem 0.4rem;
+
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(40px) saturate(160%);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 20px 60px -10px rgba(0, 0, 0, 0.55),
+    0 4px 16px rgba(0, 0, 0, 0.30),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.14);
+
+  // Top shine line
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.50) 50%, transparent);
+    pointer-events: none;
+  }
 
   @media (max-width: 768px) {
     position: absolute;
-    left: -260px;
-    top: 0;
-    bottom: 0;
+    left: -280px;
+    top: 0.4rem;
+    bottom: 5.5rem;
     z-index: 100;
-    background: var(--surface-bg, #1a1a2e);
-    transition: left 0.25s ease;
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    margin: 0;
+    border-radius: 0 var(--r-xl) var(--r-xl) 0;
+    transition: left 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     &.open { left: 0; }
   }
@@ -38,51 +68,156 @@
     position: absolute;
     inset: 0;
     z-index: 99;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.50);
+    backdrop-filter: blur(4px);
   }
 }
 
-// ── Main area ──────────────────────────────────────────────────────────────
+// ── Main area — glass island ──────────────────────────────────────────────
 .chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   position: relative;
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  margin: 0.4rem 0.4rem 5.5rem 0;
+
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(48px) saturate(180%);
+  -webkit-backdrop-filter: blur(48px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  box-shadow:
+    0 28px 80px -16px rgba(0, 0, 0, 0.60),
+    0 8px 28px -4px rgba(0, 0, 0, 0.35),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.14),
+    inset 0 0 120px rgba(var(--accent-rgb), 0.03);
+
+  // Top frost gradient
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      transparent 40%
+    );
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  // Top shine line
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55) 50%, transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  app-chat-shell {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
 }
 
+// ── Topbar ────────────────────────────────────────────────────────────────
 .chat-topbar {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.7rem 0.9rem;
   gap: 0.5rem;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+
+  // Frosted glass separator
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 5%;
+    right: 5%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14) 30%, rgba(255, 255, 255, 0.14) 70%, transparent);
+  }
 }
 
-.topbar-spacer { flex: 1; }
+.topbar-title {
+  flex: 1;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text);
+  opacity: 0.9;
+}
 
 .topbar-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
   background: none;
   border: none;
   cursor: pointer;
   color: inherit;
-  opacity: 0.6;
-  padding: 0.35rem 0.5rem;
-  border-radius: 0.4rem;
+  opacity: 0.50;
+  border-radius: 0.55rem;
   font-size: 1rem;
-  &:hover { opacity: 1; background: rgba(255, 255, 255, 0.07); }
+  transition: opacity 140ms ease, background 140ms ease;
+  flex-shrink: 0;
+
+  &:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.09);
+  }
 }
 
-// ── Memory overlay ─────────────────────────────────────────────────────────
+// ── Memory overlay ────────────────────────────────────────────────────────
 .memory-overlay {
   position: absolute;
-  top: 2.75rem;
+  top: 3.5rem;
   right: 0.75rem;
   z-index: 50;
-  background: var(--surface-bg, #1a1a2e);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.75rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  max-height: calc(100% - 4rem);
+
+  // Rich dark glass — more opaque than panel glass for readability
+  background: rgba(8, 9, 24, 0.88);
+  backdrop-filter: blur(48px) saturate(180%);
+  -webkit-backdrop-filter: blur(48px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-xl);
+  box-shadow:
+    0 28px 72px -12px rgba(0, 0, 0, 0.65),
+    0 8px 24px -4px rgba(0, 0, 0, 0.40),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.20);
+  max-height: calc(100% - 4.5rem);
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+
+  // Top shine line
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.50) 50%, transparent);
+    pointer-events: none;
+  }
 }

@@ -1,100 +1,89 @@
 <div class="chat-shell">
-  <app-glass-card [extraClass]="'chat-frame glass-strong'">
-    <header class="chat-header">
-      <div>
-        <h3 class="title">{{ titleKey | translate }}</h3>
-        <p class="subtitle">{{ subtitleKey | translate: subtitleParams }}</p>
-      </div>
-      <div class="chip-secure">
-        <i class="bi bi-shield-check"></i>
-        <span>{{ secureKey | translate }}</span>
-      </div>
-    </header>
+  <!-- Messages area -->
+  <section #chatWindow class="chat-window" *ngIf="history.length || isLoading; else emptyState">
+    <div class="message" *ngFor="let message of history; let i = index">
 
-    <section #chatWindow class="chat-window" *ngIf="history.length || isLoading; else emptyState">
-      <div class="message" *ngFor="let message of history; let i = index">
-        <div class="bubble bubble-user">
-          <div class="bubble-meta">
-            <div class="avatar"><i class="bi bi-person"></i></div>
-            <div>
-              <span class="who">{{ youKey | translate }}</span>
-              <span class="time">{{ message.timestamp | date: 'd MMM HH:mm' }}</span>
-            </div>
-          </div>
-          <div class="bubble-text" [innerHTML]="renderMessageAsHtml(message.question)"></div>
+      <!-- User bubble -->
+      <div class="bubble bubble-user">
+        <div class="bubble-text" [innerHTML]="renderMessageAsHtml(message.question)"></div>
+        <span class="bubble-time">{{ message.timestamp | date: 'd MMM · HH:mm' }}</span>
+      </div>
+
+      <!-- AI bubble -->
+      <div
+        class="bubble bubble-ai"
+        *ngIf="((displayedAnswers[i] !== undefined ? displayedAnswers[i] : message.answer) || '').trim().length > 0"
+      >
+        <div class="ai-header">
+          <div class="avatar avatar-ai"><i class="bi bi-stars"></i></div>
+          <span class="who">{{ aiKey | translate }}</span>
+          <span class="bubble-time">{{ message.timestamp | date: 'd MMM · HH:mm' }}</span>
         </div>
-
         <div
-          class="bubble bubble-ai"
-          *ngIf="
-            ((displayedAnswers[i] !== undefined ? displayedAnswers[i] : message.answer) || '').trim().length > 0
-          "
-        >
-          <div class="bubble-meta">
-            <div class="avatar avatar-ai"><i class="bi bi-stars"></i></div>
-            <div>
-              <span class="who">{{ aiKey | translate }}</span>
-              <span class="time">{{ message.timestamp | date: 'd MMM HH:mm' }}</span>
-            </div>
-          </div>
-          <div
-            class="bubble-text"
-            [innerHTML]="renderMessageAsHtml(displayedAnswers[i] !== undefined ? displayedAnswers[i] : message.answer)"
-          ></div>
+          class="bubble-text"
+          [innerHTML]="renderMessageAsHtml(displayedAnswers[i] !== undefined ? displayedAnswers[i] : message.answer)"
+        ></div>
+        <p class="disclaimer" *ngIf="message.disclaimer">{{ disclaimerKey | translate }}</p>
+      </div>
+    </div>
 
-          <p class="disclaimer" *ngIf="message.disclaimer">
-            {{ disclaimerKey | translate }}
-          </p>
+    <!-- Loading indicator -->
+    <div class="message" *ngIf="isLoading">
+      <div class="bubble bubble-ai bubble-ai--loading">
+        <div class="ai-header">
+          <div class="avatar avatar-ai"><i class="bi bi-stars"></i></div>
+          <span class="who">{{ aiKey | translate }}</span>
+          <span class="bubble-time">{{ thinkingKey | translate }}</span>
+        </div>
+        <div class="thinking-dots" aria-hidden="true">
+          <span></span><span></span><span></span>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="message" *ngIf="isLoading">
-        <div class="bubble bubble-ai bubble-thinking">
-          <div class="bubble-meta">
-            <div class="avatar avatar-ai"><i class="bi bi-stars"></i></div>
-            <div>
-              <span class="who">{{ aiKey | translate }}</span>
-              <span class="time">{{ thinkingKey | translate }}</span>
-            </div>
-          </div>
-          <div class="thinking-dots" aria-hidden="true">
-            <span></span><span></span><span></span>
-          </div>
-        </div>
-      </div>
-    </section>
+  <!-- Empty state -->
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-stars"></i></div>
+      <p class="empty-label">{{ emptyKey | translate }}</p>
+      <div class="quick-prompts" *ngIf="quickPrompts.length">
+        <button
+          type="button"
+          class="prompt"
+          *ngFor="let prompt of quickPrompts"
+          (click)="onPrompt(prompt)"
+        >{{ prompt }}</button>
 
-    <ng-template #emptyState>
-      <div class="empty-state">
-        <i class="bi bi-robot"></i>
-        <p>{{ emptyKey | translate }}</p>
       </div>
-    </ng-template>
+    </div>
+  </ng-template>
 
-    <form class="composer" [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="composer-bar">
-        <textarea
-          class="chat-textarea"
-          rows="2"
-          formControlName="question"
-          [placeholder]="placeholderKey | translate"
-        ></textarea>
-        <button type="submit" class="send-btn" [disabled]="isLoading || form.invalid">
-          <span *ngIf="isLoading" class="loader-dot"></span>
-          <span *ngIf="!isLoading" class="bi bi-send"></span>
-        </button>
-      </div>
+  <!-- Composer island -->
+  <form class="composer" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <textarea
+      class="chat-textarea"
+      rows="2"
+      formControlName="question"
+      [placeholder]="placeholderKey | translate"
+    ></textarea>
+    <div class="composer-bar">
+      <div class="prompts-scroll" *ngIf="history.length && quickPrompts.length && !(questionControl?.invalid && questionControl?.touched)">
+        <button
+          type="button"
+          class="prompt"
+          *ngFor="let prompt of quickPrompts"
+          (click)="onPrompt(prompt)"
+        >{{ prompt }}</button>
 
-      <div class="composer-foot">
-        <span class="hint" *ngIf="questionControl?.invalid && questionControl?.touched">
-          {{ minCharsKey | translate }}
-        </span>
-        <div class="quick-prompts" *ngIf="quickPrompts.length">
-          <button type="button" class="prompt" *ngFor="let prompt of quickPrompts" (click)="onPrompt(prompt)">
-            {{ prompt }}
-          </button>
-        </div>
       </div>
-    </form>
-  </app-glass-card>
+      <span class="hint" *ngIf="questionControl?.invalid && questionControl?.touched">
+        {{ minCharsKey | translate }}
+      </span>
+      <button type="submit" class="send-btn" [disabled]="isLoading || form.invalid">
+        <span *ngIf="isLoading" class="loader-dot"></span>
+        <i *ngIf="!isLoading" class="bi bi-arrow-up"></i>
+      </button>
+    </div>
+  </form>
 </div>
