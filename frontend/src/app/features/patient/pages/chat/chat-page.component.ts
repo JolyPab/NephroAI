@@ -140,7 +140,10 @@ export class PatientChatPageComponent implements OnInit {
   }
 
   // ── Quick prompts ──────────────────────────────────────────────────────
-  setPrompt(prompt: string): void { this.chatForm.patchValue({ question: prompt }); }
+  setPrompt(prompt: string): void {
+    this.chatForm.patchValue({ question: prompt });
+    this.submit();
+  }
 
   // ── Submit ─────────────────────────────────────────────────────────────
   submit(): void {
