@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>NephroAI — C4 Architecture</title>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--border:#30363d;
+  --text:#c9d1d9;--muted:#8b949e;--accent:#58a6ff;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{display:flex;flex-direction:column}
+
+header{
+  padding:16px 32px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;flex-shrink:0
+}
+.h-title{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.h-sub{font-size:12px;color:var(--muted)}
+.h-badge{
+  margin-left:auto;font-size:10px;color:var(--accent);
+  border:1px solid rgba(88,166,255,.3);border-radius:20px;
+  padding:2px 10px;letter-spacing:1px;text-transform:uppercase
+}
+
+nav{
+  display:flex;gap:4px;padding:8px 32px;
+  border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0
+}
+.tab{
+  height:32px;padding:0 14px;border-radius:6px;font-size:12px;font-weight:500;
+  cursor:pointer;border:1px solid transparent;color:var(--muted);background:transparent;
+  transition:all .15s;display:flex;align-items:center;gap:6px;user-select:none
+}
+.tab:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.tab.active{color:var(--accent);background:rgba(88,166,255,.08);border-color:rgba(88,166,255,.25)}
+.tab-num{
+  font-size:9px;font-weight:700;background:rgba(255,255,255,.08);
+  border-radius:3px;padding:1px 4px
+}
+.tab.active .tab-num{background:rgba(88,166,255,.2);color:var(--accent)}
+
+main{flex:1;overflow:hidden;position:relative}
+.level{position:absolute;inset:0;display:none;flex-direction:column}
+.level.active{display:flex}
+
+.level-header{
+  padding:14px 32px 10px;flex-shrink:0;
+  display:flex;align-items:center;gap:16px;
+  border-bottom:1px solid rgba(48,54,61,.5)
+}
+.lh-tag{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.lh-title{font-size:16px;font-weight:700;color:#fff}
+.lh-desc{font-size:11px;color:var(--muted);margin-top:1px}
+.legend{margin-left:auto;display:flex;flex-wrap:wrap;gap:12px}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+.cy-wrap{flex:1;position:relative}
+.cy-wrap .cy{width:100%;height:100%}
+.cy-hint{
+  position:absolute;bottom:12px;right:16px;
+  font-size:10px;color:#374151;pointer-events:none
+}
+
+.seq-wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:24px 32px}
+.seq-wrap .mermaid{max-width:860px;width:100%}
+
+footer{
+  text-align:center;padding:7px;font-size:11px;color:#374151;
+  border-top:1px solid var(--border);flex-shrink:0
+}
+kbd{
+  background:rgba(255,255,255,.07);border:1px solid var(--border);
+  border-radius:3px;padding:1px 5px;font-size:10px;color:var(--muted)
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-title">NephroAI — C4 Architecture</div>
+  <div class="h-sub">FastAPI · Angular 20 · Flutter · PostgreSQL · OpenAI</div>
+  <div class="h-badge">C4 Model</div>
+</header>
+
+<nav>
+  <div class="tab active" onclick="showLevel(0)"><span class="tab-num">L1</span> Contexto del Sistema</div>
+  <div class="tab"        onclick="showLevel(1)"><span class="tab-num">L2</span> Contenedores</div>
+  <div class="tab"        onclick="showLevel(2)"><span class="tab-num">L3</span> Componentes — API</div>
+  <div class="tab"        onclick="showLevel(3)"><span class="tab-num">~</span>  Flujo de Datos</div>
+</nav>
+
+<main>
+
+<!-- ═══ L1 CONTEXT ═══ -->
+<div class="level active" id="level-0">
+  <div class="level-header">
+    <div>
+      <div class="lh-tag">Nivel 1 — System Context</div>
+      <div class="lh-title">Contexto del Sistema</div>
+      <div class="lh-desc">Quién usa NephroAI y con qué sistemas externos se integra.</div>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:#08427b"></div>Persona</div>
+      <div class="leg"><div class="leg-dot" style="background:#1168bd"></div>Sistema</div>
+      <div class="leg"><div class="leg-dot" style="background:#4a4a4a"></div>Externo</div>
+    </div>
+  </div>
+  <div class="cy-wrap"><div class="cy" id="cy0"></div><div class="cy-hint">scroll para zoom · drag para mover</div></div>
+</div>
+
+<!-- ═══ L2 CONTAINERS ═══ -->
+<div class="level" id="level-1">
+  <div class="level-header">
+    <div>
+      <div class="lh-tag">Nivel 2 — Containers</div>
+      <div class="lh-title">Contenedores</div>
+      <div class="lh-desc">Aplicaciones y servicios que componen NephroAI (un servidor, Docker Compose).</div>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:#08427b"></div>Persona</div>
+      <div class="leg"><div class="leg-dot" style="background:#1868c2"></div>Contenedor</div>
+      <div class="leg"><div class="leg-dot" style="background:#1a5c3a"></div>Base de datos</div>
+      <div class="leg"><div class="leg-dot" style="background:#4a4a4a"></div>Externo</div>
+    </div>
+  </div>
+  <div class="cy-wrap"><div class="cy" id="cy1"></div><div class="cy-hint">scroll para zoom · drag para mover</div></div>
+</div>
+
+<!-- ═══ L3 COMPONENTS ═══ -->
+<div class="level" id="level-2">
+  <div class="level-header">
+    <div>
+      <div class="lh-tag">Nivel 3 — Components</div>
+      <div class="lh-title">Componentes — API Server</div>
+      <div class="lh-desc">Módulos internos del backend FastAPI y sus responsabilidades.</div>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:#2a4a7f"></div>Componente</div>
+      <div class="leg"><div class="leg-dot" style="background:#1868c2"></div>Contenedor</div>
+      <div class="leg"><div class="leg-dot" style="background:#4a4a4a"></div>Externo</div>
+    </div>
+  </div>
+  <div class="cy-wrap"><div class="cy" id="cy2"></div><div class="cy-hint">scroll para zoom · drag para mover</div></div>
+</div>
+
+<!-- ═══ DATA FLOW ═══ -->
+<div class="level" id="level-3">
+  <div class="level-header">
+    <div>
+      <div class="lh-tag">Flujo Principal</div>
+      <div class="lh-title">PDF → Extracción → Gráficos</div>
+      <div class="lh-desc">Secuencia completa desde la subida del PDF hasta el gráfico de evolución temporal.</div>
+    </div>
+  </div>
+  <div class="seq-wrap">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  actor P as Paciente
+  participant FE as Angular / Flutter
+  participant API as FastAPI
+  participant W as Celery Worker
+  participant OAI as OpenAI API
+  participant DB as PostgreSQL
+
+  P->>FE: Selecciona PDF de laboratorio
+  FE->>API: POST /api/v2/documents
+  API->>API: SHA-256 hash del PDF
+  API->>DB: Existe este hash?
+  DB-->>API: No existe
+  API->>W: Encola tarea async (Redis)
+  API-->>FE: 202 + document_id
+
+  Note over W,OAI: Pipeline V2 en background
+  W->>OAI: files.create(pdf_bytes)
+  OAI-->>W: file_id
+  W->>OAI: responses.parse(gpt-5.2, file_id, schema=ImportV2)
+  OAI-->>W: ImportV2 JSON con metrics[]
+  W->>OAI: files.delete(file_id)
+  W->>DB: INSERT V2Document + N x V2Metric
+
+  P->>FE: Abre el dashboard
+  FE->>API: GET /api/v2/analytes
+  API->>DB: SELECT ultimas metricas
+  DB-->>API: Lista analytes
+  API-->>FE: [{analyte_key, last_value, unit}]
+  FE-->>P: Tarjetas de metricas
+
+  P->>FE: Clic en GLUCOSE_SERUM
+  FE->>API: GET /api/v2/series?analyte_key=GLUCOSE_SERUM
+  API->>DB: SELECT V2Metric ORDER BY date
+  DB-->>API: Puntos de la serie
+  API-->>FE: SeriesResponse {points:[{t,y,evidence}]}
+  FE-->>P: Grafico de evolucion temporal
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <kbd>←</kbd><kbd>→</kbd> entre niveles &nbsp;·&nbsp; <kbd>F</kbd> pantalla completa
+</footer>
+
+<script>
+// ── helpers ──────────────────────────────────────
+function lbl(type, name, tech, desc) {
+  const t = `<<${type}>>`;
+  return tech ? `${t}\n${name}\n[${tech}]\n${desc}` : `${t}\n${name}\n${desc}`;
+}
+
+const C = {
+  person:    '#08427b',
+  system:    '#1168bd',
+  external:  '#3d3d3d',
+  container: '#1868c2',
+  db:        '#1a5c3a',
+  component: '#1e3a6e',
+  extcont:   '#3a3a5c',
+};
+
+const baseStyle = [
+  {
+    selector: 'node',
+    style: {
+      shape: 'roundrectangle',
+      'background-color': 'data(bg)',
+      'border-width': 1,
+      'border-color': 'rgba(255,255,255,0.15)',
+      color: '#fff',
+      'text-valign': 'center',
+      'text-halign': 'center',
+      'text-wrap': 'wrap',
+      'text-max-width': 155,
+      'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      'font-size': '11px',
+      'line-height': 1.45,
+      label: 'data(label)',
+      width: 170,
+      height: 80,
+    }
+  },
+  {
+    selector: 'node[t="person"]',
+    style: { width: 155, height: 75 }
+  },
+  {
+    selector: 'node[t="component"]',
+    style: { width: 180, height: 85 }
+  },
+  {
+    selector: 'edge',
+    style: {
+      'curve-style': 'bezier',
+      'line-color': '#3b82f6',
+      'target-arrow-color': '#3b82f6',
+      'target-arrow-shape': 'triangle',
+      'arrow-scale': 0.9,
+      width: 1.5,
+      label: 'data(label)',
+      'font-size': '9.5px',
+      color: '#8b949e',
+      'text-background-color': '#0d1117',
+      'text-background-opacity': 0.85,
+      'text-background-padding': '2px',
+      'text-wrap': 'wrap',
+      'text-max-width': 95,
+      'edge-text-rotation': 'autorotate',
+    }
+  },
+  {
+    selector: 'edge[ext]',
+    style: {
+      'line-style': 'dashed',
+      'line-color': '#6b7280',
+      'target-arrow-color': '#6b7280',
+    }
+  },
+];
+
+function layout() {
+  return {
+    name: 'dagre',
+    rankDir: 'TB',
+    nodeSep: 45,
+    rankSep: 75,
+    edgeSep: 15,
+    ranker: 'network-simplex',
+    fit: true,
+    padding: 40,
+    animate: false,
+    nodeDimensionsIncludeLabels: true,
+  };
+}
+
+function mk(id, t, label, extra={}) {
+  return { data: { id, t, label, bg: C[t] || C.external, ...extra } };
+}
+function edge(s, t, label='', ext=false) {
+  const d = { source: s, target: t, label };
+  if (ext) d.ext = true;
+  return { data: d };
+}
+
+// ── L1: CONTEXT ──────────────────────────────────
+const l1 = {
+  nodes: [
+    mk('pac',   'person',   lbl('person',   'Paciente',          null, 'Sube PDFs, consulta\nmetricas, chatea con IA')),
+    mk('med',   'person',   lbl('person',   'Medico/Nefrologo',  null, 'Panel B2B: datos\nde sus pacientes')),
+    mk('sys',   'system',   lbl('system',   'NephroAI',          null, 'Plataforma SaaS de\nanalisis de laboratorio\ncon IA — Ecuador')),
+    mk('oai',   'external', lbl('external', 'OpenAI API',        null, 'gpt-5.2 extraccion PDF\ngpt-4o consejos IA')),
+    mk('rsnd',  'external', lbl('external', 'Resend',            null, 'Email transaccional\nOTP y reset password')),
+    mk('pp',    'external', lbl('external', 'PayPal',            null, 'Pagos y\nsuscripciones')),
+    mk('cf',    'external', lbl('external', 'Cloudflare',        null, 'CDN, proxy HTTPS\ny proteccion DDoS')),
+  ],
+  edges: [
+    edge('pac', 'sys', 'Sube PDFs,\nconsulta [HTTPS]'),
+    edge('med', 'sys', 'Panel B2B\n[HTTPS]'),
+    edge('sys', 'oai', 'Extrae PDFs y\nconsejos [HTTPS]',  true),
+    edge('sys', 'rsnd','Emails OTP\n[SMTP TLS]',           true),
+    edge('sys', 'pp',  'Pagos\n[HTTPS REST]',              true),
+    edge('cf',  'sys', 'Proxy HTTPS\n[TCP 443]',           true),
+  ]
+};
+
+// ── L2: CONTAINERS ───────────────────────────────
+const l2 = {
+  nodes: [
+    // persons
+    mk('p_pac',  'person',    lbl('person',    'Paciente',          null,    'Navegador o app Android')),
+    mk('p_med',  'person',    lbl('person',    'Medico',            null,    'Navegador — panel B2B')),
+    // server containers
+    mk('nginx',  'container', lbl('container', 'Nginx',             'nginx:alpine',      'Reverse proxy\n/api/* → :8000')),
+    mk('web',    'container', lbl('container', 'Web App',           'Angular 20',        'SPA con lazy load,\nsignals, i18n')),
+    mk('api',    'container', lbl('container', 'API Server',        'FastAPI / Py 3.11', 'Auth, V2 pipeline,\ndoctor B2B, consejos')),
+    mk('wkr',    'container', lbl('container', 'Background Worker', 'Celery / Python',   'Procesa PDFs\nasync via Redis')),
+    mk('db',     'db',        lbl('database',  'Base de Datos',     'PostgreSQL 15',     'Users, V2Docs,\nMetrics, Grants')),
+    mk('redis',  'db',        lbl('database',  'Cache y Cola',      'Redis alpine',      'Broker Celery\ny result backend')),
+    // external
+    mk('mob',    'extcont',   lbl('container', 'Mobile App',        'Flutter 3.41',      'App Android nativa.\nMismo API backend.')),
+    mk('e_oai',  'external',  lbl('external',  'OpenAI API',        null,                'gpt-5.2 + gpt-4o')),
+    mk('e_rsnd', 'external',  lbl('external',  'Resend SMTP',       null,                'smtp.resend.com:587')),
+    mk('e_pp',   'external',  lbl('external',  'PayPal API',        null,                'Pagos SaaS')),
+  ],
+  edges: [
+    edge('p_pac', 'nginx',  'HTTPS 443'),
+    edge('p_med', 'nginx',  'HTTPS 443'),
+    edge('mob',   'nginx',  'HTTP 80'),
+    edge('nginx', 'web',    'Archivos\nAngular'),
+    edge('nginx', 'api',    'Proxy /api/*\nHTTP 8000'),
+    edge('api',   'db',     'SQL / TCP'),
+    edge('api',   'redis',  'Encola tareas\nasync'),
+    edge('api',   'e_oai',  'Extraccion +\nconsejos [HTTPS]', true),
+    edge('api',   'e_rsnd', 'Emails OTP\n[SMTP 587]',         true),
+    edge('api',   'e_pp',   'Pagos [HTTPS]',                  true),
+    edge('wkr',   'redis',  'Consume cola'),
+    edge('wkr',   'db',     'Guarda V2Docs\ny Metrics'),
+    edge('wkr',   'e_oai',  'Extraccion async\ngpt-5.2 [HTTPS]', true),
+  ]
+};
+
+// ── L3: COMPONENTS (API) ─────────────────────────
+const l3 = {
+  nodes: [
+    // external callers
+    mk('x_web',  'container', lbl('container', 'Web App',          'Angular 20',  'SPA frontend')),
+    mk('x_mob',  'extcont',   lbl('container', 'Mobile App',       'Flutter',     'App Android')),
+    // components
+    mk('c_auth', 'component', lbl('component', 'Auth Router',      'auth_routes.py',  'Registro OTP email,\nlogin JWT, reset pwd')),
+    mk('c_pat',  'component', lbl('component', 'Patient Router',   'patient_routes.py','CRUD pacientes del\nusuario autenticado')),
+    mk('c_v2',   'component', lbl('component', 'V2 API',           'main.py /api/v2/*','Upload PDF, analytes,\nseries, delete cascade')),
+    mk('c_ext',  'component', lbl('component', 'V2 Extractor',     'v2/extractor.py',  'Pipeline: PDF bytes\n→ LLM → Pydantic → DB')),
+    mk('c_llm',  'component', lbl('component', 'LLM Client',       'v2/llm_client.py', 'File API OpenAI\nresponses.parse(gpt-5.2)')),
+    mk('c_adv',  'component', lbl('component', 'Advice Handler',   'main.py /api/advice','Consejos IA basados\nen metricas (gpt-4o)')),
+    mk('c_doc',  'component', lbl('component', 'Doctor API',       'main.py /api/v2/doctor/*','Panel B2B: pacientes,\nmetricas, notas, chat')),
+    mk('c_shr',  'component', lbl('component', 'Share & Grants',   'main.py /api/share/*','Paciente otorga/revoca\nacceso al medico')),
+    mk('c_ac',   'component', lbl('component', 'Auth Core',        'auth.py',          'JWT HS256 7d\nPBKDF2 hashing')),
+    mk('c_em',   'component', lbl('component', 'Email Service',    'email_service.py', 'Envia OTP y reset\nvia Resend SMTP')),
+    mk('c_db',   'component', lbl('component', 'Database Layer',   'database.py',      'SQLAlchemy models\nmigraciones inline')),
+    // external dependencies
+    mk('x_pg',   'db',        lbl('database',  'PostgreSQL',       null,              'Base de datos\nprincipal')),
+    mk('x_rd',   'db',        lbl('database',  'Redis',            null,              'Cola Celery')),
+    mk('x_oai',  'external',  lbl('external',  'OpenAI API',       null,              'File API +\nChat completions')),
+    mk('x_rsnd', 'external',  lbl('external',  'Resend SMTP',      null,              'smtp.resend.com\n:587')),
+  ],
+  edges: [
+    edge('x_web',  'c_auth', 'POST /api/auth/*'),
+    edge('x_web',  'c_v2',   'POST/GET /api/v2/*'),
+    edge('x_web',  'c_adv',  'POST /api/advice'),
+    edge('x_web',  'c_doc',  'GET /api/v2/doctor/*'),
+    edge('x_mob',  'c_auth', 'POST /api/auth/*'),
+    edge('x_mob',  'c_v2',   'POST/GET /api/v2/*'),
+    edge('c_auth', 'c_ac',   'JWT y hashing'),
+    edge('c_auth', 'c_em',   'Envio OTP'),
+    edge('c_auth', 'c_db',   'CRUD usuarios'),
+    edge('c_v2',   'c_ext',  'Invoca extraccion'),
+    edge('c_ext',  'c_llm',  'PDF bytes'),
+    edge('c_llm',  'x_oai',  'File API +\nresponses.parse',  true),
+    edge('c_ext',  'c_db',   'V2Doc + V2Metrics'),
+    edge('c_adv',  'c_db',   'Lee metricas\ndel paciente'),
+    edge('c_adv',  'x_oai',  'chat.completions\ngpt-4o',      true),
+    edge('c_doc',  'c_db',   'DoctorGrant +\nMetrics + Notes'),
+    edge('c_shr',  'c_db',   'CRUD DoctorGrant'),
+    edge('c_em',   'x_rsnd', 'SMTP TLS 587',                  true),
+    edge('c_db',   'x_pg',   'SQLAlchemy ORM'),
+  ]
+};
+
+// ── RENDER ───────────────────────────────────────
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'dark',
+  themeVariables: { darkMode: true, background: '#161b22', fontSize: '13px' },
+  sequence: {
+    useMaxWidth: true, actorMargin: 65,
+    width: 130, height: 44, diagramMarginX: 16, diagramMarginY: 16
+  }
+});
+
+cytoscape.use(cytoscapeDagre);
+
+const rendered = {};
+const DIAGRAMS = [
+  { id: 'cy0', data: l1 },
+  { id: 'cy1', data: l2 },
+  { id: 'cy2', data: l3 },
+];
+
+function renderCy(idx) {
+  if (rendered[idx]) return;
+  rendered[idx] = true;
+  const { id, data } = DIAGRAMS[idx];
+  setTimeout(() => {
+    cytoscape({
+      container: document.getElementById(id),
+      elements: [...data.nodes, ...data.edges],
+      style: baseStyle,
+      layout: layout(),
+      wheelSensitivity: 0.25,
+      minZoom: 0.15,
+      maxZoom: 3,
+    });
+  }, 30);
+}
+
+// ── TABS ─────────────────────────────────────────
+let current = 0;
+function showLevel(idx) {
+  current = idx;
+  document.querySelectorAll('.level').forEach((el, i) => el.classList.toggle('active', i === idx));
+  document.querySelectorAll('.tab').forEach((el, i)   => el.classList.toggle('active', i === idx));
+  if (idx < 3) renderCy(idx);
+}
+renderCy(0); // initial
+
+// ── KEYBOARD ─────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if      (e.key === 'ArrowRight' && current < 3) showLevel(current + 1);
+  else if (e.key === 'ArrowLeft'  && current > 0) showLevel(current - 1);
+  else if (e.key === 'f' || e.key === 'F') {
+    document.fullscreenElement
+      ? document.exitFullscreen()
+      : document.documentElement.requestFullscreen().catch(() => {});
+  }
+});
+</script>
+</body>
+</html>
