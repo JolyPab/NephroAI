@@ -1,6 +1,6 @@
 :host {
   display: block;
-  --charts-panel-height: clamp(420px, 56vh, 620px);
+  --charts-panel-height: clamp(320px, calc(100vh - 320px), 600px);
 }
 
 .charts-layout {
