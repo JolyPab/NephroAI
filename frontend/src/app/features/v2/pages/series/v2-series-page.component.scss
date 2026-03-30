@@ -43,11 +43,11 @@
 
 .series-page--embedded .series-chart-shell {
   flex: 0 0 auto;
-  min-height: 0;
+  min-height: 240px;
 }
 
 .series-page--embedded .series-chart-canvas {
-  min-height: 0;
+  min-height: 200px;
 }
 
 .timeline-row {
