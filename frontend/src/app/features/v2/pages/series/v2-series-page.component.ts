@@ -220,7 +220,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
         ticks: {
           color: 'rgba(255, 255, 255, 0.7)',
           maxRotation: 45,
-          autoSkipPadding: 12,
+          autoSkip: false,
         },
         grid: {
           color: 'rgba(255, 255, 255, 0.08)',
@@ -519,7 +519,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
             ...currentXTicks,
             color: themeColors.text,
             maxRotation: 45,
-            autoSkipPadding: 12,
+            autoSkip: false,
           },
           grid: {
             ...currentXGrid,
