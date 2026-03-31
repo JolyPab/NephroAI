@@ -28,7 +28,15 @@
     {{ errorMessage }}
   </div>
 
-  <app-glass-card *ngIf="!isLoading && !errorMessage && series" [extraClass]="'glass-strong min-h-[320px] series-card'">
+  <app-glass-card *ngIf="!isLoading && !errorMessage && series && !embedded" [extraClass]="'glass-strong series-card'">
+    <ng-container *ngTemplateOutlet="seriesBody"></ng-container>
+  </app-glass-card>
+
+  <ng-container *ngIf="!isLoading && !errorMessage && series && embedded">
+    <ng-container *ngTemplateOutlet="seriesBody"></ng-container>
+  </ng-container>
+
+  <ng-template #seriesBody>
     <div *ngIf="isNumeric && hasReferenceBounds && !hasCategoricalReference" class="inline-flex">
       <label class="glass chip filter-chip">
         <input type="checkbox" [checked]="abnormalOnly" (change)="onAbnormalOnlyChange($any($event.target).checked)" />
@@ -94,7 +102,7 @@
       </div>
       <p *ngIf="!timelinePoints.length" class="text-sm text-[var(--text-dim)] text-center">{{ copy.noPoints }}</p>
     </ng-template>
-  </app-glass-card>
+  </ng-template>
 </div>
 
 <app-v2-point-detail-panel

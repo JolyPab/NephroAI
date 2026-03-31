@@ -30,7 +30,7 @@
       </div>
 
       <div class="charts-series-card" *ngIf="!isLoading && !errorMessage">
-        <app-glass-card [extraClass]="'glass-strong min-h-[320px] h-full'">
+        <app-glass-card [extraClass]="'glass-strong h-full'">
           <app-v2-series-page
             *ngIf="selectedMetric; else noMetric"
             [embedded]="true"

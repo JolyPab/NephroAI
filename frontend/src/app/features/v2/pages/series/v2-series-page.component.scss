@@ -36,18 +36,22 @@
   flex: 0 0 auto;
 }
 
-.series-page--embedded .series-card {
-  height: auto;
+.series-page--embedded {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   min-height: 0;
+  gap: 0.75rem;
 }
 
 .series-page--embedded .series-chart-shell {
-  flex: 0 0 auto;
-  min-height: 240px;
+  flex: 1 1 auto;
+  min-height: 180px;
 }
 
 .series-page--embedded .series-chart-canvas {
-  min-height: 200px;
+  flex: 1 1 auto;
+  min-height: 150px;
 }
 
 .timeline-row {

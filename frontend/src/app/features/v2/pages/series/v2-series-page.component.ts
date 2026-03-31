@@ -219,8 +219,9 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
         offset: true,
         ticks: {
           color: 'rgba(255, 255, 255, 0.7)',
-          maxRotation: 45,
-          autoSkip: false,
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 8,
         },
         grid: {
           color: 'rgba(255, 255, 255, 0.08)',
@@ -519,7 +520,8 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
             ...currentXTicks,
             color: themeColors.text,
             maxRotation: 45,
-            autoSkip: false,
+            autoSkip: true,
+            maxTicksLimit: 8,
           },
           grid: {
             ...currentXGrid,
