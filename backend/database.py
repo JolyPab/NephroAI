@@ -26,7 +26,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 
 from backend.analyte_utils import normalize_analyte_name, analyte_key
 # Ensure .env is loaded before reading DB_URL so we don't fall back to SQLite accidentally
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 if TYPE_CHECKING:
     from backend.models import ImportJson

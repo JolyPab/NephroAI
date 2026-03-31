@@ -1,48 +1,21 @@
 :host {
   display: flex;
   flex-direction: column;
-  // Убираем отрицательные маржины на мобилках, они — главный яд
-  height: 100dvh; 
-  
-  @media (min-width: 769px) {
-    margin-top: -2rem;
-    margin-bottom: -8rem;
-    height: calc(100dvh - 116px);
-    min-height: 400px;
-  }
+  margin-top: -2rem;
+  margin-bottom: -8rem;
+  height: calc(100dvh - 116px);
+  min-height: 400px;
 }
 
 .chat-page {
   display: flex;
   height: 100%;
-  width: 100%; // Чтобы не схлопывалось
   position: relative;
   overflow: hidden;
   gap: 0.5rem;
+  // Нет padding — острова управляют своими отступами через margin
 }
 
-.chat-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--r-xl);
-  
-  // На мобилках прижимаем вплотную, убираем огромный нижний маржин
-  margin: 0.4rem; 
-
-  @media (min-width: 769px) {
-    margin: 0.4rem 0.4rem 5.5rem 0;
-  }
-
-  // Остальной твой стиль (background, glassmorphism) оставляем...
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(48px) saturate(180%);
-  // ... и так далее
-}
 // ── Sidebar — glass island ────────────────────────────────────────────────
 .sidebar-wrapper {
   width: 256px;

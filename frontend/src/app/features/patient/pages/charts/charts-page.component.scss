@@ -18,6 +18,8 @@
 
 .charts-series-card {
   min-height: 0;
+  border-radius: var(--r-xl);
+  overflow: hidden;
 }
 
 .charts-series-card > app-glass-card {
@@ -129,6 +131,11 @@
 
   .charts-series-card > app-glass-card {
     height: 100%;
+  }
+
+  .charts-series-card app-v2-series-page {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 }
 
