@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func
 from sqlalchemy.sql import over
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel, ValidationError
 from typing import Any, Dict, List, Optional
 import io
@@ -1206,6 +1207,24 @@ async def create_v2_document(
     except HTTPException:
         db.rollback()
         raise
+    except IntegrityError:
+        db.rollback()
+        existing = (
+            db.query(V2Document)
+            .filter(
+                V2Document.user_id == user_id,
+                V2Document.document_hash == document_hash,
+            )
+            .first()
+        )
+        if existing:
+            num_metrics = db.query(V2Metric).filter(V2Metric.document_id == existing.id).count()
+            return {
+                "document_id": existing.id,
+                "analysis_date": _iso_or_none(existing.analysis_date),
+                "num_metrics": num_metrics,
+            }
+        raise HTTPException(status_code=500, detail="Failed to persist V2 document: IntegrityError")
     except Exception as e:
         db.rollback()
         logger.exception(
