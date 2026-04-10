@@ -1,46 +1,149 @@
-<div class="space-y-6">
-  <app-glass-card [extraClass]="'glass-strong'">
-    <div class="space-y-1">
-      <h3 class="text-xl font-semibold text-[var(--text)]">{{ 'CHARTS.TITLE' | translate }}</h3>
-      <p class="text-sm text-[var(--text-dim)] max-w-xl">{{ 'CHARTS.SUBTITLE' | translate }}</p>
-    </div>
-  </app-glass-card>
+<div class="charts-page">
 
-  <div class="charts-layout">
-    <div class="charts-selector">
-      <app-glass-card [extraClass]="'glass-strong h-full'">
-        <app-v2-metric-selector
-          [items]="analytes"
-          [selectedKey]="selectedMetric"
-          [lang]="language"
-          [showNumericTextToggles]="true"
-          (select)="onMetricChange($event)"
-        ></app-v2-metric-selector>
-      </app-glass-card>
+  <!-- ── Left Sidebar ── -->
+  <aside class="charts-sidebar glass glass-strong">
+
+    <div class="sidebar-search">
+      <span class="material-symbols-rounded sidebar-search__icon">search</span>
+      <input
+        type="text"
+        class="sidebar-search__input"
+        [placeholder]="language === 'es' ? 'Buscar métrica...' : 'Search metric...'"
+        [(ngModel)]="sidebarSearch"
+      />
     </div>
 
-    <div class="charts-series">
-      <div *ngIf="isLoading" class="glass glass-strong flex flex-col items-center justify-center gap-3 min-h-[280px]">
-        <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
-        <p class="text-sm text-[var(--text-dim)]">{{ 'CHARTS.LOADING' | translate }}</p>
+    <ng-container *ngIf="!isLoading && selectedMetric">
+      <p class="sidebar-section-label">{{ language === 'es' ? 'Métrica seleccionada' : 'Selected Metric' }}</p>
+      <div class="sidebar-metric-item sidebar-metric-item--active">
+        <span class="metric-dot" [style.background]="getMetricColor(selectedMetric)"></span>
+        <span class="metric-item-name">{{ getDisplayNameByKey(selectedMetric) }}</span>
+        <span class="metric-more-btn">···</span>
+      </div>
+    </ng-container>
+
+    <div class="sidebar-list-shell">
+      <div *ngIf="isLoading" class="sidebar-list">
+        <div class="sidebar-metric-item skeleton-row" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+          <span class="skeleton-line h-3 rounded-full" style="width: 0.65rem; flex-shrink: 0; border-radius: 50%"></span>
+          <span class="skeleton-line h-3 flex-1"></span>
+        </div>
       </div>
 
-      <div *ngIf="!isLoading && errorMessage" class="glass glass-strong p-4 text-[var(--danger)] border border-[var(--danger)]/40">
-        {{ errorMessage }}
-      </div>
-
-      <div class="charts-series-card" *ngIf="!isLoading && !errorMessage">
-        <app-glass-card [extraClass]="'glass-strong h-full'">
-          <app-v2-series-page
-            *ngIf="selectedMetric; else noMetric"
-            [embedded]="true"
-            [analyteKeyInput]="selectedMetric"
-          ></app-v2-series-page>
-          <ng-template #noMetric>
-            <p class="text-sm text-[var(--text-dim)] text-center">{{ 'CHARTS.NO_DATA' | translate }}</p>
-          </ng-template>
-        </app-glass-card>
+      <div *ngIf="!isLoading" class="sidebar-list scrollable">
+        <ng-container *ngFor="let analyte of filteredSidebarAnalytes; trackBy: trackByAnalyte">
+          <div
+            *ngIf="analyte.analyte_key !== selectedMetric"
+            class="sidebar-metric-item"
+            (click)="onMetricChange(analyte.analyte_key)"
+          >
+            <span class="metric-dot" [style.background]="getMetricColor(analyte.analyte_key)"></span>
+            <span class="metric-item-name">{{ getDisplayName(analyte) }}</span>
+          </div>
+        </ng-container>
+        <p *ngIf="!filteredSidebarAnalytes.length" class="sidebar-empty">
+          {{ language === 'es' ? 'Sin resultados' : 'No results' }}
+        </p>
       </div>
     </div>
-  </div>
+  </aside>
+
+  <!-- ── Main Content ── -->
+  <main class="charts-main">
+
+    <div *ngIf="isLoading" class="charts-loading glass glass-strong">
+      <div class="animate-spin h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
+      <p class="text-sm text-[var(--text-dim)] mt-3">{{ 'CHARTS.LOADING' | translate }}</p>
+    </div>
+
+    <div *ngIf="!isLoading && errorMessage" class="glass glass-strong p-5 text-[var(--danger)]">
+      {{ errorMessage }}
+    </div>
+
+    <ng-container *ngIf="!isLoading && !errorMessage">
+
+      <!-- Metric title row -->
+      <div class="metric-title-row glass glass-strong">
+        <div class="metric-title-left">
+          <span class="metric-dot-lg" [style.background]="getMetricColor(selectedMetric)"></span>
+          <h2 class="metric-title-name">{{ getDisplayNameByKey(selectedMetric) }}</h2>
+        </div>
+        <span *ngIf="statLastDate" class="metric-date-badge">{{ statLastDate }}</span>
+      </div>
+
+      <!-- Stats cards -->
+      <div class="stats-row" *ngIf="statLastValue">
+        <div class="stat-card glass">
+          <p class="stat-card__label">{{ language === 'es' ? 'Último Valor' : 'Last Value' }}</p>
+          <p class="stat-card__value">{{ statLastValue }}</p>
+          <p class="stat-card__unit" *ngIf="statUnit">{{ statUnit }}</p>
+        </div>
+
+        <div class="stat-card glass">
+          <p class="stat-card__label">{{ language === 'es' ? 'Promedio' : 'Average' }}</p>
+          <p class="stat-card__value">{{ statAverage }}</p>
+          <p class="stat-card__unit" *ngIf="statUnit">{{ statUnit }}</p>
+        </div>
+
+        <div class="stat-card glass">
+          <p class="stat-card__label">{{ language === 'es' ? 'Variación' : 'Change' }}</p>
+          <p
+            class="stat-card__value"
+            [class.stat-card__value--up]="variationIsPositive"
+            [class.stat-card__value--down]="variationIsNegative"
+          >{{ statVariation }}</p>
+          <p class="stat-card__unit" *ngIf="statVariationPeriod">{{ statVariationPeriod }}</p>
+        </div>
+
+        <div class="stat-card glass">
+          <p class="stat-card__label">{{ language === 'es' ? 'Estado' : 'Status' }}</p>
+          <div
+            class="stat-status"
+            [class.stat-status--normal]="statStatus === 'normal'"
+            [class.stat-status--abnormal]="statStatus === 'abnormal'"
+          >
+            <span class="material-symbols-rounded stat-status__icon">
+              {{ statStatus === 'normal' ? 'check_circle' : statStatus === 'abnormal' ? 'warning' : 'help_outline' }}
+            </span>
+            <span>{{ statusLabel }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-card glass glass-strong" *ngIf="selectedMetric; else noMetric">
+        <app-v2-series-page
+          [embedded]="true"
+          [analyteKeyInput]="selectedMetric"
+          (seriesDataReady)="onSeriesDataReady($event)"
+        ></app-v2-series-page>
+      </div>
+
+      <ng-template #noMetric>
+        <div class="glass glass-strong p-5 text-center">
+          <p class="text-sm text-[var(--text-dim)]">{{ 'CHARTS.NO_DATA' | translate }}</p>
+        </div>
+      </ng-template>
+
+      <!-- Copilot -->
+      <div class="copilot-card glass glass-strong" *ngIf="copilotLoading || copilotMessage">
+        <div class="copilot-avatar">
+          <span class="material-symbols-rounded">smart_toy</span>
+        </div>
+        <div class="copilot-content">
+          <p class="copilot-title">Copilot</p>
+          <div *ngIf="copilotLoading" class="copilot-skeleton">
+            <span class="skeleton-line h-3" style="width: 85%"></span>
+            <span class="skeleton-line h-3" style="width: 62%"></span>
+          </div>
+          <p
+            *ngIf="!copilotLoading && copilotMessage"
+            class="copilot-message"
+            [innerHTML]="formatCopilotHtml(copilotMessage)"
+          ></p>
+        </div>
+      </div>
+
+    </ng-container>
+  </main>
 </div>
