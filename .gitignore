@@ -29,3 +29,27 @@ Thumbs.db
 
 # Git worktrees
 .worktrees/
+
+# Mobile
+mobile/build/
+mobile/.dart_tool/
+mobile/.idea/
+
+# Root node_modules
+node_modules/
+
+# pixel-agents dependencies
+pixel-agents/node_modules/
+pixel-agents/webview-ui/node_modules/
+pixel-agents/webview-ui/dist/
+pixel-agents/out/
+
+# Playwright MCP cache
+.playwright-mcp/
+
+# Obsidian
+.obsidian/
+
+# Misc untracked
+stress_test/
+uploads/

@@ -16,6 +16,12 @@ import { getAnalyteDisplayName, V2DashboardLang } from '../../i18n/analyte-displ
 import { SharedModule } from '../../../../shared/shared.module';
 import { V2PointDetailPanelComponent } from '../../components/point-detail-panel/v2-point-detail-panel.component';
 
+export interface SeriesReadyPayload {
+  series: V2SeriesResponse;
+  refMin?: number;
+  refMax?: number;
+}
+
 type LineChartConfig = ChartConfiguration<'line', (number | null)[], string>;
 interface NumericReferenceBounds {
   refMin?: number;
@@ -133,6 +139,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
   @Input() doctorPatientId: string | number | null = null;
   @Input() embedded = false;
   @Output() pointSelected = new EventEmitter<V2SeriesPointResponse>();
+  @Output() seriesDataReady = new EventEmitter<SeriesReadyPayload>();
 
   analyteKey = '';
   series: V2SeriesResponse | null = null;
@@ -165,10 +172,15 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
   chartOptions: LineChartConfig['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 520,
+      easing: 'easeInOutQuart',
+    },
     plugins: {
       legend: {
         labels: {
           color: 'rgba(255, 255, 255, 0.9)',
+          filter: (item) => (item.text ?? '').charAt(0) !== '_',
         },
       },
       tooltip: {
@@ -359,6 +371,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
           this.headerAbnormalCount = null;
           this.chartData = { labels: [], datasets: [] };
         }
+        this.seriesDataReady.emit({ series, ...this.referenceBounds });
       },
       error: (err) => {
         this.series = null;
@@ -395,10 +408,20 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       {
         label: `${series.analyte_key}${labelSuffix}`,
         data: maskedData,
-        borderColor: 'rgba(118, 168, 255, 0.92)',
-        backgroundColor: 'rgba(118, 168, 255, 0.22)',
-        borderWidth: 2,
-        tension: 0.3,
+        borderColor: 'rgba(118, 168, 255, 1)',
+        backgroundColor: (ctx: ScriptableContext<'line'>) => {
+          const chart = ctx.chart;
+          const { ctx: canvasCtx, chartArea } = chart;
+          if (!chartArea) return 'rgba(118, 168, 255, 0.15)';
+          const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, 'rgba(118, 168, 255, 0.38)');
+          gradient.addColorStop(0.5, 'rgba(118, 168, 255, 0.12)');
+          gradient.addColorStop(1, 'rgba(118, 168, 255, 0.0)');
+          return gradient;
+        },
+        fill: true,
+        borderWidth: 3,
+        tension: 0.42,
         pointRadius: (ctx: ScriptableContext<'line'>) => {
           const idx = ctx.dataIndex;
           const value = maskedData[idx];
@@ -411,9 +434,9 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
           }
           const status = statuses[idx];
           if (isSelected) {
-            return 8;
+            return 9;
           }
-          return status === 'low' || status === 'high' ? 6 : 4;
+          return status === 'low' || status === 'high' ? 7 : 5;
         },
         pointHoverRadius: (ctx: ScriptableContext<'line'>) => {
           const idx = ctx.dataIndex;
@@ -423,13 +446,13 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
           }
           const isSelected = this.selectedPointIndex === idx;
           if (this.hasCategoricalReference) {
-            return isSelected ? 9 : 6;
+            return isSelected ? 10 : 7;
           }
           const status = statuses[idx];
           if (isSelected) {
-            return 10;
+            return 11;
           }
-          return status === 'low' || status === 'high' ? 8 : 6;
+          return status === 'low' || status === 'high' ? 9 : 7;
         },
         pointBackgroundColor: (ctx: ScriptableContext<'line'>) => {
           const isSelected = this.selectedPointIndex === ctx.dataIndex;
@@ -464,6 +487,18 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
           }
           return status === 'low' || status === 'high' ? 2.5 : 2;
         },
+      },
+      {
+        label: '_glow',
+        data: maskedData,
+        borderColor: 'rgba(118, 168, 255, 0.10)',
+        backgroundColor: 'transparent',
+        fill: false,
+        borderWidth: 11,
+        tension: 0.42,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        order: 2,
       },
     ];
 
@@ -1071,24 +1106,39 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       return annotations;
     }
 
-    if (this.referenceBounds.refMin !== undefined && this.referenceBounds.refMin !== null) {
+    const hasMin = this.referenceBounds.refMin !== undefined && this.referenceBounds.refMin !== null;
+    const hasMax = this.referenceBounds.refMax !== undefined && this.referenceBounds.refMax !== null;
+
+    if (hasMin && hasMax) {
+      annotations['normalZone'] = {
+        type: 'box',
+        yMin: this.referenceBounds.refMin,
+        yMax: this.referenceBounds.refMax,
+        backgroundColor: 'rgba(72, 187, 120, 0.055)',
+        borderWidth: 0,
+        drawTime: 'beforeDatasetsDraw',
+        z: -10,
+      };
+    }
+
+    if (hasMin) {
       annotations['refMin'] = {
         type: 'line',
         yMin: this.referenceBounds.refMin,
         yMax: this.referenceBounds.refMin,
-        borderColor: 'rgba(72, 187, 120, 0.9)',
-        borderWidth: 2,
-        borderDash: [6, 4],
+        borderColor: 'rgba(72, 187, 120, 0.65)',
+        borderWidth: 1.5,
+        borderDash: [5, 5],
       };
     }
-    if (this.referenceBounds.refMax !== undefined && this.referenceBounds.refMax !== null) {
+    if (hasMax) {
       annotations['refMax'] = {
         type: 'line',
         yMin: this.referenceBounds.refMax,
         yMax: this.referenceBounds.refMax,
-        borderColor: 'rgba(239, 68, 68, 0.9)',
-        borderWidth: 2,
-        borderDash: [6, 4],
+        borderColor: 'rgba(239, 68, 68, 0.65)',
+        borderWidth: 1.5,
+        borderDash: [5, 5],
       };
     }
     return annotations;
