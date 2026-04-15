@@ -356,6 +356,48 @@ def _summarize_metrics_v2(db: Session, user_id: int, metric_names=None, days: in
     return grouped
 
 
+def _build_compact_metrics_summary(metrics_summary: dict) -> str:
+    """One-line-per-metric overview of all available lab metrics.
+
+    Used as the initial context in Function Calling mode so the AI can decide
+    which metrics to inspect in detail via get_metric_details().
+    """
+    lines = []
+    for key, entries in sorted(metrics_summary.items()):
+        if not entries:
+            continue
+        latest = entries[0]
+        value = latest.get("value")
+        value_text = latest.get("value_text") or ""
+        unit = latest.get("unit") or ""
+        ref_min = latest.get("ref_min")
+        ref_max = latest.get("ref_max")
+        date = (latest.get("t") or "")[:10]
+
+        val_str = str(value) if value is not None else value_text
+
+        if ref_min is not None and ref_max is not None:
+            ref_str = f" (ref {ref_min}–{ref_max})"
+        elif ref_min is not None:
+            ref_str = f" (ref >{ref_min})"
+        elif ref_max is not None:
+            ref_str = f" (ref <{ref_max})"
+        else:
+            ref_str = ""
+
+        flag = ""
+        if value is not None and ref_min is not None and value < ref_min:
+            flag = " ↓"
+        elif value is not None and ref_max is not None and value > ref_max:
+            flag = " ↑"
+
+        unit_str = f" {unit}" if unit else ""
+        date_str = f" [{date}]" if date else ""
+        lines.append(f"{key}: {val_str}{unit_str}{ref_str}{date_str}{flag}")
+
+    return "\n".join(lines) if lines else "(sin datos)"
+
+
 def _short_iso_date(value: Optional[str]) -> str:
     if not value:
         return "-"
@@ -817,6 +859,122 @@ def _openai_chat_completion_with_history(system_prompt: str, messages: list[dict
         return str(content)
     except Exception:
         raise HTTPException(status_code=502, detail="Malformed response from OpenAI.")
+
+
+def _openai_chat_with_tools(
+    system_prompt: str,
+    messages: list[dict],
+    metrics_summary: dict,
+) -> str:
+    """Call OpenAI with Function Calling so the AI can request metric details.
+
+    The AI receives a compact one-line summary of every metric and may call
+    get_metric_details(metric_names) to get full time-series data for specific
+    analytes.  We loop up to 3 times to handle chained tool calls, then force
+    a final answer.
+    """
+    key = os.getenv("OPENAI_API_KEY")
+    model = os.getenv("OPENAI_MODEL", "gpt-4o")
+    if not key:
+        raise HTTPException(status_code=500, detail="OpenAI API key is missing.")
+
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_metric_details",
+                "description": (
+                    "Obtiene los datos históricos completos (todas las mediciones recientes) "
+                    "de una o varias métricas de laboratorio. Úsalo cuando necesites analizar "
+                    "la tendencia o el detalle de analitos específicos."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "metric_names": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": (
+                                "Lista de claves de analito en mayúsculas "
+                                "(ej: [\"CREATININE\", \"UREA\", \"POTASSIUM\"])"
+                            ),
+                        }
+                    },
+                    "required": ["metric_names"],
+                },
+            },
+        }
+    ]
+
+    model_lc = model.lower()
+    token_param = "max_completion_tokens" if model_lc.startswith(("gpt-5", "o1", "o3", "o4")) else "max_tokens"
+
+    # Build a case-insensitive lookup so the AI can match even if case differs
+    metrics_upper = {k.upper(): v for k, v in metrics_summary.items()}
+
+    current_messages = [{"role": "system", "content": system_prompt}] + list(messages)
+
+    for _ in range(3):
+        payload = {
+            "model": model,
+            "messages": current_messages,
+            token_param: 1500,
+            "temperature": 0.4,
+            "tools": tools,
+            "tool_choice": "auto",
+        }
+        resp = requests.post(url, headers=headers, data=json.dumps(payload), timeout=120)
+        if resp.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"OpenAI error: {resp.text}")
+
+        data = resp.json()
+        choice = data["choices"][0]
+        message = choice["message"]
+        finish_reason = choice.get("finish_reason")
+
+        current_messages.append(message)
+
+        if finish_reason != "tool_calls":
+            content = message.get("content") or ""
+            if isinstance(content, list):
+                content = "\n".join(
+                    item.get("text", "") if isinstance(item, dict) else str(item)
+                    for item in content
+                )
+            return content.strip()
+
+        for tc in message.get("tool_calls", []):
+            fn_name = tc["function"]["name"]
+            fn_args = json.loads(tc["function"]["arguments"])
+
+            if fn_name == "get_metric_details":
+                requested = [str(n).strip().upper() for n in fn_args.get("metric_names", [])]
+                result = {k: metrics_upper[k] for k in requested if k in metrics_upper}
+                result_str = json.dumps(result, ensure_ascii=False)
+            else:
+                result_str = json.dumps({"error": f"Unknown function: {fn_name}"})
+
+            current_messages.append(
+                {"role": "tool", "tool_call_id": tc["id"], "content": result_str}
+            )
+
+    # Max iterations reached — force a final answer without tools
+    payload_final = {
+        "model": model,
+        "messages": current_messages,
+        token_param: 1500,
+        "temperature": 0.4,
+        "tools": tools,
+        "tool_choice": "none",
+    }
+    resp = requests.post(url, headers=headers, data=json.dumps(payload_final), timeout=120)
+    if resp.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"OpenAI error: {resp.text}")
+    content = resp.json()["choices"][0]["message"].get("content") or ""
+    return content.strip()
 
 
 class ChatSessionCreate(BaseModel):
@@ -3013,24 +3171,8 @@ async def get_advice(
     if not metrics_summary:
         raise HTTPException(status_code=400, detail="No lab data available for advice.")
 
-    # ── 5b. Select top-5 relevant metrics ─────────────────────────────────
-    question_lower = req.question.lower()
-
-    def _relevance_score(name: str) -> int:
-        # Match against analyte key (English)
-        words = name.lower().replace("_", " ").replace("__", " ").split()
-        score = sum(1 for w in words if len(w) > 2 and w in question_lower)
-        # Also match against raw_name (Spanish) if available
-        entries = metrics_summary.get(name) or []
-        raw = (entries[0].get("raw_name") or "") if entries else ""
-        raw_words = raw.lower().split()
-        score += sum(1 for w in raw_words if len(w) > 2 and w in question_lower)
-        return score
-
-    sorted_names = sorted(metrics_summary.keys(), key=_relevance_score, reverse=True)
-    top_names = sorted_names[:5] if len(sorted_names) > 5 else sorted_names
-    relevant_metrics = {k: metrics_summary[k] for k in top_names}
-    all_analyte_names = ", ".join(sorted_names[:30])
+    # ── 5b. Build compact summary of ALL metrics for Function Calling ──────
+    compact_summary = _build_compact_metrics_summary(metrics_summary)
 
     # ── 6. Doctor notes ───────────────────────────────────────────────────
     v2_notes = (
@@ -3079,9 +3221,8 @@ async def get_advice(
     user_prompt_parts = [
         f"Pregunta: {req.question}",
         f"Período considerado: últimos {days} días.",
-        "Métricas relevantes (hasta 5):",
-        json.dumps(relevant_metrics, ensure_ascii=False, indent=2),
-        f"Todos los análisis disponibles del paciente: {all_analyte_names}",
+        "Resumen de todos los análisis disponibles del paciente (usa get_metric_details para obtener el historial completo de cualquier métrica):",
+        compact_summary,
     ]
     if notes_lines:
         user_prompt_parts.append("Notas del médico (recientes):")
@@ -3094,8 +3235,8 @@ async def get_advice(
     else:
         history_messages.append({"role": "user", "content": user_prompt})
 
-    # ── 8. Call OpenAI ────────────────────────────────────────────────────
-    answer = _openai_chat_completion_with_history(system_prompt, history_messages)
+    # ── 8. Call OpenAI with Function Calling ──────────────────────────────
+    answer = _openai_chat_with_tools(system_prompt, history_messages, metrics_summary)
     if isinstance(answer, str):
         answer = answer.strip()
     if not answer or _is_low_signal_advice(answer):
