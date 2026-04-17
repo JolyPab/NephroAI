@@ -376,11 +376,21 @@
 @media (max-width: 720px) {
   .charts-page {
     grid-template-columns: 1fr;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
 
   .charts-sidebar {
     position: static;
     max-height: none;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .charts-main {
+    overflow-x: hidden;
+    overflow-y: visible;
   }
 
   .sidebar-list {
@@ -392,7 +402,7 @@
   }
 
   .chart-card app-v2-series-page {
-    height: clamp(220px, 35vh, 320px);
+    height: clamp(220px, 40vh, 360px);
   }
 }
 

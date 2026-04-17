@@ -11,19 +11,9 @@ import { getAnalyteDisplayName, V2DashboardLang } from '../../../v2/i18n/analyte
 import { AdviceClientService } from '../../../../core/services/advice.service';
 import { SeriesReadyPayload } from '../../../v2/pages/series/v2-series-page.component';
 
-const METRIC_COLORS = [
-  '#f87171', '#fb923c', '#fbbf24', '#a3e635',
-  '#34d399', '#22d3ee', '#60a5fa', '#a78bfa',
-  '#f472b6', '#94a3b8',
-];
-
-function hashKey(str: string): number {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h);
-}
+const COLOR_NORMAL = '#34d399';
+const COLOR_ABNORMAL = '#f87171';
+const COLOR_UNKNOWN = 'rgba(255,255,255,0.22)';
 
 @Component({
   selector: 'app-patient-charts-page',
@@ -55,11 +45,15 @@ export class PatientChartsPageComponent implements OnInit {
   statStatus: 'normal' | 'abnormal' | null = null;
   statLastDate = '';
 
-  // Copilot
+  // IA Asistente
   copilotMessage = '';
   copilotLoading = false;
   copilotKey = '';
 
+  // Status dots: populated lazily as user browses metrics
+  statusMap = new Map<string, 'normal' | 'abnormal'>();
+
+  private dataVersion = '';
   private pendingSelectedAnalyteKey: string | null = null;
 
   ngOnInit(): void {
@@ -93,7 +87,10 @@ export class PatientChartsPageComponent implements OnInit {
   }
 
   getMetricColor(key: string): string {
-    return METRIC_COLORS[hashKey(key) % METRIC_COLORS.length];
+    const status = this.statusMap.get(key);
+    if (status === 'normal') return COLOR_NORMAL;
+    if (status === 'abnormal') return COLOR_ABNORMAL;
+    return COLOR_UNKNOWN;
   }
 
   get filteredSidebarAnalytes(): V2AnalyteItemResponse[] {
@@ -160,6 +157,10 @@ export class PatientChartsPageComponent implements OnInit {
       this.statStatus = null;
     }
 
+    if (this.statStatus) {
+      this.statusMap.set(this.selectedMetric, this.statStatus);
+    }
+
     // Copilot — only reload if metric actually changed
     if (this.copilotKey !== this.selectedMetric) {
       this.copilotKey = this.selectedMetric;
@@ -207,6 +208,12 @@ export class PatientChartsPageComponent implements OnInit {
   }
 
   private loadCopilot(analyteKey: string): void {
+    const cached = this.getCopilotCache(analyteKey);
+    if (cached) {
+      this.copilotMessage = cached;
+      this.copilotLoading = false;
+      return;
+    }
     const name = this.getDisplayNameByKey(analyteKey);
     this.copilotMessage = '';
     this.copilotLoading = true;
@@ -221,11 +228,24 @@ export class PatientChartsPageComponent implements OnInit {
         next: (res) => {
           this.copilotLoading = false;
           this.copilotMessage = res.answer ?? '';
+          if (this.copilotMessage) this.setCopilotCache(analyteKey, this.copilotMessage);
         },
         error: () => {
           this.copilotLoading = false;
         },
       });
+  }
+
+  private getCopilotCache(analyteKey: string): string | null {
+    try {
+      return localStorage.getItem(`copilot_${analyteKey}_${this.dataVersion}`);
+    } catch { return null; }
+  }
+
+  private setCopilotCache(analyteKey: string, message: string): void {
+    try {
+      localStorage.setItem(`copilot_${analyteKey}_${this.dataVersion}`, message);
+    } catch {}
   }
 
   private loadAnalytes(): void {
@@ -234,6 +254,11 @@ export class PatientChartsPageComponent implements OnInit {
     this.v2Service.listAnalytes().subscribe({
       next: (rows) => {
         this.analytes = rows ?? [];
+        this.dataVersion = [...this.analytes]
+          .map((a) => a.last_date ?? '')
+          .filter(Boolean)
+          .sort()
+          .at(-1) ?? 'v0';
         const availableKeys = new Set(this.analytes.map((item) => item.analyte_key));
 
         if (!this.selectedMetric || !availableKeys.has(this.selectedMetric)) {
