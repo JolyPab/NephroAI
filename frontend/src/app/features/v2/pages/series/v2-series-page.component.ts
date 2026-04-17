@@ -408,15 +408,15 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       {
         label: `${series.analyte_key}${labelSuffix}`,
         data: maskedData,
-        borderColor: 'rgba(118, 168, 255, 1)',
+        borderColor: 'rgba(255, 255, 255, 0.92)',
         backgroundColor: (ctx: ScriptableContext<'line'>) => {
           const chart = ctx.chart;
           const { ctx: canvasCtx, chartArea } = chart;
-          if (!chartArea) return 'rgba(118, 168, 255, 0.15)';
+          if (!chartArea) return 'rgba(255, 255, 255, 0.12)';
           const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, 'rgba(118, 168, 255, 0.38)');
-          gradient.addColorStop(0.5, 'rgba(118, 168, 255, 0.12)');
-          gradient.addColorStop(1, 'rgba(118, 168, 255, 0.0)');
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+          gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.09)');
+          gradient.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
           return gradient;
         },
         fill: true,
@@ -457,13 +457,13 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
         pointBackgroundColor: (ctx: ScriptableContext<'line'>) => {
           const isSelected = this.selectedPointIndex === ctx.dataIndex;
           if (this.hasCategoricalReference) {
-            return isSelected ? 'rgba(255, 215, 0, 0.98)' : 'rgba(118, 168, 255, 0.95)';
+            return isSelected ? 'rgba(255, 215, 0, 0.98)' : 'rgba(255, 255, 255, 0.92)';
           }
           const status = statuses[ctx.dataIndex];
           if (isSelected) {
             return 'rgba(255, 215, 0, 0.98)';
           }
-          return status === 'low' || status === 'high' ? 'rgba(255, 99, 132, 0.95)' : 'rgba(118, 168, 255, 0.95)';
+          return status === 'low' || status === 'high' ? 'rgba(255, 99, 132, 0.95)' : 'rgba(255, 255, 255, 0.92)';
         },
         pointBorderColor: (ctx: ScriptableContext<'line'>) => {
           const isSelected = this.selectedPointIndex === ctx.dataIndex;
@@ -491,7 +491,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       {
         label: '_glow',
         data: maskedData,
-        borderColor: 'rgba(118, 168, 255, 0.10)',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
         backgroundColor: 'transparent',
         fill: false,
         borderWidth: 11,
