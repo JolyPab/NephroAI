@@ -66,6 +66,12 @@
   --chart-zone-alt-1: rgba(239, 68, 68, 0.14);
   --chart-zone-alt-2: rgba(168, 85, 247, 0.14);
   --chart-zone-border: rgba(255, 255, 255, 0.18);
+  --chart-line: rgba(255, 255, 255, 0.92);
+  --chart-line-fill-top: rgba(255, 255, 255, 0.28);
+  --chart-line-fill-mid: rgba(255, 255, 255, 0.09);
+  --chart-line-glow: rgba(255, 255, 255, 0.08);
+  --chart-point-normal: rgba(255, 255, 255, 0.92);
+  --chart-point-border-normal: rgba(255, 255, 255, 0.90);
 
   --scroll-thumb: rgba(165, 180, 252, 0.28);
   --scroll-thumb-hover: rgba(165, 180, 252, 0.48);
@@ -125,6 +131,12 @@
   --chart-zone-alt-1: rgba(220, 38, 38, 0.18);
   --chart-zone-alt-2: rgba(168, 85, 247, 0.18);
   --chart-zone-border: rgba(79, 70, 229, 0.28);
+  --chart-line: rgba(79, 70, 229, 0.85);
+  --chart-line-fill-top: rgba(79, 70, 229, 0.20);
+  --chart-line-fill-mid: rgba(79, 70, 229, 0.07);
+  --chart-line-glow: rgba(79, 70, 229, 0.08);
+  --chart-point-normal: rgba(79, 70, 229, 0.90);
+  --chart-point-border-normal: rgba(79, 70, 229, 0.80);
 
   --scroll-thumb: rgba(79, 70, 229, 0.22);
   --scroll-thumb-hover: rgba(79, 70, 229, 0.42);
