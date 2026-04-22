@@ -10,6 +10,7 @@ import { V2Service } from '../../../../core/services/v2.service';
 import { getAnalyteDisplayName, V2DashboardLang } from '../../../v2/i18n/analyte-display';
 import { AdviceClientService } from '../../../../core/services/advice.service';
 import { SeriesReadyPayload } from '../../../v2/pages/series/v2-series-page.component';
+import { VitalsService, BloodPressureItem } from '../../../../core/services/vitals.service';
 
 const COLOR_NORMAL = '#34d399';
 const COLOR_ABNORMAL = '#f87171';
@@ -28,6 +29,7 @@ export class PatientChartsPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly adviceService = inject(AdviceClientService);
+  private readonly vitalsService = inject(VitalsService);
 
   analytes: V2AnalyteItemResponse[] = [];
   selectedMetric = '';
@@ -55,6 +57,19 @@ export class PatientChartsPageComponent implements OnInit {
 
   private dataVersion = '';
   private pendingSelectedAnalyteKey: string | null = null;
+
+  // Blood pressure modal
+  showBpModal = false;
+  bpSystolic: number | null = null;
+  bpDiastolic: number | null = null;
+  bpPulse: number | null = null;
+  bpMeasuredAt = '';
+  bpNotes = '';
+  bpSaving = false;
+  bpError = '';
+  bpSuccess = false;
+  bpHistory: BloodPressureItem[] = [];
+  bpHistoryLoading = false;
 
   ngOnInit(): void {
     this.language = this.loadV2Language();
@@ -193,6 +208,87 @@ export class PatientChartsPageComponent implements OnInit {
 
   trackByAnalyte(_: number, item: V2AnalyteItemResponse): string {
     return item.analyte_key;
+  }
+
+  openBpModal(): void {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    this.bpMeasuredAt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    this.bpSystolic = null;
+    this.bpDiastolic = null;
+    this.bpPulse = null;
+    this.bpNotes = '';
+    this.bpError = '';
+    this.bpSuccess = false;
+    this.showBpModal = true;
+    this.loadBpHistory();
+  }
+
+  private loadBpHistory(): void {
+    this.bpHistoryLoading = true;
+    this.vitalsService.listBloodPressure().subscribe({
+      next: (items) => {
+        this.bpHistory = items.slice(0, 8);
+        this.bpHistoryLoading = false;
+      },
+      error: () => { this.bpHistoryLoading = false; },
+    });
+  }
+
+  bpCategoryLabel(sys: number, dia: number): { label: string; color: string } {
+    if (sys >= 180 || dia >= 120) return { label: 'Crisis', color: '#ef4444' };
+    if (sys >= 140 || dia >= 90)  return { label: 'Alta', color: '#f87171' };
+    if (sys >= 130 || dia >= 80)  return { label: 'Elevada', color: '#fb923c' };
+    if (sys < 90  || dia < 60)   return { label: 'Baja', color: '#60a5fa' };
+    return { label: 'Normal', color: '#34d399' };
+  }
+
+  bpFormatDate(iso: string): string {
+    try {
+      return format(new Date(iso), "d MMM yyyy, HH:mm", { locale: esLocale });
+    } catch { return iso; }
+  }
+
+  closeBpModal(): void {
+    if (this.bpSaving) return;
+    this.showBpModal = false;
+  }
+
+  submitBp(): void {
+    this.bpError = '';
+    const sys = Number(this.bpSystolic);
+    const dia = Number(this.bpDiastolic);
+    if (!sys || !dia) {
+      this.bpError = 'Ingresa sistólica y diastólica.';
+      return;
+    }
+    if (sys < 60 || sys > 250) {
+      this.bpError = 'Sistólica debe estar entre 60 y 250 mmHg.';
+      return;
+    }
+    if (dia < 40 || dia > 150) {
+      this.bpError = 'Diastólica debe estar entre 40 y 150 mmHg.';
+      return;
+    }
+    this.bpSaving = true;
+    this.vitalsService.createBloodPressure({
+      systolic: sys,
+      diastolic: dia,
+      pulse: this.bpPulse ?? undefined,
+      measured_at: this.bpMeasuredAt || undefined,
+      notes: this.bpNotes.trim() || undefined,
+    }).subscribe({
+      next: () => {
+        this.bpSaving = false;
+        this.bpSuccess = true;
+        this.loadBpHistory();
+        setTimeout(() => { this.showBpModal = false; }, 1500);
+      },
+      error: (err) => {
+        this.bpSaving = false;
+        this.bpError = err?.error?.detail ?? 'Error al guardar. Intenta de nuevo.';
+      },
+    });
   }
 
   private clearStats(): void {
