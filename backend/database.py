@@ -300,6 +300,23 @@ class EmailVerificationCode(Base):
     user = relationship("User", foreign_keys=[user_id])
 
 
+class BloodPressure(Base):
+    """Patient-recorded blood pressure readings."""
+
+    __tablename__ = "blood_pressure"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    measured_at = Column(DateTime, nullable=False)
+    systolic = Column(Integer, nullable=False)
+    diastolic = Column(Integer, nullable=False)
+    pulse = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id])
+
+
 def get_database_url(default_sqlite: Optional[str] = None) -> str:
     """Get database URL from environment or fallback to local SQLite."""
     if default_sqlite is None:

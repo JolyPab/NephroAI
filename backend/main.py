@@ -54,6 +54,7 @@ from backend.database import (
     ChatSession,
     ChatMessageRecord,
     PatientMemory,
+    BloodPressure,
     save_parsed_records,
 )
 from backend.auth import get_current_user_id
@@ -1014,6 +1015,24 @@ class AdviceResponse(BaseModel):
     usedMetrics: List[AdviceMetric]
     disclaimer: bool = True
     session_id: Optional[int] = None
+
+
+class BloodPressureCreate(BaseModel):
+    systolic: int
+    diastolic: int
+    pulse: Optional[int] = None
+    measured_at: Optional[str] = None  # ISO datetime, defaults to now
+    notes: Optional[str] = None
+
+
+class BloodPressureItem(BaseModel):
+    id: int
+    measured_at: str
+    systolic: int
+    diastolic: int
+    pulse: Optional[int]
+    notes: Optional[str]
+    created_at: str
 
 
 class DoctorChatHistoryItem(BaseModel):
@@ -3218,12 +3237,37 @@ async def get_advice(
         "Siempre responde en español."
     )
 
+    # ── 6b. Blood pressure readings ───────────────────────────────────────
+    bp_records = (
+        db.query(BloodPressure)
+        .filter(BloodPressure.user_id == user_id)
+        .order_by(BloodPressure.measured_at.desc())
+        .limit(10)
+        .all()
+    )
+    if bp_records:
+        bp_lines = []
+        for r in bp_records:
+            date_str = r.measured_at.strftime("%Y-%m-%d %H:%M")
+            line = f"- {date_str}: {r.systolic}/{r.diastolic} mmHg"
+            if r.pulse:
+                line += f", pulso {r.pulse} lpm"
+            if r.notes:
+                line += f" ({r.notes})"
+            bp_lines.append(line)
+        bp_text = "\n".join(bp_lines)
+    else:
+        bp_text = None
+
     user_prompt_parts = [
         f"Pregunta: {req.question}",
         f"Período considerado: últimos {days} días.",
         "Resumen de todos los análisis disponibles del paciente (usa get_metric_details para obtener el historial completo de cualquier métrica):",
         compact_summary,
     ]
+    if bp_text:
+        user_prompt_parts.append("Registros de presión arterial del paciente (más recientes primero):")
+        user_prompt_parts.append(bp_text)
     if notes_lines:
         user_prompt_parts.append("Notas del médico (recientes):")
         user_prompt_parts.extend(notes_lines)
@@ -3328,6 +3372,76 @@ async def update_me(
         email_verified=user.email_verified_at is not None,
         role="DOCTOR" if user.is_doctor else "PATIENT",
     )
+
+
+@app.post("/api/vitals/blood-pressure", response_model=BloodPressureItem)
+async def create_blood_pressure(
+    payload: BloodPressureCreate,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Record a blood pressure measurement for the authenticated user."""
+    measured_at = dt.datetime.utcnow()
+    if payload.measured_at:
+        try:
+            measured_at = dt.datetime.fromisoformat(
+                payload.measured_at.replace("Z", "+00:00")
+            ).replace(tzinfo=None)
+        except ValueError:
+            pass
+
+    if not (60 <= payload.systolic <= 250):
+        raise HTTPException(status_code=400, detail="Sistólica fuera de rango (60-250)")
+    if not (40 <= payload.diastolic <= 150):
+        raise HTTPException(status_code=400, detail="Diastólica fuera de rango (40-150)")
+
+    record = BloodPressure(
+        user_id=user_id,
+        measured_at=measured_at,
+        systolic=payload.systolic,
+        diastolic=payload.diastolic,
+        pulse=payload.pulse,
+        notes=payload.notes,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return BloodPressureItem(
+        id=record.id,
+        measured_at=record.measured_at.isoformat(),
+        systolic=record.systolic,
+        diastolic=record.diastolic,
+        pulse=record.pulse,
+        notes=record.notes,
+        created_at=record.created_at.isoformat(),
+    )
+
+
+@app.get("/api/vitals/blood-pressure", response_model=List[BloodPressureItem])
+async def list_blood_pressure(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """List blood pressure readings for the authenticated user."""
+    records = (
+        db.query(BloodPressure)
+        .filter(BloodPressure.user_id == user_id)
+        .order_by(BloodPressure.measured_at.desc())
+        .limit(200)
+        .all()
+    )
+    return [
+        BloodPressureItem(
+            id=r.id,
+            measured_at=r.measured_at.isoformat(),
+            systolic=r.systolic,
+            diastolic=r.diastolic,
+            pulse=r.pulse,
+            notes=r.notes,
+            created_at=r.created_at.isoformat(),
+        )
+        for r in records
+    ]
 
 
 @app.get("/")
