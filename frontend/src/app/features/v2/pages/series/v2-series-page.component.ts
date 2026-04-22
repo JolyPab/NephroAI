@@ -47,6 +47,12 @@ interface ChartThemeColors {
   tooltipBg: string;
   tooltipText: string;
   tooltipBorder: string;
+  line: string;
+  lineFillTop: string;
+  lineFillMid: string;
+  lineGlow: string;
+  pointNormal: string;
+  pointBorderNormal: string;
 }
 
 interface SeriesCopy {
@@ -404,19 +410,20 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       return value;
     });
     const labelSuffix = series.unit ? ` (${series.unit})` : '';
+    const tc = this.getChartThemeColors();
     const datasets: LineChartConfig['data']['datasets'] = [
       {
         label: `${series.analyte_key}${labelSuffix}`,
         data: maskedData,
-        borderColor: 'rgba(255, 255, 255, 0.92)',
+        borderColor: tc.line,
         backgroundColor: (ctx: ScriptableContext<'line'>) => {
           const chart = ctx.chart;
           const { ctx: canvasCtx, chartArea } = chart;
-          if (!chartArea) return 'rgba(255, 255, 255, 0.12)';
+          if (!chartArea) return tc.lineFillTop;
           const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
-          gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.09)');
-          gradient.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+          gradient.addColorStop(0, tc.lineFillTop);
+          gradient.addColorStop(0.5, tc.lineFillMid);
+          gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
           return gradient;
         },
         fill: true,
@@ -457,24 +464,24 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
         pointBackgroundColor: (ctx: ScriptableContext<'line'>) => {
           const isSelected = this.selectedPointIndex === ctx.dataIndex;
           if (this.hasCategoricalReference) {
-            return isSelected ? 'rgba(255, 215, 0, 0.98)' : 'rgba(255, 255, 255, 0.92)';
+            return isSelected ? 'rgba(255, 215, 0, 0.98)' : tc.pointNormal;
           }
           const status = statuses[ctx.dataIndex];
           if (isSelected) {
             return 'rgba(255, 215, 0, 0.98)';
           }
-          return status === 'low' || status === 'high' ? 'rgba(255, 99, 132, 0.95)' : 'rgba(255, 255, 255, 0.92)';
+          return status === 'low' || status === 'high' ? 'rgba(255, 99, 132, 0.95)' : tc.pointNormal;
         },
         pointBorderColor: (ctx: ScriptableContext<'line'>) => {
           const isSelected = this.selectedPointIndex === ctx.dataIndex;
           if (this.hasCategoricalReference) {
-            return isSelected ? 'rgba(255, 234, 160, 1)' : 'rgba(255, 255, 255, 0.9)';
+            return isSelected ? 'rgba(255, 234, 160, 1)' : tc.pointBorderNormal;
           }
           const status = statuses[ctx.dataIndex];
           if (isSelected) {
             return 'rgba(255, 234, 160, 1)';
           }
-          return status === 'low' || status === 'high' ? 'rgba(255, 220, 220, 0.95)' : 'rgba(255, 255, 255, 0.9)';
+          return status === 'low' || status === 'high' ? 'rgba(255, 220, 220, 0.95)' : tc.pointBorderNormal;
         },
         pointBorderWidth: (ctx: ScriptableContext<'line'>) => {
           const isSelected = this.selectedPointIndex === ctx.dataIndex;
@@ -491,7 +498,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       {
         label: '_glow',
         data: maskedData,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        borderColor: tc.lineGlow,
         backgroundColor: 'transparent',
         fill: false,
         borderWidth: 11,
@@ -835,7 +842,13 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
     const tooltipBg = this.readCssVar(styles, '--chart-tooltip-bg') ?? 'rgba(16, 22, 36, 0.92)';
     const tooltipText = this.readCssVar(styles, '--chart-tooltip-text') ?? text;
     const tooltipBorder = this.readCssVar(styles, '--chart-tooltip-border') ?? grid;
-    return { text, grid, tooltipBg, tooltipText, tooltipBorder };
+    const line = this.readCssVar(styles, '--chart-line') ?? 'rgba(255, 255, 255, 0.92)';
+    const lineFillTop = this.readCssVar(styles, '--chart-line-fill-top') ?? 'rgba(255, 255, 255, 0.28)';
+    const lineFillMid = this.readCssVar(styles, '--chart-line-fill-mid') ?? 'rgba(255, 255, 255, 0.09)';
+    const lineGlow = this.readCssVar(styles, '--chart-line-glow') ?? 'rgba(255, 255, 255, 0.08)';
+    const pointNormal = this.readCssVar(styles, '--chart-point-normal') ?? 'rgba(255, 255, 255, 0.92)';
+    const pointBorderNormal = this.readCssVar(styles, '--chart-point-border-normal') ?? 'rgba(255, 255, 255, 0.90)';
+    return { text, grid, tooltipBg, tooltipText, tooltipBorder, line, lineFillTop, lineFillMid, lineGlow, pointNormal, pointBorderNormal };
   }
 
   private readCssVar(styles: CSSStyleDeclaration, name: string): string | null {
