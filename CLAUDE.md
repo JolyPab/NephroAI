@@ -4,7 +4,7 @@
 
 ## Obsidian Knowledge Vault
 
-Хранилище знаний: `C:\Users\jolypab\Documents\CODE\nephroai-vault\`
+Хранилище знаний: `D:\CODE\nephroai-vault\`
 
 ### При старте сессии
 Прочитай `00-home/index.md` и `00-home/текущие-приоритеты.md`.

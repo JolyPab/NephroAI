@@ -15,39 +15,7 @@ body {
   background-attachment: fixed;
 }
 
-/* ─── Animated background orbs via @property ──────────────────────────────── */
-
-@property --orb1-x { syntax: '<percentage>'; initial-value: 15%; inherits: true; }
-@property --orb1-y { syntax: '<percentage>'; initial-value: 45%; inherits: true; }
-@property --orb2-x { syntax: '<percentage>'; initial-value: 80%; inherits: true; }
-@property --orb2-y { syntax: '<percentage>'; initial-value: 72%; inherits: true; }
-@property --orb3-x { syntax: '<percentage>'; initial-value: 82%; inherits: true; }
-@property --orb3-y { syntax: '<percentage>'; initial-value: 12%; inherits: true; }
-
-@keyframes orb-1 {
-  0%   { --orb1-x: 15%; --orb1-y: 45%; }
-  35%  { --orb1-x: 22%; --orb1-y: 38%; }
-  65%  { --orb1-x: 10%; --orb1-y: 52%; }
-  100% { --orb1-x: 15%; --orb1-y: 45%; }
-}
-@keyframes orb-2 {
-  0%   { --orb2-x: 80%; --orb2-y: 72%; }
-  40%  { --orb2-x: 88%; --orb2-y: 62%; }
-  75%  { --orb2-x: 76%; --orb2-y: 80%; }
-  100% { --orb2-x: 80%; --orb2-y: 72%; }
-}
-@keyframes orb-3 {
-  0%   { --orb3-x: 82%; --orb3-y: 12%; }
-  50%  { --orb3-x: 90%; --orb3-y: 20%; }
-  100% { --orb3-x: 82%; --orb3-y: 12%; }
-}
-
-html {
-  animation:
-    orb-1 18s ease-in-out infinite,
-    orb-2 23s ease-in-out infinite,
-    orb-3 20s ease-in-out infinite;
-}
+/* dot grid is now baked into --bg in tokens.css */
 
 :root {
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
@@ -84,10 +52,35 @@ html {
   }
 }
 
+/* ─── Global typography helpers ───────────────────────────────────────────── */
+
+/* Metric values — big readable numbers */
+.metric-value {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+/* Section / card labels */
+.label-caps {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted, rgba(165, 180, 252, 0.6));
+}
+
+/* Smooth font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 @layer components {
   .card {
     border-radius: var(--radius-brand);
-    box-shadow: var(--shadow-soft);
+    box-shadow: var(--shadow-card, var(--shadow-soft));
   }
 
   .alert-warning {

@@ -27,16 +27,47 @@
   min-height: 68px;
   position: relative;
   overflow: visible;
+  // Premium toolbar shadow — stronger than default .glass
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 4px 60px -8px rgba(var(--accent-rgb), 0.28),
+    0 8px 32px -4px rgba(0, 0, 0, 0.60),
+    0 2px 8px rgba(0, 0, 0, 0.38),
+    inset 0 2px 0 rgba(255, 255, 255, 0.44),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.20),
+    inset 0 0 80px rgba(255, 255, 255, 0.028) !important;
+  // Toolbar doesn't lift on hover
+  &:hover,
+  &:focus-within {
+    transform: none !important;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.07),
+      0 4px 60px -8px rgba(var(--accent-rgb), 0.28),
+      0 8px 32px -4px rgba(0, 0, 0, 0.60),
+      0 2px 8px rgba(0, 0, 0, 0.38),
+      inset 0 2px 0 rgba(255, 255, 255, 0.44),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.20),
+      inset 0 0 80px rgba(255, 255, 255, 0.028) !important;
+    border-color: var(--border) !important;
+    backdrop-filter: blur(32px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(32px) saturate(140%) !important;
+  }
 }
 
 .toolbar-island__inner {
   position: absolute;
   inset: 8px;
   border-radius: calc(var(--r-xl) - 8px);
-  background: radial-gradient(120% 140% at 50% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0) 100%);
+  // Stronger specular dome highlight
+  background: radial-gradient(
+    110% 180% at 50% 0%,
+    rgba(255, 255, 255, 0.26) 0%,
+    rgba(255, 255, 255, 0.09) 42%,
+    rgba(255, 255, 255, 0) 100%
+  );
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.14);
   pointer-events: none;
   z-index: 0;
 }
@@ -75,7 +106,8 @@
   object-fit: contain;
   display: block;
   background: transparent;
-  filter: none;
+  filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.32));
+  transition: filter var(--transition-base);
 }
 
 .glass-toolbar--compact {
@@ -125,37 +157,52 @@
 .glass-toolbar__title {
   margin: 0;
   font-size: clamp(1.15rem, 2vw, 1.45rem);
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1.1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  // Gradient text: white → accent purple
+  background: linear-gradient(
+    120deg,
+    var(--text) 0%,
+    rgba(var(--accent-rgb), 0.90) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .glass-toolbar__badge {
   display: inline-flex;
   align-items: center;
   height: 18px;
-  padding: 0 0.5rem;
+  padding: 0 0.55rem;
   border-radius: 999px;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--accent);
-  border: 1px solid rgba(var(--accent-rgb), 0.4);
-  background: rgba(var(--accent-rgb), 0.14);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  background: rgba(var(--accent-rgb), 0.16);
+  box-shadow: 0 0 12px -3px rgba(var(--accent-rgb), 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .glass-toolbar__subtitle {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 400;
   color: var(--text-dim);
   line-height: 1.2;
-  opacity: 0.8;
+  opacity: 0.72;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: 0.005em;
 }
 
 .glass-toolbar__actions {
@@ -179,6 +226,47 @@
   width: 40px;
   height: 40px;
   padding: 0;
+}
+
+// ─── Light theme overrides ────────────────────────────────────────────────────
+
+:host-context([data-theme='light']) {
+  .toolbar-island {
+    box-shadow:
+      0 0 0 1px rgba(79, 70, 229, 0.10),
+      0 4px 48px -8px rgba(79, 70, 229, 0.22),
+      0 8px 28px -4px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.05),
+      inset 0 2px 0 rgba(255, 255, 255, 0.88),
+      inset 0 -1px 0 rgba(79, 70, 229, 0.08) !important;
+    &:hover,
+    &:focus-within {
+      transform: none !important;
+      box-shadow:
+        0 0 0 1px rgba(79, 70, 229, 0.10),
+        0 4px 48px -8px rgba(79, 70, 229, 0.22),
+        0 8px 28px -4px rgba(0, 0, 0, 0.08),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        inset 0 2px 0 rgba(255, 255, 255, 0.88),
+        inset 0 -1px 0 rgba(79, 70, 229, 0.08) !important;
+    }
+  }
+
+  .glass-toolbar__title {
+    background: linear-gradient(
+      120deg,
+      #1e1b4b 0%,
+      var(--accent) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .glass-toolbar__logo {
+    filter: drop-shadow(0 0 8px rgba(79, 70, 229, 0.28));
+  }
 }
 
 @media (max-width: 900px) {
