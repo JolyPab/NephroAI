@@ -317,6 +317,21 @@ class BloodPressure(Base):
     user = relationship("User", foreign_keys=[user_id])
 
 
+class BodyTemperature(Base):
+    """Patient-recorded body temperature readings (Celsius)."""
+
+    __tablename__ = "body_temperature"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    measured_at = Column(DateTime, nullable=False)
+    value = Column(Float, nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id])
+
+
 def get_database_url(default_sqlite: Optional[str] = None) -> str:
     """Get database URL from environment or fallback to local SQLite."""
     if default_sqlite is None:

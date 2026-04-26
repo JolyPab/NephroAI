@@ -51,6 +51,10 @@
       <span class="material-symbols-rounded">monitor_heart</span>
       Registrar PA
     </button>
+    <button class="bp-trigger-btn" style="margin-top: 0.5rem;" (click)="openTempModal()">
+      <span class="material-symbols-rounded">thermostat</span>
+      Registrar Temperatura
+    </button>
   </aside>
 
   <!-- Blood Pressure Modal -->
@@ -135,6 +139,82 @@
               class="bp-history__badge"
               [style.color]="bpCategoryLabel(item.systolic, item.diastolic).color"
             >{{ bpCategoryLabel(item.systolic, item.diastolic).label }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Temperature Modal -->
+  <div class="bp-overlay" *ngIf="showTempModal" (click)="closeTempModal()">
+    <div class="bp-modal glass glass-strong" (click)="$event.stopPropagation()">
+
+      <div class="bp-modal__header">
+        <h3 class="bp-modal__title">
+          <span class="material-symbols-rounded">thermostat</span>
+          Registrar Temperatura Corporal
+        </h3>
+        <button class="bp-modal__close" (click)="closeTempModal()">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <div class="bp-modal__body" *ngIf="!tempSuccess">
+        <div class="bp-row">
+          <div class="bp-field">
+            <label class="bp-label">Temperatura <span class="bp-unit">°C</span></label>
+            <input type="number" class="bp-input" [(ngModel)]="tempValue"
+                   min="34" max="43" step="0.1" placeholder="36.6">
+          </div>
+          <div class="bp-field">
+            <label class="bp-label">Fecha y hora</label>
+            <input type="datetime-local" class="bp-input" [(ngModel)]="tempMeasuredAt">
+          </div>
+        </div>
+
+        <div class="bp-field">
+          <label class="bp-label">Notas <span class="bp-optional">(opcional)</span></label>
+          <textarea class="bp-input bp-textarea" [(ngModel)]="tempNotes"
+                    placeholder="Ej: después de actividad física, en reposo..."></textarea>
+        </div>
+
+        <p class="bp-error-msg" *ngIf="tempError">{{ tempError }}</p>
+
+        <div class="bp-actions">
+          <button class="bp-btn bp-btn--ghost" (click)="closeTempModal()" [disabled]="tempSaving">Cancelar</button>
+          <button class="bp-btn bp-btn--primary" (click)="submitTemp()" [disabled]="tempSaving">
+            <span *ngIf="!tempSaving">Guardar</span>
+            <span *ngIf="tempSaving" class="bp-spinner"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bp-success" *ngIf="tempSuccess">
+        <span class="material-symbols-rounded bp-success__icon">check_circle</span>
+        <p class="bp-success__text">¡Registro guardado!</p>
+      </div>
+
+      <!-- History -->
+      <div class="bp-history" *ngIf="!tempSuccess">
+        <p class="bp-history__title">Historial reciente</p>
+        <div *ngIf="tempHistoryLoading" class="bp-history__loading">
+          <span class="skeleton-line h-3" style="width: 100%"></span>
+          <span class="skeleton-line h-3" style="width: 80%"></span>
+          <span class="skeleton-line h-3" style="width: 90%"></span>
+        </div>
+        <p *ngIf="!tempHistoryLoading && !tempHistory.length" class="bp-history__empty">
+          Sin registros previos.
+        </p>
+        <div *ngIf="!tempHistoryLoading && tempHistory.length" class="bp-history__list">
+          <div class="bp-history__row" *ngFor="let item of tempHistory">
+            <span class="bp-history__date">{{ tempFormatDate(item.measured_at) }}</span>
+            <span class="bp-history__value">{{ item.value }}</span>
+            <span class="bp-history__unit">°C</span>
+            <span
+              class="bp-history__badge"
+              [style.color]="tempCategoryLabel(item.value).color"
+            >{{ tempCategoryLabel(item.value).label }}</span>
           </div>
         </div>
       </div>
