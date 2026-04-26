@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import Chart from 'chart.js/auto';
@@ -139,6 +139,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
   private readonly route = inject(ActivatedRoute);
   private readonly v2Service = inject(V2Service);
   private readonly themeService = inject(ThemeService);
+  private readonly destroyRef = inject(DestroyRef);
   @ViewChild(BaseChartDirective) private chartRef?: BaseChartDirective<'line'>;
 
   @Input() analyteKeyInput: string | null = null;
@@ -261,7 +262,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.language = this.loadV2Language();
     toObservable(this.themeService.theme)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         if (this.series?.series_type === 'numeric') {
           this.buildNumericChart(this.series);
@@ -274,7 +275,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
       this.loadSeries(this.analyteKey);
       return;
     }
-    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const analyteKey = params.get('analyteKey');
       if (!analyteKey) {
         this.errorMessage = this.copy.missingKey;
