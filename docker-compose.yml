@@ -84,6 +84,7 @@ services:
     volumes:
       - ./frontend/dist/medic-frontend:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./landing:/usr/share/nginx/landing:ro
 
 volumes:
   db_data:

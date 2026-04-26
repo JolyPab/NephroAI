@@ -30,7 +30,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: "Dockerfile,docker-compose.yml,nginx.conf,backend/**,frontend/dist/medic-frontend/**"
+          source: "Dockerfile,docker-compose.yml,nginx.conf,backend/**,frontend/dist/medic-frontend/**,landing/**"
           target: "~/medic"
 
       - name: Deploy via SSH

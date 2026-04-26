@@ -10,18 +10,22 @@
 
 .glass {
   background: var(--glass);
-  backdrop-filter: blur(32px) saturate(130%);
-  -webkit-backdrop-filter: blur(32px) saturate(130%);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
   box-shadow:
-    var(--shadow-soft),
-    /* glass thickness — top bright edge */
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.30),
-    /* glass thickness — bottom dark edge */
-    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
-    /* subtle inner surface glow */
-    inset 0 0 80px rgba(255, 255, 255, 0.02);
+    /* colored ambient glow — blends card into background */
+    0 0 80px -24px rgba(var(--accent-rgb), 0.28),
+    /* main depth shadow */
+    0 8px 32px -4px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.35),
+    /* glass top bright edge */
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.38),
+    /* glass bottom dark edge */
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    /* subtle surface glow */
+    inset 0 0 60px rgba(255, 255, 255, 0.025);
   transition:
     transform var(--transition-base, 220ms ease),
     box-shadow var(--transition-base, 220ms ease),
@@ -31,37 +35,37 @@
   overflow: hidden;
 }
 
-/* Subtle top-edge frost — matte style, not shiny dome */
+/* Top-edge frost layer */
 .glass::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 30%;
+  height: 28%;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0.09) 0%,
     transparent 100%
   );
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   pointer-events: none;
 }
 
-/* Minimal top edge line — barely visible */
+/* Top edge shine line — more visible */
 .glass::after {
   content: '';
   position: absolute;
   top: 0;
-  left: 16%;
-  right: 16%;
+  left: 10%;
+  right: 10%;
   height: 1px;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.30) 30%,
-    rgba(255, 255, 255, 0.50) 50%,
-    rgba(255, 255, 255, 0.30) 70%,
+    rgba(255, 255, 255, 0.45) 25%,
+    rgba(255, 255, 255, 0.70) 50%,
+    rgba(255, 255, 255, 0.45) 75%,
     transparent
   );
   pointer-events: none;
@@ -85,14 +89,16 @@
 
 .glass:hover,
 .glass:focus-within {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow:
-    var(--shadow-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+    0 0 100px -20px rgba(var(--accent-rgb), 0.45),
+    0 16px 48px -8px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.14);
   border-color: var(--ring);
-  backdrop-filter: blur(36px) saturate(150%);
-  -webkit-backdrop-filter: blur(36px) saturate(150%);
+  backdrop-filter: blur(36px) saturate(160%);
+  -webkit-backdrop-filter: blur(36px) saturate(160%);
 }
 
 .glass-strong {
