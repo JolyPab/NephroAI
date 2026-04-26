@@ -55,6 +55,7 @@ from backend.database import (
     ChatMessageRecord,
     PatientMemory,
     BloodPressure,
+    BodyTemperature,
     save_parsed_records,
 )
 from backend.auth import get_current_user_id
@@ -1031,6 +1032,20 @@ class BloodPressureItem(BaseModel):
     systolic: int
     diastolic: int
     pulse: Optional[int]
+    notes: Optional[str]
+    created_at: str
+
+
+class TemperatureCreate(BaseModel):
+    value: float  # Celsius
+    measured_at: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class TemperatureItem(BaseModel):
+    id: int
+    measured_at: str
+    value: float
     notes: Optional[str]
     created_at: str
 
@@ -3437,6 +3452,68 @@ async def list_blood_pressure(
             systolic=r.systolic,
             diastolic=r.diastolic,
             pulse=r.pulse,
+            notes=r.notes,
+            created_at=r.created_at.isoformat(),
+        )
+        for r in records
+    ]
+
+
+@app.post("/api/vitals/temperature", response_model=TemperatureItem)
+async def create_temperature(
+    payload: TemperatureCreate,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Record a body temperature measurement for the authenticated user."""
+    measured_at = dt.datetime.utcnow()
+    if payload.measured_at:
+        try:
+            measured_at = dt.datetime.fromisoformat(
+                payload.measured_at.replace("Z", "+00:00")
+            ).replace(tzinfo=None)
+        except ValueError:
+            pass
+
+    if not (34.0 <= payload.value <= 43.0):
+        raise HTTPException(status_code=400, detail="Temperatura fuera de rango (34-43 °C)")
+
+    record = BodyTemperature(
+        user_id=user_id,
+        measured_at=measured_at,
+        value=payload.value,
+        notes=payload.notes,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return TemperatureItem(
+        id=record.id,
+        measured_at=record.measured_at.isoformat(),
+        value=record.value,
+        notes=record.notes,
+        created_at=record.created_at.isoformat(),
+    )
+
+
+@app.get("/api/vitals/temperature", response_model=List[TemperatureItem])
+async def list_temperature(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """List body temperature readings for the authenticated user."""
+    records = (
+        db.query(BodyTemperature)
+        .filter(BodyTemperature.user_id == user_id)
+        .order_by(BodyTemperature.measured_at.desc())
+        .limit(200)
+        .all()
+    )
+    return [
+        TemperatureItem(
+            id=r.id,
+            measured_at=r.measured_at.isoformat(),
+            value=r.value,
             notes=r.notes,
             created_at=r.created_at.isoformat(),
         )

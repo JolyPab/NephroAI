@@ -10,7 +10,7 @@ import { V2Service } from '../../../../core/services/v2.service';
 import { getAnalyteDisplayName, V2DashboardLang } from '../../../v2/i18n/analyte-display';
 import { AdviceClientService } from '../../../../core/services/advice.service';
 import { SeriesReadyPayload } from '../../../v2/pages/series/v2-series-page.component';
-import { VitalsService, BloodPressureItem } from '../../../../core/services/vitals.service';
+import { VitalsService, BloodPressureItem, TemperatureItem } from '../../../../core/services/vitals.service';
 
 const COLOR_NORMAL = '#34d399';
 const COLOR_ABNORMAL = '#f87171';
@@ -70,6 +70,17 @@ export class PatientChartsPageComponent implements OnInit {
   bpSuccess = false;
   bpHistory: BloodPressureItem[] = [];
   bpHistoryLoading = false;
+
+  // Temperature modal
+  showTempModal = false;
+  tempValue: number | null = null;
+  tempMeasuredAt = '';
+  tempNotes = '';
+  tempSaving = false;
+  tempError = '';
+  tempSuccess = false;
+  tempHistory: TemperatureItem[] = [];
+  tempHistoryLoading = false;
 
   ngOnInit(): void {
     this.language = this.loadV2Language();
@@ -287,6 +298,74 @@ export class PatientChartsPageComponent implements OnInit {
       error: (err) => {
         this.bpSaving = false;
         this.bpError = err?.error?.detail ?? 'Error al guardar. Intenta de nuevo.';
+      },
+    });
+  }
+
+  openTempModal(): void {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    this.tempMeasuredAt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    this.tempValue = null;
+    this.tempNotes = '';
+    this.tempError = '';
+    this.tempSuccess = false;
+    this.showTempModal = true;
+    this.loadTempHistory();
+  }
+
+  private loadTempHistory(): void {
+    this.tempHistoryLoading = true;
+    this.vitalsService.listTemperature().subscribe({
+      next: (items) => {
+        this.tempHistory = items.slice(0, 8);
+        this.tempHistoryLoading = false;
+      },
+      error: () => { this.tempHistoryLoading = false; },
+    });
+  }
+
+  tempCategoryLabel(value: number): { label: string; color: string } {
+    if (value >= 40.0) return { label: 'Fiebre alta', color: '#ef4444' };
+    if (value >= 37.6) return { label: 'Fiebre', color: '#fb923c' };
+    if (value >= 36.5) return { label: 'Normal', color: '#34d399' };
+    if (value >= 35.0) return { label: 'Baja', color: '#93c5fd' };
+    return { label: 'Hipotermia', color: '#60a5fa' };
+  }
+
+  tempFormatDate(iso: string): string {
+    try {
+      return format(new Date(iso), "d MMM yyyy, HH:mm", { locale: esLocale });
+    } catch { return iso; }
+  }
+
+  closeTempModal(): void {
+    if (this.tempSaving) return;
+    this.showTempModal = false;
+  }
+
+  submitTemp(): void {
+    this.tempError = '';
+    const val = Number(this.tempValue);
+    if (!val || val < 34 || val > 43) {
+      this.tempError = 'Ingresa una temperatura válida (34 - 43 °C).';
+      return;
+    }
+    this.tempSaving = true;
+    this.vitalsService.createTemperature({
+      value: val,
+      measured_at: this.tempMeasuredAt || undefined,
+      notes: this.tempNotes.trim() || undefined,
+    }).subscribe({
+      next: () => {
+        this.tempSaving = false;
+        this.tempSuccess = true;
+        this.loadTempHistory();
+        setTimeout(() => { this.showTempModal = false; }, 1500);
+      },
+      error: (err) => {
+        this.tempSaving = false;
+        this.tempError = err?.error?.detail ?? 'Error al guardar. Intenta de nuevo.';
       },
     });
   }
