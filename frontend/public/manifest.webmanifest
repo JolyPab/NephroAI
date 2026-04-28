@@ -1,6 +1,6 @@
 {
-  "name": "medic-frontend",
-  "short_name": "medic-frontend",
+  "name": "NephroAI",
+  "short_name": "NephroAI",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",
