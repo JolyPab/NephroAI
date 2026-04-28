@@ -1,6 +1,6 @@
 <aside class="sidebar">
   <button class="new-chat-btn" (click)="onNew()">
-    <i class="bi bi-plus-lg"></i>
+    <span class="material-symbols-rounded">add</span>
     <span>{{ 'chat.newChat' | translate }}</span>
   </button>
 
@@ -15,7 +15,7 @@
       >
         <span class="session-title">{{ displayTitle(session) }}</span>
         <button class="delete-btn" (click)="onDelete($event, session.id)" title="{{ 'chat.deleteSession' | translate }}">
-          <i class="bi bi-trash3"></i>
+          <span class="material-symbols-rounded">delete</span>
         </button>
       </button>
     </ng-container>

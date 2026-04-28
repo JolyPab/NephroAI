@@ -1,74 +1,87 @@
-<app-glass-card [extraClass]="'glass-strong space-y-5'">
-  <div class="flex items-center justify-between gap-3 flex-wrap">
-    <h2 class="text-xl font-semibold text-[var(--text)]">{{ 'profile.title' | translate }}</h2>
-    <span class="badge-glass badge-accent" *ngIf="user()">{{ user()?.role === 'PATIENT' ? ('auth.patient' | translate) : ('auth.doctor' | translate) }}</span>
+<div class="profile-page">
+  <div class="profile-title-row glass glass-strong">
+    <div class="profile-title-left">
+      <span class="material-symbols-rounded profile-title-icon">account_circle</span>
+      <div>
+        <p class="profile-kicker">Cuenta</p>
+        <h2 class="profile-title-name">{{ 'profile.title' | translate }}</h2>
+      </div>
+    </div>
+    <span class="badge-glass badge-accent" *ngIf="user()">
+      {{ user()?.role === 'PATIENT' ? ('auth.patient' | translate) : ('auth.doctor' | translate) }}
+    </span>
   </div>
 
-  <div *ngIf="user(); else guest" class="space-y-5">
-    <dl class="profile-grid">
-      <div>
-        <dt>Email</dt>
-        <dd>{{ user()?.email }}</dd>
+  <ng-container *ngIf="user(); else guest">
+    <section class="profile-section glass glass-strong">
+      <div class="profile-grid">
+        <div>
+          <dt>Email</dt>
+          <dd>{{ user()?.email }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'profile.role' | translate }}</dt>
+          <dd>{{ user()?.role === 'PATIENT' ? ('auth.patient' | translate) : ('auth.doctor' | translate) }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'profile.registered' | translate }}</dt>
+          <dd>{{ user()?.created_at | date: 'd MMM yyyy, HH:mm' }}</dd>
+        </div>
       </div>
-      <div>
-        <dt>{{ 'profile.role' | translate }}</dt>
-        <dd>{{ user()?.role === 'PATIENT' ? ('auth.patient' | translate) : ('auth.doctor' | translate) }}</dd>
-      </div>
-      <div>
-        <dt>{{ 'profile.registered' | translate }}</dt>
-        <dd>{{ user()?.created_at | date: 'd MMMM yyyy, HH:mm' }}</dd>
-      </div>
-    </dl>
+    </section>
 
-    <app-glass-card [extraClass]="'glass-strong space-y-3'">
-      <div>
-        <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'profile.nameTitle' | translate }}</h3>
-        <p class="text-sm text-[var(--text-dim)]">{{ 'profile.nameSubtitle' | translate }}</p>
+    <section class="profile-section glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">badge</span>
+          <div>
+            <h3>{{ 'profile.nameTitle' | translate }}</h3>
+            <p>{{ 'profile.nameSubtitle' | translate }}</p>
+          </div>
+        </div>
       </div>
       <form class="name-form" [formGroup]="nameForm" (ngSubmit)="saveName()">
         <app-glass-input [label]="'profile.fullName' | translate" formControlName="full_name" placeholder="Jane Doe"></app-glass-input>
-        <div class="name-form__actions">
-          <button type="submit" appGlassButton [disabled]="savingName">
+        <div class="form-actions">
+          <button type="submit" class="profile-action-btn" [disabled]="savingName">
             <span *ngIf="savingName" class="loader-dot"></span>
+            <span class="material-symbols-rounded" *ngIf="!savingName">save</span>
             <span>{{ 'profile.saveName' | translate }}</span>
           </button>
-          <span class="text-xs text-[var(--text-dim)]" *ngIf="nameMessage && !nameError">{{ nameMessage | translate }}</span>
-          <span class="text-xs text-[var(--danger)]" *ngIf="nameError">{{ nameError }}</span>
+          <span class="form-message" *ngIf="nameMessage && !nameError">{{ nameMessage | translate }}</span>
+          <span class="form-message form-message--error" *ngIf="nameError">{{ nameError }}</span>
         </div>
       </form>
-    </app-glass-card>
+    </section>
 
-    <app-glass-card [extraClass]="'glass-strong space-y-3'">
-      <div class="flex items-center justify-between gap-2 flex-wrap">
-        <div>
-          <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'share.title' | translate }}</h3>
-          <p class="text-sm text-[var(--text-dim)]">{{ 'share.doctorEmail' | translate }}</p>
+    <section class="profile-section glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">clinical_notes</span>
+          <div>
+            <h3>{{ documentsHeading() }}</h3>
+            <p>{{ documentsSubtitle() }}</p>
+          </div>
         </div>
-        <a routerLink="/patient/share" appGlassButton>{{ 'share.grant' | translate }}</a>
-      </div>
-      <p class="text-sm text-[var(--text-dim)]">{{ 'share.noGrants' | translate }}</p>
-    </app-glass-card>
-
-    <app-glass-card [extraClass]="'glass-strong space-y-3'">
-      <div>
-        <h3 class="text-lg font-semibold text-[var(--text)]">{{ documentsHeading() }}</h3>
-        <p class="text-sm text-[var(--text-dim)]">{{ documentsSubtitle() }}</p>
       </div>
 
       <div class="documents-state" *ngIf="documentsLoading">
         <span class="loader-dot"></span>
-        <span class="text-sm text-[var(--text-dim)]">{{ currentLang === 'es' ? 'Cargando documentos...' : 'Loading documents...' }}</span>
+        <span>{{ currentLang === 'es' ? 'Cargando documentos...' : 'Loading documents...' }}</span>
       </div>
 
-      <div class="text-sm text-[var(--danger)]" *ngIf="documentsError">{{ documentsError }}</div>
-      <div class="text-sm text-[var(--text-dim)]" *ngIf="documentsMessage && !documentsError">{{ documentsMessage }}</div>
+      <div class="form-message form-message--error" *ngIf="documentsError">{{ documentsError }}</div>
+      <div class="form-message" *ngIf="documentsMessage && !documentsError">{{ documentsMessage }}</div>
 
       <div class="documents-list scrollable" *ngIf="!documentsLoading && documents.length; else noDocuments">
-        <div class="documents-row glass glass-soft" *ngFor="let document of documents">
+        <div class="documents-row" *ngFor="let document of documents">
           <div class="documents-row__meta">
-            <p class="documents-row__title">{{ documentName(document) }}</p>
+            <div class="metric-name-line">
+              <span class="metric-dot"></span>
+              <p class="documents-row__title">{{ documentName(document) }}</p>
+            </div>
             <p class="documents-row__info">
-              {{ documentDate(document) | date: 'd MMM yyyy' }} · {{ document.num_metrics }} {{ currentLang === 'es' ? 'métricas' : 'metrics' }}
+              {{ documentDate(document) | date: 'd MMM yyyy' }} - {{ document.num_metrics }} {{ currentLang === 'es' ? 'métricas' : 'metrics' }}
             </p>
           </div>
           <button
@@ -83,28 +96,49 @@
       </div>
 
       <ng-template #noDocuments>
-        <p class="text-sm text-[var(--text-dim)]">
+        <p class="empty-text">
           {{ currentLang === 'es' ? 'Aún no has cargado documentos.' : 'No documents uploaded yet.' }}
         </p>
       </ng-template>
-    </app-glass-card>
+    </section>
 
-    <div class="preferences space-y-4">
-      <div class="preferences__header">
-        <h3 class="text-lg font-semibold text-[var(--text)]">{{ 'PATIENT.PROFILE.PREFERENCES_TITLE' | translate }}</h3>
-        <p class="text-sm text-[var(--text-dim)]">{{ 'PATIENT.PROFILE.PREFERENCES_SUBTITLE' | translate }}</p>
+    <section class="profile-section glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">share</span>
+          <div>
+            <h3>{{ 'share.title' | translate }}</h3>
+            <p>{{ 'share.doctorEmail' | translate }}</p>
+          </div>
+        </div>
+        <a routerLink="/patient/share" class="profile-action-btn">
+          <span class="material-symbols-rounded">person_add</span>
+          {{ 'share.grant' | translate }}
+        </a>
+      </div>
+      <p class="empty-text">{{ 'share.noGrants' | translate }}</p>
+    </section>
+
+    <section class="profile-section glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">tune</span>
+          <div>
+            <h3>{{ 'PATIENT.PROFILE.PREFERENCES_TITLE' | translate }}</h3>
+            <p>{{ 'PATIENT.PROFILE.PREFERENCES_SUBTITLE' | translate }}</p>
+          </div>
+        </div>
       </div>
 
-      <div class="theme-toggle glass glass-strong">
-        <div class="theme-toggle__text">
-          <h3>{{ 'profile.themeTitle' | translate }}</h3>
-          <p>{{ 'profile.themeText' | translate }}</p>
-        </div>
-        <div class="theme-toggle__controls">
+      <div class="preference-list">
+        <div class="preference-row">
+          <div>
+            <h4>{{ 'profile.themeTitle' | translate }}</h4>
+            <p>{{ 'profile.themeText' | translate }}</p>
+          </div>
           <button
             type="button"
-            appGlassButton
-            class="theme-toggle__button"
+            class="profile-action-btn"
             (click)="toggleTheme()"
             [attr.aria-label]="theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate)"
           >
@@ -114,40 +148,24 @@
             <span>{{ theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate) }}</span>
           </button>
         </div>
-      </div>
 
-      <div class="theme-toggle glass glass-strong">
-        <div class="theme-toggle__text">
-          <h3>{{ 'PATIENT.PROFILE.LANGUAGE_TITLE' | translate }}</h3>
-          <p>{{ 'PATIENT.PROFILE.LANGUAGE_TEXT' | translate }}</p>
-        </div>
-        <div class="theme-toggle__controls">
-          <div class="theme-toggle__chips">
-            <button
-              type="button"
-              appGlassButton
-              class="theme-chip"
-              [class.active]="currentLang === 'es'"
-              (click)="setLanguage('es')"
-            >
-              ES
-            </button>
-            <button
-              type="button"
-              appGlassButton
-              class="theme-chip"
-              [class.active]="currentLang === 'en'"
-              (click)="setLanguage('en')"
-            >
-              EN
-            </button>
+        <div class="preference-row">
+          <div>
+            <h4>{{ 'PATIENT.PROFILE.LANGUAGE_TITLE' | translate }}</h4>
+            <p>{{ 'PATIENT.PROFILE.LANGUAGE_TEXT' | translate }}</p>
+          </div>
+          <div class="language-actions">
+            <button type="button" class="language-chip" [class.active]="currentLang === 'es'" (click)="setLanguage('es')">ES</button>
+            <button type="button" class="language-chip" [class.active]="currentLang === 'en'" (click)="setLanguage('en')">EN</button>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+  </ng-container>
+
   <ng-template #guest>
-    <p class="text-sm text-[var(--text-dim)]">Sign in to view your profile and adjust theme.</p>
-    <p class="text-sm text-[var(--text-dim)]">{{ 'profile.signInToView' | translate }}</p>
+    <section class="profile-section glass glass-strong">
+      <p class="empty-text">{{ 'profile.signInToView' | translate }}</p>
+    </section>
   </ng-template>
-</app-glass-card>
+</div>

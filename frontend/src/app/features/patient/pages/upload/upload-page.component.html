@@ -1,17 +1,31 @@
-<div class="space-y-6">
-  <app-glass-card [extraClass]="'glass-strong flex flex-col items-center justify-center gap-6 min-h-[320px] text-center transition-all duration-200'">
+<div class="upload-page">
+  <div class="upload-title-row glass glass-strong">
+    <div class="upload-title-left">
+      <span class="material-symbols-rounded upload-title-icon">upload_file</span>
+      <div>
+        <p class="upload-kicker">Importación</p>
+        <h2 class="upload-title-name">{{ 'UPLOAD.TITLE' | translate }}</h2>
+      </div>
+    </div>
+    <span class="upload-title-badge">PDF</span>
+  </div>
+
+  <section class="upload-card glass glass-strong">
     <div
-      class="w-full relative"
-      [class.is-dragging]="isDragging"
+      class="upload-dropzone"
+      [class.upload-dropzone--active]="isDragging"
       (dragover)="onDragOver($event)"
       (dragleave)="onDragLeave($event)"
       (drop)="onDrop($event)"
     >
-      <label class="upload-dropzone" [class.upload-dropzone--active]="isDragging">
-        <span class="material-symbols-rounded text-4xl sm:text-5xl text-[var(--accent)]">upload</span>
-        <span class="text-lg font-semibold text-[var(--text)]">{{ 'UPLOAD.DROP_TITLE' | translate }}</span>
-        <p class="text-sm text-[var(--text-dim)]">{{ 'UPLOAD.DROP_HINT' | translate }}</p>
-        <button type="button" appGlassButton [disabled]="isUploading" (click)="fileInput.click()">{{ 'UPLOAD.CHOOSE_FILE' | translate }}</button>
+      <label class="upload-dropzone__label">
+        <span class="material-symbols-rounded upload-dropzone__icon">cloud_upload</span>
+        <span class="upload-dropzone__title">{{ 'UPLOAD.DROP_TITLE' | translate }}</span>
+        <span class="upload-dropzone__hint">{{ 'UPLOAD.DROP_HINT' | translate }}</span>
+        <button type="button" class="upload-action-btn" [disabled]="isUploading" (click)="fileInput.click()">
+          <span class="material-symbols-rounded">folder_open</span>
+          {{ 'UPLOAD.CHOOSE_FILE' | translate }}
+        </button>
         <input
           #fileInput
           type="file"
@@ -23,19 +37,19 @@
       </label>
     </div>
 
-    <div *ngIf="selectedFile" class="glass chip justify-center">
+    <div *ngIf="selectedFile" class="selected-file glass glass-soft">
       <span class="material-symbols-rounded">description</span>
-      {{ selectedFile.name }}
-      <button type="button" class="ml-2 text-[var(--danger)]" [disabled]="isUploading" (click)="clearSelection()">
+      <span>{{ selectedFile.name }}</span>
+      <button type="button" [disabled]="isUploading" (click)="clearSelection()" title="Quitar archivo">
         <span class="material-symbols-rounded">close</span>
       </button>
     </div>
 
-    <div *ngIf="uploadMessage" class="toast-glass success" role="status">
+    <div *ngIf="uploadMessage" class="upload-toast upload-toast--success" role="status">
       <span class="material-symbols-rounded">check_circle</span>
       <span>{{ uploadMessage }}</span>
     </div>
-    <div *ngIf="errorMessage" class="toast-glass error" role="alert">
+    <div *ngIf="errorMessage" class="upload-toast upload-toast--error" role="alert">
       <span class="material-symbols-rounded">error</span>
       <span>{{ errorMessage }}</span>
     </div>
@@ -45,9 +59,10 @@
       <span>{{ uploadAccuracyHint }}</span>
     </div>
 
-    <button type="button" appGlassButton (click)="submit()" [glassBlock]="true" [disabled]="isUploading">
+    <button type="button" class="upload-submit" (click)="submit()" [disabled]="isUploading">
       <span *ngIf="isUploading" class="loader-dot"></span>
+      <span class="material-symbols-rounded" *ngIf="!isUploading">auto_awesome</span>
       <span>{{ isUploading ? ('UPLOAD.PROCESSING' | translate) : ('UPLOAD.UPLOAD_PARSE' | translate) }}</span>
     </button>
-  </app-glass-card>
+  </section>
 </div>

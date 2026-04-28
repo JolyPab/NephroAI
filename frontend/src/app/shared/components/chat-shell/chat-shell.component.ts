@@ -13,13 +13,12 @@ import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 
-import { GlassCardComponent } from '../glass-card/glass-card.component';
 import { ChatMessage } from '../../../core/models/chat.model';
 
 @Component({
   selector: 'app-chat-shell',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, GlassCardComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './chat-shell.component.html',
   styleUrls: ['./chat-shell.component.scss'],
 })
