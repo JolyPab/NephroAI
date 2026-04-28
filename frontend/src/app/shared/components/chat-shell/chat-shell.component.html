@@ -15,7 +15,7 @@
         *ngIf="((displayedAnswers[i] !== undefined ? displayedAnswers[i] : message.answer) || '').trim().length > 0"
       >
         <div class="ai-header">
-          <div class="avatar avatar-ai"><i class="bi bi-stars"></i></div>
+          <div class="avatar avatar-ai"><span class="material-symbols-rounded">auto_awesome</span></div>
           <span class="who">{{ aiKey | translate }}</span>
           <span class="bubble-time">{{ message.timestamp | date: 'd MMM · HH:mm' }}</span>
         </div>
@@ -31,7 +31,7 @@
     <div class="message" *ngIf="isLoading">
       <div class="bubble bubble-ai bubble-ai--loading">
         <div class="ai-header">
-          <div class="avatar avatar-ai"><i class="bi bi-stars"></i></div>
+          <div class="avatar avatar-ai"><span class="material-symbols-rounded">auto_awesome</span></div>
           <span class="who">{{ aiKey | translate }}</span>
           <span class="bubble-time">{{ thinkingKey | translate }}</span>
         </div>
@@ -45,7 +45,7 @@
   <!-- Empty state -->
   <ng-template #emptyState>
     <div class="empty-state">
-      <div class="empty-icon"><i class="bi bi-stars"></i></div>
+      <div class="empty-icon"><span class="material-symbols-rounded">auto_awesome</span></div>
       <p class="empty-label">{{ emptyKey | translate }}</p>
       <div class="quick-prompts" *ngIf="quickPrompts.length">
         <button
@@ -82,7 +82,7 @@
       </span>
       <button type="submit" class="send-btn" [disabled]="isLoading || form.invalid">
         <span *ngIf="isLoading" class="loader-dot"></span>
-        <i *ngIf="!isLoading" class="bi bi-arrow-up"></i>
+        <span *ngIf="!isLoading" class="material-symbols-rounded">arrow_upward</span>
       </button>
     </div>
   </form>
