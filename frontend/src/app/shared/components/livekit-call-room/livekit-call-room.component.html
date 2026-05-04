@@ -5,6 +5,7 @@
       <p>{{ status }}</p>
     </div>
   </div>
+  <div class="livekit-room__audio" #remoteAudio aria-hidden="true"></div>
 
   <div class="livekit-room__video livekit-room__video--local" #localMedia *ngIf="room || localHasMedia">
     <div class="livekit-room__local-placeholder" *ngIf="!localHasMedia">

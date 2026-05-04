@@ -41,6 +41,7 @@ export class LivekitCallRoomComponent implements AfterViewInit, OnChanges, OnDes
 
   @ViewChild('localMedia') private localMedia?: ElementRef<HTMLElement>;
   @ViewChild('remoteMedia') private remoteMedia?: ElementRef<HTMLElement>;
+  @ViewChild('remoteAudio') private remoteAudio?: ElementRef<HTMLElement>;
 
   status = 'Preparando sala...';
   errorMessage = '';
@@ -205,26 +206,47 @@ export class LivekitCallRoomComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   private attachTrack(track: any, target?: ElementRef<HTMLElement>, muted = false): void {
-    const container = target?.nativeElement;
-    if (!container || typeof track.attach !== 'function') {
+    if (!target?.nativeElement || typeof track.attach !== 'function') {
       return;
     }
     const element = track.attach();
+    const isAudio = element instanceof HTMLAudioElement;
+    const isVideo = element instanceof HTMLVideoElement;
+    const container = isAudio && target === this.remoteMedia
+      ? this.remoteAudio?.nativeElement
+      : target.nativeElement;
+    if (!container) {
+      element.remove();
+      return;
+    }
+
+    const trackId = this.trackElementId(track, element);
+    const previous = container.querySelector(`[data-track-id="${trackId}"]`);
+    if (previous) {
+      previous.remove();
+    }
+
     if (element instanceof HTMLMediaElement) {
       element.autoplay = true;
       element.muted = muted;
-      if (element instanceof HTMLVideoElement) {
+      element.dataset['trackId'] = trackId;
+      if (isVideo) {
         element.playsInline = true;
       }
     }
-    if (muted) {
+
+    if (target === this.remoteMedia && isVideo) {
+      container.querySelectorAll('video').forEach((video) => video.remove());
+    }
+    if (target === this.localMedia && isVideo) {
       container.replaceChildren();
     }
+
     container.appendChild(element);
-    if (target === this.remoteMedia) {
+    if (target === this.remoteMedia && isVideo) {
       this.remoteHasMedia = true;
     }
-    if (target === this.localMedia) {
+    if (target === this.localMedia && isVideo) {
       this.localHasMedia = true;
     }
   }
@@ -252,12 +274,22 @@ export class LivekitCallRoomComponent implements AfterViewInit, OnChanges, OnDes
   private clearMedia(): void {
     this.localMedia?.nativeElement.replaceChildren();
     this.remoteMedia?.nativeElement.replaceChildren();
+    this.remoteAudio?.nativeElement.replaceChildren();
     this.remoteHasMedia = false;
     this.localHasMedia = false;
   }
 
   private hasAttachedMedia(target?: ElementRef<HTMLElement>): boolean {
-    return Boolean(target?.nativeElement.querySelector('video, audio'));
+    return Boolean(target?.nativeElement.querySelector('video'));
+  }
+
+  private trackElementId(track: any, element: Element): string {
+    return String(
+      track?.sid
+        ?? track?.mediaStreamTrack?.id
+        ?? (element instanceof HTMLMediaElement ? element.srcObject : '')
+        ?? Math.random(),
+    );
   }
 
   private mediaError(error: unknown, fallback: string): string {
