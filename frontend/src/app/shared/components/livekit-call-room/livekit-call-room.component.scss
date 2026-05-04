@@ -4,17 +4,31 @@
 
 .livekit-room {
   position: relative;
-  min-height: 280px;
+  width: 100%;
+  min-height: 420px;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
-  border-radius: var(--r-lg);
-  border: 1px solid rgba(var(--accent-rgb), 0.25);
-  background: rgba(0, 0, 0, 0.26);
+  border-radius: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #05050d;
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.10);
+}
+
+.livekit-room::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 7rem;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(5, 5, 13, 0.78), rgba(5, 5, 13, 0));
 }
 
 .livekit-room__video {
   position: absolute;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.22);
+  background: #05050d;
 }
 
 .livekit-room__video video {
@@ -33,19 +47,21 @@
 }
 
 .livekit-room__video--local {
-  right: 0.75rem;
-  bottom: 4.75rem;
-  width: min(34%, 180px);
-  aspect-ratio: 4 / 3;
-  border-radius: var(--r-md);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  z-index: 2;
+  right: 1rem;
+  bottom: 5.25rem;
+  width: clamp(150px, 21%, 220px);
+  aspect-ratio: 16 / 10;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  z-index: 4;
+  background: #05050d;
+  box-shadow: 0 18px 42px -18px rgba(0, 0, 0, 0.9);
 }
 
 .livekit-room__topbar {
   position: absolute;
-  inset-inline: 0.75rem;
-  top: 0.75rem;
+  inset-inline: 1rem;
+  top: 1rem;
   z-index: 3;
   display: flex;
   justify-content: flex-start;
@@ -56,14 +72,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  max-width: min(100%, 420px);
-  padding: 0.42rem 0.62rem;
+  max-width: min(100%, 260px);
+  padding: 0.46rem 0.68rem;
   border-radius: 999px;
   color: var(--text);
-  background: rgba(0, 0, 0, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(8, 8, 24, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   font-size: 0.76rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -78,31 +94,44 @@
 .livekit-room__controls {
   position: absolute;
   left: 50%;
-  bottom: 0.9rem;
-  z-index: 4;
+  bottom: 1rem;
+  z-index: 5;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
-  padding: 0.5rem;
+  gap: 0.48rem;
+  padding: 0.48rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.38);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(8, 8, 18, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 18px 42px -22px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .livekit-control {
-  width: 2.7rem;
-  height: 2.7rem;
+  width: 2.65rem;
+  height: 2.65rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   color: var(--text);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.11);
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    opacity 140ms ease;
+}
+
+.livekit-control:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.17);
+}
+
+.livekit-control:not(:disabled):active {
+  transform: scale(0.94);
 }
 
 .livekit-control:disabled {
@@ -113,6 +142,7 @@
   color: white;
   border-color: rgba(220, 38, 38, 0.55);
   background: #dc2626;
+  box-shadow: 0 12px 28px -18px rgba(220, 38, 38, 0.9);
 }
 
 .livekit-control .material-symbols-rounded {
@@ -120,7 +150,8 @@
 }
 
 .livekit-room__placeholder {
-  min-height: 280px;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -171,17 +202,28 @@
 @media (max-width: 540px) {
   .livekit-room {
     min-height: 0;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 9 / 13;
+    border-radius: 1rem;
   }
 
   .livekit-room__video--local {
-    right: 0.6rem;
-    bottom: 4.6rem;
-    width: min(34%, 140px);
+    right: 0.75rem;
+    bottom: 5rem;
+    width: min(38%, 150px);
+    border-radius: 0.8rem;
   }
 
   .livekit-room__status {
     max-width: 100%;
     font-size: 0.7rem;
+  }
+
+  .livekit-room__controls {
+    bottom: 0.85rem;
+  }
+
+  .livekit-control {
+    width: 2.55rem;
+    height: 2.55rem;
   }
 }
