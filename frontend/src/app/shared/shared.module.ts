@@ -15,6 +15,7 @@ import { GlassTabbarComponent } from './components/glass-tabbar/glass-tabbar.com
 import { LatestReportSummaryComponent } from './components/latest-report-summary/latest-report-summary.component';
 import { ChatShellComponent } from './components/chat-shell/chat-shell.component';
 import { OtpInputComponent } from './components/otp-input/otp-input.component';
+import { LivekitCallRoomComponent } from './components/livekit-call-room/livekit-call-room.component';
 
 @NgModule({
   imports: [
@@ -34,6 +35,7 @@ import { OtpInputComponent } from './components/otp-input/otp-input.component';
     LatestReportSummaryComponent,
     ChatShellComponent,
     OtpInputComponent,
+    LivekitCallRoomComponent,
   ],
   exports: [
     CommonModule,
@@ -52,6 +54,7 @@ import { OtpInputComponent } from './components/otp-input/otp-input.component';
     LatestReportSummaryComponent,
     ChatShellComponent,
     OtpInputComponent,
+    LivekitCallRoomComponent,
   ],
 })
 export class SharedModule {}

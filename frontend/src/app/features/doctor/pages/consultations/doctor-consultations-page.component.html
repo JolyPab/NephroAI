@@ -1,0 +1,166 @@
+<div class="doctor-consultations">
+  <section class="doctor-consultations__grid">
+    <article class="doctor-consultations__panel doctor-consultations__panel--messages glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">forum</span>
+          <h3>Mensajes</h3>
+        </div>
+        <span class="badge-glass">{{ selectedConsultation?.id ? 'Activo' : 'Selecciona' }}</span>
+      </div>
+
+      <div *ngIf="!selectedConsultation" class="empty-state">
+        <span class="material-symbols-rounded">chat</span>
+        <p>Selecciona un paciente para abrir la conversación.</p>
+      </div>
+
+      <div *ngIf="selectedConsultation" class="message-panel">
+        <div class="message-panel__patient">
+          <div>
+            <p>{{ selectedConsultation.patient_name || 'Paciente' }}</p>
+            <span>{{ selectedConsultation.doctor_email }}</span>
+          </div>
+          <div class="message-panel__actions">
+            <button
+              type="button"
+              class="call-action"
+              [disabled]="!selectedConsultation.id || !selectedConsultation.can_call || callBusy || !!activeCall"
+              (click)="startCall()"
+            >
+              <span class="material-symbols-rounded">call</span>
+              <span>{{ selectedConsultation.can_call ? 'Llamar' : 'Sin permiso' }}</span>
+            </button>
+            <span class="badge-glass" [class.badge-accent]="selectedConsultation.can_message">
+              {{ selectedConsultation.can_message ? 'Mensajes' : 'Solo lectura' }}
+            </span>
+          </div>
+        </div>
+
+        <div *ngIf="activeCall" class="call-status">
+          <span class="material-symbols-rounded">
+            {{ activeCall.status === 'accepted' ? 'phone_in_talk' : 'ring_volume' }}
+          </span>
+          <div>
+            <p>{{ activeCall.status === 'accepted' ? 'Llamada activa' : 'Llamando al paciente' }}</p>
+            <small>{{ activeCall.patient_name || selectedConsultation.patient_name || 'Paciente' }}</small>
+          </div>
+          <button type="button" class="call-end" [disabled]="callBusy" (click)="endCall()">
+            <span class="material-symbols-rounded">call_end</span>
+          </button>
+        </div>
+
+        <div *ngIf="errorMessage" class="consultations-alert">
+          <span class="material-symbols-rounded">error</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="message-list" #messageList>
+          <div *ngIf="loadingMessages" class="empty-line">Cargando mensajes...</div>
+
+          <div
+            *ngFor="let message of messages; trackBy: trackByMessage"
+            class="message-bubble"
+            [class.message-bubble--mine]="message.sender_role === 'doctor'"
+          >
+            <p>{{ message.body }}</p>
+            <span>
+              {{ message.sender_role === 'doctor' ? 'Tú' : (message.sender_name || 'Paciente') }}
+              · {{ message.created_at | date: 'd MMM, HH:mm' }}
+            </span>
+          </div>
+
+          <div *ngIf="!loadingMessages && selectedConsultation.id && !messages.length" class="empty-state empty-state--compact">
+            <span class="material-symbols-rounded">chat_bubble</span>
+            <p>Inicia la conversación con este paciente.</p>
+          </div>
+        </div>
+
+        <form class="message-form" (ngSubmit)="sendMessage()">
+          <textarea
+            name="doctorConsultationMessage"
+            [(ngModel)]="draftMessage"
+            [disabled]="!selectedConsultation.id || !selectedConsultation.can_message || sending"
+            maxlength="4000"
+            rows="3"
+            placeholder="Escribe un mensaje para el paciente"
+          ></textarea>
+          <button
+            type="submit"
+            class="message-send"
+            [disabled]="!draftMessage.trim() || !selectedConsultation.id || !selectedConsultation.can_message || sending"
+          >
+            <span class="material-symbols-rounded">{{ sending ? 'sync' : 'send' }}</span>
+          </button>
+        </form>
+      </div>
+    </article>
+
+    <article class="doctor-consultations__panel doctor-consultations__panel--patients glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">groups</span>
+          <h3>Pacientes</h3>
+        </div>
+        <span class="badge-glass">{{ consultations.length }}</span>
+      </div>
+
+      <div *ngIf="loading" class="empty-line">Cargando consultas...</div>
+      <div *ngIf="!loading && !consultations.length" class="empty-line">
+        Aún no tienes pacientes con acceso activo.
+      </div>
+
+      <div class="patient-list" *ngIf="!loading && consultations.length">
+        <button
+          type="button"
+          class="patient-row"
+          *ngFor="let consultation of consultations; trackBy: trackByPatient"
+          [class.patient-row--active]="selectedConsultation?.patient_id === consultation.patient_id"
+          [disabled]="openingPatientId === consultation.patient_id"
+          (click)="openConsultation(consultation)"
+        >
+          <div class="patient-row__avatar">
+            <span class="material-symbols-rounded">person</span>
+          </div>
+          <div class="patient-row__body">
+            <p>{{ consultation.patient_name || 'Paciente' }}</p>
+            <span>{{ consultation.last_message || 'Sin mensajes todavía' }}</span>
+          </div>
+          <span
+            class="patient-row__status"
+            [class.patient-row__status--unread]="consultation.unread_count > 0"
+          >
+            {{
+              openingPatientId === consultation.patient_id
+                ? '...'
+                : consultation.unread_count > 0
+                  ? consultation.unread_count
+                  : ''
+            }}
+            <span class="material-symbols-rounded" *ngIf="consultation.unread_count === 0">
+              chevron_right
+            </span>
+          </span>
+        </button>
+      </div>
+    </article>
+  </section>
+
+  <div class="call-overlay call-overlay--modal" *ngIf="activeCall">
+    <div class="call-modal glass glass-strong">
+      <div class="call-modal__header">
+        <div>
+          <p>{{ activeCall.status === 'accepted' ? 'Llamada activa' : 'Llamando al paciente' }}</p>
+          <span>{{ activeCall.patient_name || selectedConsultation?.patient_name || 'Paciente' }}</span>
+        </div>
+        <button type="button" class="call-modal__close" [disabled]="callBusy" (click)="endCall()">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <app-livekit-call-room
+        [callId]="activeCall.id"
+        [enabled]="activeCall.status === 'ringing' || activeCall.status === 'accepted'"
+        (endCall)="endCall()"
+      ></app-livekit-call-room>
+    </div>
+  </div>
+</div>

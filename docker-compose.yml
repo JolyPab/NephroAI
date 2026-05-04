@@ -18,6 +18,20 @@ services:
     image: redis:alpine
     restart: unless-stopped
 
+  livekit:
+    image: livekit/livekit-server:latest
+    restart: unless-stopped
+    command: --config /etc/livekit.yaml
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    depends_on:
+      redis:
+        condition: service_started
+    ports:
+      - "7880:7880"
+      - "7881:7881/tcp"
+      - "7882:7882/udp"
+
   api:
     build: .
     command: gunicorn -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:8000 --timeout 330 main:app
@@ -35,6 +49,10 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_REQUIRE_DELIVERY: ${SMTP_REQUIRE_DELIVERY:-true}
+      LIVEKIT_URL: ${LIVEKIT_URL:-ws://localhost:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-nephroai-dev-livekit-secret-2026-local}
     volumes:
       - .:/app
       - uploads:/app/uploads
@@ -42,6 +60,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_started
+      livekit:
         condition: service_started
     expose:
       - "8000"
@@ -64,6 +84,10 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_REQUIRE_DELIVERY: ${SMTP_REQUIRE_DELIVERY:-true}
+      LIVEKIT_URL: ${LIVEKIT_URL:-ws://localhost:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-nephroai-dev-livekit-secret-2026-local}
     volumes:
       - .:/app
       - uploads:/app/uploads
@@ -71,6 +95,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_started
+      livekit:
         condition: service_started
     restart: always
 

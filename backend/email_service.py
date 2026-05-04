@@ -24,6 +24,8 @@ def send_verification_code_email(email: str, code: str) -> None:
     smtp_from = (os.getenv("SMTP_FROM_EMAIL") or smtp_user or "no-reply@localhost").strip()
     smtp_use_tls = (os.getenv("SMTP_USE_TLS") or "true").strip().lower() in {"1", "true", "yes"}
     smtp_require = (os.getenv("SMTP_REQUIRE_DELIVERY") or "false").strip().lower() in {"1", "true", "yes"}
+    app_env = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").strip().lower()
+    allow_dev_fallback = app_env not in {"prod", "production"} and not smtp_require
 
     subject = "NephroAI - verification code"
     body = (
@@ -49,9 +51,20 @@ def send_verification_code_email(email: str, code: str) -> None:
     msg["To"] = email
     msg.set_content(body)
 
-    with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
-        if smtp_use_tls:
-            server.starttls()
-        if smtp_user:
-            server.login(smtp_user, smtp_password)
-        server.send_message(msg)
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+            if smtp_use_tls:
+                server.starttls()
+            if smtp_user:
+                server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+    except (OSError, smtplib.SMTPException):
+        if not allow_dev_fallback:
+            raise
+        logger.warning(
+            "SMTP delivery failed in %s. Verification code for %s: %s",
+            app_env,
+            email,
+            code,
+            exc_info=True,
+        )

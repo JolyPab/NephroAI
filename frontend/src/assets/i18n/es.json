@@ -6,8 +6,10 @@
     "NAV": {
       "HOME": "Inicio",
       "UPLOAD": "Subir",
-      "CHARTS": "Graficas",
+      "CHARTS": "Gráficos",
       "CHAT": "Chat",
+      "AI": "IA",
+      "CONSULTATIONS": "Consultas",
       "PROFILE": "Perfil"
     },
     "BRAND_NAME": "NephroAI"
@@ -124,6 +126,10 @@
     "CHAT": {
       "TITLE": "Consejo de IA",
       "SUBTITLE": "Pregunta sobre tus analisis con sugerencias seguras"
+    },
+    "CONSULTATIONS": {
+      "TITLE": "Consultas",
+      "SUBTITLE": "Médicos, mensajes y permisos"
     },
     "PROFILE": {
       "TITLE": "Perfil",

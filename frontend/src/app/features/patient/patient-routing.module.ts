@@ -8,6 +8,7 @@ import { PatientChartsPageComponent } from './pages/charts/charts-page.component
 import { PatientSharePageComponent } from './pages/share/share-page.component';
 import { PatientChatPageComponent } from './pages/chat/chat-page.component';
 import { PatientProfilePageComponent } from './pages/profile/profile-page.component';
+import { PatientConsultationsPageComponent } from './pages/consultations/consultations-page.component';
 
 const routes: Routes = [
   {
@@ -65,12 +66,23 @@ const routes: Routes = [
         },
       },
       {
+        path: 'consultations',
+        component: PatientConsultationsPageComponent,
+        data: {
+          title: 'PATIENT.CONSULTATIONS.TITLE',
+          subtitle: 'PATIENT.CONSULTATIONS.SUBTITLE',
+          tabbar: true,
+        },
+      },
+      {
         path: 'profile',
         component: PatientProfilePageComponent,
         data: {
           title: 'PATIENT.PROFILE.TITLE',
           subtitle: 'PATIENT.PROFILE.SUBTITLE',
-          tabbar: true,
+          tabbar: false,
+          showBack: true,
+          back: '/patient',
         },
       },
     ],

@@ -105,12 +105,77 @@ class DoctorGrant(Base):
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
     doctor_email = Column(String, nullable=False, index=True)
     doctor_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    can_message = Column(Boolean, default=True, nullable=False)
+    can_call = Column(Boolean, default=False, nullable=False)
     granted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     revoked_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     patient = relationship("Patient", back_populates="grants", foreign_keys=[patient_id])
     doctor = relationship("User", foreign_keys=[doctor_id])
+    consultation_threads = relationship("ConsultationThread", back_populates="grant")
+
+
+class ConsultationThread(Base):
+    """Human consultation thread between a patient and a doctor."""
+
+    __tablename__ = "consultation_threads"
+    __table_args__ = (
+        UniqueConstraint("patient_id", "doctor_id", "grant_id", name="uq_consultation_thread_grant"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
+    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    grant_id = Column(Integer, ForeignKey("doctor_grants.id"), nullable=False, index=True)
+    status = Column(String(24), nullable=False, default="active")
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    patient = relationship("Patient", foreign_keys=[patient_id])
+    doctor = relationship("User", foreign_keys=[doctor_id])
+    grant = relationship("DoctorGrant", back_populates="consultation_threads", foreign_keys=[grant_id])
+    created_by = relationship("User", foreign_keys=[created_by_user_id])
+    messages = relationship("ConsultationMessage", back_populates="thread", cascade="all, delete-orphan")
+    calls = relationship("ConsultationCall", back_populates="thread", cascade="all, delete-orphan")
+
+
+class ConsultationMessage(Base):
+    """Message in a patient-doctor consultation thread."""
+
+    __tablename__ = "consultation_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    thread_id = Column(Integer, ForeignKey("consultation_threads.id"), nullable=False, index=True)
+    sender_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    body = Column(Text, nullable=False)
+    message_type = Column(String(24), nullable=False, default="text")
+    read_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    thread = relationship("ConsultationThread", back_populates="messages", foreign_keys=[thread_id])
+    sender = relationship("User", foreign_keys=[sender_user_id])
+
+
+class ConsultationCall(Base):
+    """Call lifecycle record for a consultation thread."""
+
+    __tablename__ = "consultation_calls"
+
+    id = Column(Integer, primary_key=True, index=True)
+    thread_id = Column(Integer, ForeignKey("consultation_threads.id"), nullable=False, index=True)
+    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
+    status = Column(String(24), nullable=False, default="ringing")
+    livekit_room = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    accepted_at = Column(DateTime, nullable=True)
+    ended_at = Column(DateTime, nullable=True)
+
+    thread = relationship("ConsultationThread", back_populates="calls", foreign_keys=[thread_id])
+    doctor = relationship("User", foreign_keys=[doctor_id])
+    patient = relationship("Patient", foreign_keys=[patient_id])
 
 
 class DoctorNote(Base):
@@ -388,6 +453,7 @@ def init_db(engine):
     added_columns = ensure_lab_results_columns(engine)
     user_added_columns = ensure_users_columns(engine)
     code_added_columns = ensure_email_code_purpose_column(engine)
+    grant_added_columns = ensure_doctor_grant_columns(engine)
     ensure_chat_tables(engine)
     if added_columns:
         print(f"[DB] added columns: {', '.join(added_columns)}")
@@ -395,6 +461,8 @@ def init_db(engine):
         print(f"[DB] added user columns: {', '.join(user_added_columns)}")
     if code_added_columns:
         print(f"[DB] added email_code columns: {', '.join(code_added_columns)}")
+    if grant_added_columns:
+        print(f"[DB] added doctor_grant columns: {', '.join(grant_added_columns)}")
 
 
 def ensure_lab_results_columns(engine) -> list[str]:
@@ -425,6 +493,31 @@ def ensure_lab_results_columns(engine) -> list[str]:
         return [name for name, _ in additions]
     except Exception as exc:
         print(f"[WARN] Could not ensure lab_results columns: {exc}")
+        return []
+
+
+def ensure_doctor_grant_columns(engine) -> list[str]:
+    """Add consultation permission columns to doctor_grants without Alembic."""
+    try:
+        inspector = inspect(engine)
+        if "doctor_grants" not in inspector.get_table_names():
+            return []
+        existing = {col["name"] for col in inspector.get_columns("doctor_grants")}
+        additions: list[tuple[str, str]] = []
+        if "can_message" not in existing:
+            additions.append(("can_message", "BOOLEAN NOT NULL DEFAULT TRUE"))
+        if "can_call" not in existing:
+            additions.append(("can_call", "BOOLEAN NOT NULL DEFAULT FALSE"))
+
+        if not additions:
+            return []
+
+        with engine.begin() as conn:
+            for name, col_type in additions:
+                conn.execute(text(f"ALTER TABLE doctor_grants ADD COLUMN {name} {col_type}"))
+        return [name for name, _ in additions]
+    except Exception as exc:
+        print(f"[WARN] Could not ensure doctor_grants consultation columns: {exc}")
         return []
 
 

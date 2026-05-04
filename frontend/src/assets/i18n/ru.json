@@ -8,6 +8,8 @@
       "UPLOAD": "Upload",
       "CHARTS": "Charts",
       "CHAT": "Assistant",
+      "AI": "AI",
+      "CONSULTATIONS": "Consults",
       "PROFILE": "Profile"
     },
     "BRAND_NAME": "NephroAI"
@@ -124,6 +126,10 @@
     "CHAT": {
       "TITLE": "AI advice",
       "SUBTITLE": "Ask about your labs with safe hints"
+    },
+    "CONSULTATIONS": {
+      "TITLE": "Consultations",
+      "SUBTITLE": "Doctors, messages and permissions"
     },
     "PROFILE": {
       "TITLE": "Profile",
