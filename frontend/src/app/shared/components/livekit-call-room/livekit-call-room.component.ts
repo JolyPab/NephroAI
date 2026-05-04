@@ -232,6 +232,9 @@ export class LivekitCallRoomComponent implements AfterViewInit, OnChanges, OnDes
       element.dataset['trackId'] = trackId;
       if (isVideo) {
         element.playsInline = true;
+        element.style.width = '100%';
+        element.style.height = '100%';
+        element.style.objectFit = 'cover';
       }
     }
 
