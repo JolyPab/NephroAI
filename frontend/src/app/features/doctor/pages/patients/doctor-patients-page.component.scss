@@ -18,3 +18,29 @@ button:hover {
   align-items: center;
   flex-wrap: wrap;
 }
+
+.patient-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.patient-message-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.62rem;
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(var(--accent-rgb), 0.32);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.10);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.patient-message-btn .material-symbols-rounded {
+  font-size: 1rem;
+}

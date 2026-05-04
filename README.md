@@ -59,6 +59,28 @@ npm install
 ng serve
 ```
 
+### Optional calls setup
+
+Doctor-patient video calls use LiveKit. Local Docker runs a self-hosted LiveKit server on `ws://localhost:7880` with the dev keypair from `livekit.yaml`.
+
+```bash
+docker compose up -d livekit
+```
+
+For production, put LiveKit behind TLS and override these variables:
+
+```env
+LIVEKIT_URL=wss://your-livekit-host
+LIVEKIT_API_KEY=your-api-key
+LIVEKIT_API_SECRET=your-api-secret
+```
+
+For local doctor registration tests, email delivery can be made non-blocking:
+
+```env
+SMTP_REQUIRE_DELIVERY=false
+```
+
 ---
 
 ## 🌎 Mission

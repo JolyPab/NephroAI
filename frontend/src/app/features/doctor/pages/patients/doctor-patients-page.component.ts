@@ -47,6 +47,17 @@ export class DoctorPatientsPageComponent implements OnInit {
     void this.router.navigate(['/doctor/patient', patient.patient_id]);
   }
 
+  openPatientConsultation(patient: V2DoctorPatientResponse, event: MouseEvent): void {
+    event.stopPropagation();
+    void this.router.navigate(['/doctor/consultations'], {
+      queryParams: { patient_id: patient.patient_id },
+    });
+  }
+
+  openConsultations(): void {
+    void this.router.navigate(['/doctor/consultations']);
+  }
+
   saveName(): void {
     if (this.nameForm.invalid) {
       this.nameForm.markAllAsTouched();

@@ -1,0 +1,227 @@
+<div class="consultations-page">
+  <section class="consultations-hero glass glass-strong">
+    <div class="consultations-hero__copy">
+      <span class="material-symbols-rounded consultations-hero__icon">stethoscope</span>
+      <div>
+        <p class="consultations-kicker">Consultas</p>
+        <h2>Atención médica conectada con tus análisis</h2>
+        <p>Gestiona tus médicos, permisos y próximos mensajes desde un solo lugar.</p>
+      </div>
+    </div>
+    <a class="consultations-hero__action" [routerLink]="['/patient/share']">
+      <span class="material-symbols-rounded">person_add</span>
+      Agregar médico
+    </a>
+  </section>
+
+  <section class="consultations-grid">
+    <article class="consultations-section consultations-section--doctors glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">clinical_notes</span>
+          <h3>Mis médicos</h3>
+        </div>
+        <span class="badge-glass">{{ consultations.length }}</span>
+      </div>
+
+      <div *ngIf="loading" class="consultations-empty">Cargando médicos...</div>
+
+      <div *ngIf="!loading && consultations.length" class="doctor-list">
+        <button
+          type="button"
+          class="doctor-row"
+          *ngFor="let consultation of consultations; trackBy: trackByGrant"
+          [class.doctor-row--active]="selectedConsultation?.grant_id === consultation.grant_id"
+          [disabled]="openingGrantId === consultation.grant_id"
+          (click)="openConsultation(consultation)"
+        >
+          <div class="doctor-row__avatar">
+            <span class="material-symbols-rounded">person</span>
+          </div>
+          <div class="doctor-row__body">
+            <p>{{ consultation.doctor_name || consultation.doctor_email }}</p>
+            <span>{{ consultation.doctor_email }}</span>
+            <small *ngIf="consultation.last_message">{{ consultation.last_message }}</small>
+          </div>
+          <span class="badge-glass badge-accent">
+            <span class="material-symbols-rounded">
+              {{ openingGrantId === consultation.grant_id ? 'sync' : 'verified' }}
+            </span>
+            {{
+              openingGrantId === consultation.grant_id
+                ? 'Abriendo'
+                : consultation.unread_count > 0
+                  ? consultation.unread_count
+                : consultation.status === 'not_started'
+                  ? 'Acceso'
+                  : 'Activo'
+            }}
+          </span>
+        </button>
+      </div>
+
+      <div *ngIf="!loading && !consultations.length" class="consultations-empty">
+        Aún no has agregado médicos. Comparte acceso para iniciar una consulta.
+      </div>
+    </article>
+
+    <article class="consultations-section consultations-section--messages glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">chat</span>
+          <h3>Mensajes</h3>
+        </div>
+        <span class="badge-glass">{{ selectedConsultation?.id ? 'Activo' : 'Selecciona' }}</span>
+      </div>
+
+      <div *ngIf="!selectedConsultation" class="consultation-placeholder">
+        <span class="material-symbols-rounded">forum</span>
+        <p>Selecciona un médico para abrir la conversación.</p>
+      </div>
+
+      <div *ngIf="selectedConsultation" class="message-panel">
+        <div class="message-panel__doctor">
+          <div>
+            <p>{{ selectedConsultation.doctor_name || selectedConsultation.doctor_email }}</p>
+            <span>{{ selectedConsultation.doctor_email }}</span>
+          </div>
+          <span class="badge-glass" [class.badge-accent]="selectedConsultation.can_message">
+            {{ selectedConsultation.can_message ? 'Mensajes' : 'Solo lectura' }}
+          </span>
+        </div>
+
+        <div *ngIf="errorMessage" class="consultations-alert">
+          <span class="material-symbols-rounded">error</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="message-list" #messageList>
+          <div *ngIf="loadingMessages" class="consultations-empty">Cargando mensajes...</div>
+
+          <div
+            *ngFor="let message of messages; trackBy: trackByMessage"
+            class="message-bubble"
+            [class.message-bubble--mine]="message.sender_role === 'patient'"
+          >
+            <p>{{ message.body }}</p>
+            <span>
+              {{ message.sender_role === 'patient' ? 'Tú' : (message.sender_name || 'Médico') }}
+              · {{ message.created_at | date: 'd MMM, HH:mm' }}
+            </span>
+          </div>
+
+          <div *ngIf="!loadingMessages && selectedConsultation.id && !messages.length" class="consultation-placeholder consultation-placeholder--compact">
+            <span class="material-symbols-rounded">chat_bubble</span>
+            <p>Inicia la conversación con tu médico.</p>
+          </div>
+
+          <div *ngIf="!selectedConsultation.id" class="consultation-placeholder consultation-placeholder--compact">
+            <span class="material-symbols-rounded">lock_open</span>
+            <p>Abriendo la conversación segura...</p>
+          </div>
+        </div>
+
+        <form class="message-form" (ngSubmit)="sendMessage()">
+          <textarea
+            name="consultationMessage"
+            [(ngModel)]="draftMessage"
+            [disabled]="!selectedConsultation.id || !selectedConsultation.can_message || sending"
+            maxlength="4000"
+            rows="3"
+            placeholder="Escribe un mensaje para tu médico"
+          ></textarea>
+          <button
+            type="submit"
+            class="message-send"
+            [disabled]="!draftMessage.trim() || !selectedConsultation.id || !selectedConsultation.can_message || sending"
+          >
+            <span class="material-symbols-rounded">{{ sending ? 'sync' : 'send' }}</span>
+          </button>
+        </form>
+      </div>
+    </article>
+
+    <article class="consultations-section consultations-section--permissions glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
+          <span class="material-symbols-rounded">admin_panel_settings</span>
+          <h3>Permisos</h3>
+        </div>
+        <span class="badge-glass">Seguro</span>
+      </div>
+        <div class="permission-list">
+        <div class="permission-row">
+          <span class="material-symbols-rounded">lab_profile</span>
+          <div>
+            <p>Resultados de laboratorio</p>
+            <small>Compartidos mediante acceso activo.</small>
+          </div>
+        </div>
+        <div class="permission-row permission-row--muted">
+          <span class="material-symbols-rounded">videocam</span>
+          <div>
+            <p>Llamadas médicas</p>
+            <small>{{ selectedConsultation?.can_call ? 'El médico puede iniciar llamadas.' : 'Activa este permiso para recibir llamadas.' }}</small>
+          </div>
+          <button
+            type="button"
+            class="permission-toggle"
+            [class.permission-toggle--on]="selectedConsultation?.can_call"
+            [disabled]="!selectedConsultation"
+            (click)="toggleCalls()"
+          >
+            {{ selectedConsultation?.can_call ? 'Activo' : 'Activar' }}
+          </button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <div class="call-overlay" *ngIf="activeCall" [class.call-overlay--modal]="activeCall.status === 'accepted'">
+    <div class="call-card glass glass-strong" *ngIf="activeCall.status === 'ringing'">
+      <span class="material-symbols-rounded call-card__icon">
+        ring_volume
+      </span>
+      <div>
+        <p>Llamada entrante</p>
+        <span>{{ activeCall.doctor_name || 'Médico' }}</span>
+      </div>
+      <div class="call-card__actions">
+        <button
+          type="button"
+          class="call-btn call-btn--accept"
+          *ngIf="activeCall.status === 'ringing'"
+          [disabled]="callBusy"
+          (click)="handleCall('accept')"
+        >
+          <span class="material-symbols-rounded">call</span>
+        </button>
+        <button
+          type="button"
+          class="call-btn call-btn--end"
+          [disabled]="callBusy"
+          (click)="handleCall(activeCall.status === 'ringing' ? 'decline' : 'end')"
+        >
+          <span class="material-symbols-rounded">call_end</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="call-modal glass glass-strong" *ngIf="activeCall.status === 'accepted'">
+      <div class="call-modal__header">
+        <div>
+          <p>Llamada activa</p>
+          <span>{{ activeCall.doctor_name || 'MГ©dico' }}</span>
+        </div>
+        <button type="button" class="call-modal__close" [disabled]="callBusy" (click)="handleCall('end')">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <app-livekit-call-room
+        [callId]="activeCall.id"
+        [enabled]="true"
+        (endCall)="handleCall('end')"
+      ></app-livekit-call-room>
+    </div>
+  </div>
+</div>

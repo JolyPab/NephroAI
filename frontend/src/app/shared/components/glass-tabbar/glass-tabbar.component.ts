@@ -24,8 +24,8 @@ export class GlassTabbarComponent {
     { label: 'COMMON.NAV.HOME', icon: 'home', route: '', exact: true },
     { label: 'COMMON.NAV.UPLOAD', icon: 'upload', route: 'upload' },
     { label: 'COMMON.NAV.CHARTS', icon: 'monitoring', route: 'charts' },
-    { label: 'COMMON.NAV.CHAT', icon: 'forum', route: 'chat' },
-    { label: 'COMMON.NAV.PROFILE', icon: 'person', route: 'profile' },
+    { label: 'COMMON.NAV.AI', icon: 'neurology', route: 'chat' },
+    { label: 'COMMON.NAV.CONSULTATIONS', icon: 'stethoscope', route: 'consultations' },
   ];
 
   fullRoute(item: TabItem): string {

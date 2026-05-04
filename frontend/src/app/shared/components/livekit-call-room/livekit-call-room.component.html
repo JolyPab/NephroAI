@@ -1,0 +1,38 @@
+<div class="livekit-room">
+  <div class="livekit-room__video livekit-room__video--remote" #remoteMedia>
+    <div class="livekit-room__placeholder" *ngIf="!remoteHasMedia && !errorMessage">
+      <span class="material-symbols-rounded">videocam</span>
+      <p>{{ status }}</p>
+    </div>
+  </div>
+
+  <div class="livekit-room__video livekit-room__video--local" #localMedia *ngIf="room || localHasMedia">
+    <div class="livekit-room__local-placeholder" *ngIf="!localHasMedia">
+      <span class="material-symbols-rounded">person</span>
+    </div>
+  </div>
+
+  <div class="livekit-room__topbar" *ngIf="status">
+    <span class="livekit-room__status">
+      <span class="material-symbols-rounded">{{ connecting ? 'sync' : 'radio_button_checked' }}</span>
+      {{ status }}
+    </span>
+  </div>
+
+  <div class="livekit-room__controls">
+    <button type="button" class="livekit-control" [disabled]="!room || connecting" (click)="toggleMic()">
+      <span class="material-symbols-rounded">{{ micEnabled ? 'mic' : 'mic_off' }}</span>
+    </button>
+    <button type="button" class="livekit-control" [disabled]="!room || connecting" (click)="toggleCamera()">
+      <span class="material-symbols-rounded">{{ cameraEnabled ? 'videocam' : 'videocam_off' }}</span>
+    </button>
+    <button type="button" class="livekit-control livekit-control--end" (click)="requestEndCall()">
+      <span class="material-symbols-rounded">call_end</span>
+    </button>
+  </div>
+
+  <div class="livekit-room__error" *ngIf="errorMessage">
+    <span class="material-symbols-rounded">error</span>
+    <span>{{ errorMessage }}</span>
+  </div>
+</div>

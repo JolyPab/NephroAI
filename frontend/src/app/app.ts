@@ -31,6 +31,7 @@ export class AppComponent {
 
   readonly user = this.auth.user;
   readonly isAuthenticated = this.auth.isAuthenticated;
+  readonly isPatient = computed(() => this.user()?.role === 'PATIENT');
   readonly userEmail = computed(() => this.user()?.email ?? '');
 
   toolbarTitle = 'COMMON.APP_NAME';
@@ -64,6 +65,10 @@ export class AppComponent {
       complete: () => this.router.navigate(['/auth']),
       error: () => this.router.navigate(['/auth']),
     });
+  }
+
+  openPatientProfile(): void {
+    void this.router.navigate(['/patient/profile']);
   }
 
   handleBack(): void {

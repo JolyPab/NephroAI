@@ -13,6 +13,12 @@
       routerLinkActive="is-active"
       >{{ 'DOCTOR.ASSISTANT_TAB' | translate }}</a
     >
+    <a
+      appGlassButton
+      [routerLink]="['/doctor/consultations']"
+      [queryParams]="{ patient_id: patientId }"
+      >Consultas</a
+    >
   </div>
 
   <app-glass-card [extraClass]="'glass-strong space-y-5'">

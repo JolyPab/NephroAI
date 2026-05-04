@@ -3,6 +3,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 import { ApiService } from './api.service';
+import { ConsultationCall, ConsultationMessage, ConsultationThread } from '../models/consultation.model';
 import { DoctorNote, DoctorPatientSummary } from '../models/doctor.model';
 import { MetricSeriesResponse } from '../models/analysis.model';
 import { DoctorChatContext, DoctorChatHistoryItem, DoctorChatResponse } from '../models/doctor-chat.model';
@@ -17,6 +18,40 @@ export class DoctorService {
       .pipe(
         catchError(() => of({ patients: [] }))
       );
+  }
+
+  getConsultations(): Observable<ConsultationThread[]> {
+    return this.api.get<ConsultationThread[]>('/consultations').pipe(catchError(() => of([])));
+  }
+
+  createConsultationThread(patientId: number): Observable<ConsultationThread> {
+    return this.api.post<ConsultationThread>('/consultations/threads', { patient_id: patientId });
+  }
+
+  getConsultationMessages(threadId: number): Observable<ConsultationMessage[]> {
+    return this.api
+      .get<ConsultationMessage[]>(`/consultations/threads/${threadId}/messages`)
+      .pipe(catchError(() => of([])));
+  }
+
+  sendConsultationMessage(threadId: number, body: string): Observable<ConsultationMessage> {
+    return this.api.post<ConsultationMessage>(`/consultations/threads/${threadId}/messages`, { body });
+  }
+
+  markConsultationRead(threadId: number): Observable<{ updated: number }> {
+    return this.api.post<{ updated: number }>(`/consultations/threads/${threadId}/read`, {});
+  }
+
+  getActiveConsultationCalls(): Observable<ConsultationCall[]> {
+    return this.api.get<ConsultationCall[]>('/consultations/calls/active').pipe(catchError(() => of([])));
+  }
+
+  startConsultationCall(threadId: number): Observable<ConsultationCall> {
+    return this.api.post<ConsultationCall>('/consultations/calls', { thread_id: threadId });
+  }
+
+  updateConsultationCall(callId: number, action: 'accept' | 'decline' | 'end'): Observable<ConsultationCall> {
+    return this.api.post<ConsultationCall>(`/consultations/calls/${callId}/action`, { action });
   }
 
   getAnalyses(patientId: string): Observable<any[]> {

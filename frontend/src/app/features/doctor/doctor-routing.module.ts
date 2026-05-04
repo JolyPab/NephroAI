@@ -4,6 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { DoctorPatientsPageComponent } from './pages/patients/doctor-patients-page.component';
 import { DoctorPatientDetailPageComponent } from './pages/patient-detail/doctor-patient-detail-page.component';
 import { DoctorPatientChatPageComponent } from './pages/patient-chat/doctor-patient-chat-page.component';
+import { DoctorConsultationsPageComponent } from './pages/consultations/doctor-consultations-page.component';
 
 const routes: Routes = [
   {
@@ -13,6 +14,17 @@ const routes: Routes = [
       title: 'Doctor workspace',
       subtitle: 'Patients who shared their labs with you',
       accent: 'doctor',
+    },
+  },
+  {
+    path: 'consultations',
+    component: DoctorConsultationsPageComponent,
+    data: {
+      title: 'Consultas',
+      subtitle: 'Mensajes con pacientes',
+      accent: 'doctor',
+      showBack: true,
+      back: '/doctor',
     },
   },
   {

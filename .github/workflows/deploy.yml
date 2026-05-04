@@ -30,7 +30,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: "Dockerfile,docker-compose.yml,nginx.conf,backend/**,frontend/dist/medic-frontend/**,landing/**"
+          source: "Dockerfile,docker-compose.yml,nginx.conf,livekit.yaml,backend/**,frontend/dist/medic-frontend/**,landing/**"
           target: "~/medic"
 
       - name: Deploy via SSH
@@ -42,4 +42,21 @@ jobs:
           script: |
             mkdir -p ~/medic
             cd ~/medic
+            set -a
+            [ -f .env ] && . ./.env
+            set +a
+            cat > livekit.yaml <<EOF
+            port: 7880
+            rtc:
+              node_ip: ${LIVEKIT_NODE_IP:-209.50.54.90}
+              use_external_ip: false
+              tcp_port: 7881
+              udp_port: 7882
+            redis:
+              address: redis:6379
+            keys:
+              ${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:-nephroai-dev-livekit-secret-2026-local}
+            logging:
+              level: info
+            EOF
             docker compose up -d --build

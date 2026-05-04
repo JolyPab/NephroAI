@@ -25,7 +25,13 @@
         <h2 class="text-2xl font-semibold text-[var(--text)]">{{ 'doctor.patientsTitle' | translate }}</h2>
         <p class="text-sm text-[var(--text-dim)]">{{ 'doctor.patientsSubtitle' | translate }}</p>
       </div>
-      <span class="badge-glass">{{ patients.length }} {{ 'doctor.patientsTitle' | translate }}</span>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button type="button" appGlassButton (click)="openConsultations()">
+          <span class="material-symbols-rounded text-base">forum</span>
+          <span>Consultas</span>
+        </button>
+        <span class="badge-glass">{{ patients.length }} {{ 'doctor.patientsTitle' | translate }}</span>
+      </div>
     </div>
 
     <div *ngIf="loading" class="flex flex-col items-center justify-center gap-3 py-10 text-[var(--text-dim)]">
@@ -53,9 +59,20 @@
           <p class="text-xs text-[var(--text-dim)]" *ngIf="patient.email">{{ patient.email }}</p>
           <p class="text-xs text-[var(--text-dim)]">{{ 'doctor.grantedAt' | translate }} {{ patient.granted_at | date: 'd MMMM yyyy, HH:mm' }}</p>
         </div>
-        <span class="badge-glass badge-accent">
-          {{ 'doctor.latestAnalysis' | translate }} {{ patient.latest_analysis_date ? (patient.latest_analysis_date | date: 'd MMM yyyy') : '-' }}
-        </span>
+        <div class="patient-actions">
+          <button
+            type="button"
+            class="patient-message-btn"
+            (click)="openPatientConsultation(patient, $event)"
+            aria-label="Abrir consulta"
+          >
+            <span class="material-symbols-rounded">forum</span>
+            <span>Mensaje</span>
+          </button>
+          <span class="badge-glass badge-accent">
+            {{ 'doctor.latestAnalysis' | translate }} {{ patient.latest_analysis_date ? (patient.latest_analysis_date | date: 'd MMM yyyy') : '-' }}
+          </span>
+        </div>
       </button>
     </div>
   </app-glass-card>
