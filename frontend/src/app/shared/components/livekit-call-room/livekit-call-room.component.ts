@@ -165,7 +165,7 @@ export class LivekitCallRoomComponent implements AfterViewInit, OnChanges, OnDes
 
       await room.connect(response.server_url, response.token);
       this.connecting = false;
-      this.status = `Sala: ${response.room}`;
+      this.status = 'Conectado';
       await this.enableInitialMedia();
 
       room.remoteParticipants.forEach((participant) => this.attachParticipantTracks(participant));
