@@ -35,3 +35,18 @@
   align-items: center;
   flex-wrap: wrap;
 }
+
+.doctor-series-panel {
+  max-height: clamp(320px, 46vh, 560px);
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctor-series-panel app-v2-series-page {
+  display: block;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}

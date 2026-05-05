@@ -165,20 +165,17 @@
 
 @media (min-width: 1024px) {
   .selector-root {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
+    width: 100%;
   }
 
   .metric-list-shell {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none;
+    min-height: 180px;
+    max-height: clamp(220px, 34vh, 420px);
+    overflow: hidden;
   }
 
   .metric-list-scroll {
-    min-height: 0;
-    max-height: none;
+    max-height: clamp(220px, 34vh, 420px);
+    overflow-y: auto;
   }
 }

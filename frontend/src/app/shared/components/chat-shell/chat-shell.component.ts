@@ -54,7 +54,37 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
   onSubmit(): void {
     this.submitMessage.emit();
   }
+  formatBubbleTime(value: string | Date | null | undefined): string {
+    if (!value) return '';
 
+    const raw = value instanceof Date ? value.toISOString() : String(value);
+    console.log('chat timestamp raw:', raw, 'normalized:', this.normalizeTimestamp(raw), 'local:', new Date(this.normalizeTimestamp(raw)).toString());
+    const normalized = this.normalizeTimestamp(raw);
+    const date = new Date(normalized);
+
+    if (Number.isNaN(date.getTime())) return '';
+
+    return new Intl.DateTimeFormat(undefined, {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  }
+
+  private normalizeTimestamp(value: string): string {
+    const trimmed = value.trim();
+
+    if (/[zZ]$|[+-]\d{2}:\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(trimmed)) {
+      return `${trimmed}Z`;
+    }
+
+    return trimmed;
+  }
   onPrompt(prompt: string): void {
     this.selectPrompt.emit(prompt);
   }
@@ -282,3 +312,5 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
       .replace(/'/g, '&#39;');
   }
 }
+
+
