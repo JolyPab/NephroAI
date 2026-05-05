@@ -5,9 +5,13 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from unittest.mock import patch
 
 from backend.database import Base, DoctorGrant, Patient, User, V2Document, V2Metric
 from backend.main import (
+    DoctorChatRequest,
+    doctor_patient_chat,
+    doctor_patient_chat_context,
     get_v2_doctor_patient_series,
     list_v2_doctor_patient_analytes,
     list_v2_doctor_patients,
@@ -151,6 +155,56 @@ def test_v2_non_doctor_cannot_list_doctor_patients():
     try:
         with pytest.raises(HTTPException) as exc:
             asyncio.run(list_v2_doctor_patients(user_id=patient_owner.id, db=db))
+        assert exc.value.status_code == 403
+    finally:
+        db.close()
+
+
+def test_doctor_chat_context_uses_patient_v2_metrics():
+    db, _patient_owner, patient, doctor_with_grant, _doctor_without_grant = _seed_db()
+    try:
+        context = asyncio.run(
+            doctor_patient_chat_context(patient_id=patient.id, user_id=doctor_with_grant.id, db=db)
+        )
+        metric_names = {item["name"] for item in context["metrics_snapshot"]}
+        assert "ALT_SERUM" in metric_names
+        assert context["latest_analysis_date"] is not None
+    finally:
+        db.close()
+
+
+def test_doctor_chat_sends_patient_v2_metrics_to_tool_chat():
+    db, _patient_owner, patient, doctor_with_grant, _doctor_without_grant = _seed_db()
+    try:
+        with patch("backend.main._openai_chat_with_tools", return_value="ALT dentro del rango de referencia.") as mock_llm:
+            response = asyncio.run(
+                doctor_patient_chat(
+                    patient_id=patient.id,
+                    payload=DoctorChatRequest(message="Resume los laboratorios recientes."),
+                    user_id=doctor_with_grant.id,
+                    db=db,
+                )
+            )
+        assert response.reply == "ALT dentro del rango de referencia."
+        metrics_arg = mock_llm.call_args.args[2]
+        assert "ALT_SERUM" in metrics_arg
+        assert metrics_arg["ALT_SERUM"][0]["value"] == 36.0
+    finally:
+        db.close()
+
+
+def test_doctor_chat_without_grant_gets_403():
+    db, _patient_owner, patient, _doctor_with_grant, doctor_without_grant = _seed_db()
+    try:
+        with pytest.raises(HTTPException) as exc:
+            asyncio.run(
+                doctor_patient_chat(
+                    patient_id=patient.id,
+                    payload=DoctorChatRequest(message="Resume los laboratorios recientes."),
+                    user_id=doctor_without_grant.id,
+                    db=db,
+                )
+            )
         assert exc.value.status_code == 403
     finally:
         db.close()

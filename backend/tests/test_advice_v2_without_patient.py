@@ -49,7 +49,7 @@ def test_advice_works_with_v2_data_when_patient_row_missing(monkeypatch):
     )
     db.commit()
 
-    monkeypatch.setattr("backend.main._openai_chat_completion_with_history", lambda *_args, **_kwargs: "ok")
+    monkeypatch.setattr("backend.main._openai_chat_with_tools", lambda *_args, **_kwargs: "ok")
     monkeypatch.setattr("backend.main._get_redis", lambda: None)
 
     response = asyncio.run(
