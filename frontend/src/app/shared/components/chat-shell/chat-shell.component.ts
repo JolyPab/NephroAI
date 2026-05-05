@@ -58,7 +58,6 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
     if (!value) return '';
 
     const raw = value instanceof Date ? value.toISOString() : String(value);
-    console.log('chat timestamp raw:', raw, 'normalized:', this.normalizeTimestamp(raw), 'local:', new Date(this.normalizeTimestamp(raw)).toString());
     const normalized = this.normalizeTimestamp(raw);
     const date = new Date(normalized);
 
