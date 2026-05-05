@@ -650,6 +650,44 @@ def _is_low_signal_advice(answer: str) -> bool:
 
 
 def _build_doctor_chat_context(db: Session, patient: Patient) -> Dict[str, Any]:
+    metrics_summary = _summarize_patient_metrics_for_ai(db, patient, days=36500)
+    if metrics_summary:
+        latest_dates = [
+            str(entry.get("t") or "")
+            for entries in metrics_summary.values()
+            for entry in entries[:1]
+            if entry.get("t")
+        ]
+        latest_ts = max(latest_dates) if latest_dates else None
+        metrics_snapshot = []
+        for name, entries in sorted(metrics_summary.items()):
+            if not entries:
+                continue
+            latest = entries[0]
+            metrics_snapshot.append(
+                {
+                    "analyte_key": name,
+                    "name": name,
+                    "value_num": latest.get("value"),
+                    "value_text": latest.get("value_text"),
+                    "unit": latest.get("unit"),
+                    "ref_min": latest.get("ref_min"),
+                    "ref_max": latest.get("ref_max"),
+                    "date": latest.get("t"),
+                }
+            )
+            if len(metrics_snapshot) >= 20:
+                break
+
+        return {
+            "patient": {"id": patient.id, "name": patient.full_name},
+            "latest_analysis_date": latest_ts,
+            "recent_analyses": [{"date": latest_ts, "source": "v2_documents"}] if latest_ts else [],
+            "metrics_snapshot": metrics_snapshot,
+            "trends": {},
+            "egfr": None,
+        }
+
     results = db.query(LabResult).filter(LabResult.patient_id == patient.id).all()
     results.sort(
         key=lambda r: (r.taken_at or r.created_at or dt.datetime.min),
@@ -752,6 +790,18 @@ def _build_doctor_chat_context(db: Session, patient: Patient) -> Dict[str, Any]:
         "trends": trends,
         "egfr": egfr_info,
     }
+
+
+def _summarize_patient_metrics_for_ai(db: Session, patient: Patient, days: int = 180) -> Dict[str, List[Dict[str, Any]]]:
+    """Collect the same lab context used by the patient AI chat for a granted patient."""
+    metrics_summary = _summarize_metrics_v2(db, user_id=patient.user_id, metric_names=None, days=days)
+    if not metrics_summary:
+        metrics_summary = _summarize_metrics(db, patient_id=patient.id, metric_names=None, days=days)
+    if not metrics_summary and days < 36500:
+        metrics_summary = _summarize_metrics_v2(db, user_id=patient.user_id, metric_names=None, days=36500)
+    if not metrics_summary and days < 36500:
+        metrics_summary = _summarize_metrics(db, patient_id=patient.id, metric_names=None, days=36500)
+    return metrics_summary
 
 
 def _trim_chat_context(context: Dict[str, Any], max_chars: int = 12000) -> Dict[str, Any]:
@@ -3608,49 +3658,99 @@ async def doctor_patient_chat(
     """Doctor-facing assistant chat with patient lab context."""
     doctor = db.query(User).filter(User.id == user_id).first()
     patient = _ensure_doctor_access(db, doctor, patient_id)
+    question = (payload.message or "").strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="Message is required")
 
-    context = _build_doctor_chat_context(db, patient)
-    if not context.get("metrics_snapshot") and not context.get("recent_analyses"):
+    metrics_summary = _summarize_patient_metrics_for_ai(db, patient, days=36500)
+    if not metrics_summary:
         return DoctorChatResponse(
-            reply="No lab data available yet for this patient. Upload/import reports first.",
+            reply="Todavía no hay datos de laboratorio disponibles para este paciente. Primero debe subir o importar informes.",
             disclaimer=False,
         )
 
-    context = _trim_chat_context(context)
-    context_text = json.dumps(context, ensure_ascii=False, indent=2)
-
-    history_lines = []
+    compact_summary = _build_compact_metrics_summary(metrics_summary)
+    history_messages: list[dict] = []
     for item in (payload.history or [])[-6:]:
-        role = (item.role or "").strip().upper()
+        role = (item.role or "").strip().lower()
+        if role not in {"user", "assistant"}:
+            continue
         content = (item.content or "").strip()
         if not content:
             continue
-        history_lines.append(f"{role}: {content}")
-    history_text = "\n".join(history_lines) if history_lines else "None"
+        history_messages.append({"role": role, "content": content})
+
+    notes_lines = []
+    v2_notes = (
+        db.query(V2DoctorNote)
+        .filter(V2DoctorNote.patient_user_id == patient.user_id)
+        .order_by(V2DoctorNote.updated_at.desc())
+        .limit(8)
+        .all()
+    )
+    for n in v2_notes:
+        meta = " · ".join(p for p in [n.analyte_key or "", n.t.isoformat() if n.t else ""] if p)
+        notes_lines.append(f"- [{meta}] {n.note}" if meta else f"- {n.note}")
+
+    legacy_notes = (
+        db.query(DoctorNote)
+        .filter(DoctorNote.patient_id == patient.id)
+        .order_by(DoctorNote.created_at.desc())
+        .limit(5)
+        .all()
+    )
+    for n in legacy_notes:
+        meta_parts = [p for p in [n.metric_name or "", n.metric_time or ""] if p]
+        prefix = f"[{' · '.join(meta_parts)}] " if meta_parts else ""
+        notes_lines.append(f"- {prefix}{n.text}")
+
+    bp_records = (
+        db.query(BloodPressure)
+        .filter(BloodPressure.user_id == patient.user_id)
+        .order_by(BloodPressure.measured_at.desc())
+        .limit(10)
+        .all()
+    )
+    bp_lines = []
+    for r in bp_records:
+        date_str = r.measured_at.strftime("%Y-%m-%d %H:%M")
+        line = f"- {date_str}: {r.systolic}/{r.diastolic} mmHg"
+        if r.pulse:
+            line += f", pulso {r.pulse} lpm"
+        if r.notes:
+            line += f" ({r.notes})"
+        bp_lines.append(line)
 
     system_prompt = (
-        "You are a clinical assistant supporting a doctor. "
-        "Use the provided lab context to summarize trends, highlight anomalies/risks, "
-        "and suggest what to clarify and what to check next. "
-        "Do not prescribe treatments or dosages. "
-        "Provide concise, structured bullet points. "
-        "If data are insufficient, ask clarifying questions. "
-        "Reply in the same language as the doctor's question."
+        "Eres NephroAI, un asistente clínico de apoyo para médicos en Ecuador, "
+        "especializado en seguimiento nefrológico y análisis de laboratorio.\n\n"
+        "Usa el contexto de laboratorio del paciente para resumir tendencias, destacar "
+        "valores fuera de rango o riesgos, y sugerir qué aclarar o verificar después. "
+        "No inventes datos, no diagnostiques de forma definitiva y no prescribas tratamientos "
+        "ni dosis. Responde de forma concisa, estructurada y útil para una consulta médica.\n\n"
+        "Siempre responde en español."
     )
 
-    user_prompt = "\n".join(
-        [
-            "PATIENT_CONTEXT:",
-            context_text,
-            "",
-            "CONVERSATION_HISTORY:",
-            history_text,
-            "",
-            f"QUESTION: {payload.message}",
-        ]
-    )
+    user_prompt_parts = [
+        f"Paciente: {patient.full_name or ('#' + str(patient.id))}",
+        f"Pregunta del médico: {question}",
+        "",
+        "Resumen de todos los análisis disponibles del paciente (usa get_metric_details para obtener el historial completo de cualquier métrica):",
+        compact_summary,
+    ]
+    if bp_lines:
+        user_prompt_parts.append("Registros de presión arterial del paciente (más recientes primero):")
+        user_prompt_parts.extend(bp_lines)
+    if notes_lines:
+        user_prompt_parts.append("Notas médicas recientes:")
+        user_prompt_parts.extend(notes_lines)
+    history_messages.append({"role": "user", "content": "\n".join(user_prompt_parts)})
 
-    reply = _openai_chat_completion(system_prompt, user_prompt)
+    reply = _openai_chat_with_tools(system_prompt, history_messages, metrics_summary)
+    if isinstance(reply, str):
+        reply = reply.strip()
+    if not reply or _is_low_signal_advice(reply):
+        reply = _build_deterministic_advice(metrics_summary, "es", 36500)
     return DoctorChatResponse(reply=reply, disclaimer=True)
 
 
