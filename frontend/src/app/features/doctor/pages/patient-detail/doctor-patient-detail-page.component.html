@@ -54,13 +54,14 @@
       {{ errorMessage }}
     </div>
 
-    <app-v2-series-page
-      *ngIf="!loading && !errorMessage && selectedMetric"
-      [embedded]="true"
-      [analyteKeyInput]="selectedMetric"
-      [doctorPatientId]="patientId"
-      (pointSelected)="onSeriesPointSelected($event)"
-    ></app-v2-series-page>
+    <div class="doctor-series-panel" *ngIf="!loading && !errorMessage && selectedMetric">
+      <app-v2-series-page
+        [embedded]="true"
+        [analyteKeyInput]="selectedMetric"
+        [doctorPatientId]="patientId"
+        (pointSelected)="onSeriesPointSelected($event)"
+      ></app-v2-series-page>
+    </div>
 
     <div class="note-island glass glass-soft" *ngIf="!loading && !errorMessage">
       <div>

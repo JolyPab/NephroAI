@@ -150,3 +150,53 @@
   display: flex;
   flex-direction: column;
 }
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.series-page--embedded .timeline-list {
+  max-height: clamp(220px, 42vh, 520px);
+  overflow-y: auto;
+  padding-right: 0.35rem;
+  overscroll-behavior: contain;
+}
+
+.series-page--embedded .timeline-row {
+  flex: 0 0 auto;
+}
+
+.series-page--embedded .timeline-list::-webkit-scrollbar {
+  width: 0.45rem;
+}
+
+.series-page--embedded .timeline-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.series-page--embedded .timeline-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.series-page--embedded {
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.series-page--embedded .series-chart-shell {
+  max-height: clamp(240px, 38vh, 480px);
+  overflow: hidden;
+}
+
+.series-page--embedded .series-chart-canvas {
+  min-height: 180px;
+  max-height: 360px;
+}
+
+.series-page--embedded .timeline-list {
+  max-height: clamp(180px, 34vh, 420px);
+  overflow-y: auto;
+}

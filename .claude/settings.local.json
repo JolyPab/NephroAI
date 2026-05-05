@@ -7,7 +7,8 @@
       "mcp__plugin_playwright_playwright__browser_take_screenshot",
       "Bash(/c/Users/jolypab/AppData/Local/Microsoft/WindowsApps/python3.11.exe -m pytest backend/tests/test_chat_sessions.py -v)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('main.py'\\).read\\(\\)\\); print\\('OK'\\)\")"
     ]
   }
 }
