@@ -444,6 +444,21 @@ def get_session_factory(engine):
     return sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def create_all_tables(engine) -> None:
+    """Create tables, serialized on Postgres to avoid multi-worker startup races."""
+    if engine.dialect.name != "postgresql":
+        Base.metadata.create_all(bind=engine)
+        return
+
+    lock_id = 27401989
+    with engine.begin() as conn:
+        conn.execute(text("SELECT pg_advisory_lock(:lock_id)"), {"lock_id": lock_id})
+        try:
+            Base.metadata.create_all(bind=conn)
+        finally:
+            conn.execute(text("SELECT pg_advisory_unlock(:lock_id)"), {"lock_id": lock_id})
+
+
 def ensure_email_code_purpose_column(engine) -> list[str]:
     """Add purpose column to email_verification_codes if missing."""
     try:
@@ -466,12 +481,12 @@ def ensure_email_code_purpose_column(engine) -> list[str]:
 
 def ensure_chat_tables(engine) -> None:
     """Create chat_sessions, chat_message_records, patient_memory if not present."""
-    Base.metadata.create_all(bind=engine)
+    create_all_tables(engine)
 
 
 def init_db(engine):
     """Initialize database tables."""
-    Base.metadata.create_all(bind=engine)
+    create_all_tables(engine)
     added_columns = ensure_lab_results_columns(engine)
     user_added_columns = ensure_users_columns(engine)
     code_added_columns = ensure_email_code_purpose_column(engine)
