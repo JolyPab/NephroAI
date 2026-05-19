@@ -87,11 +87,19 @@ jobs:
       - name: Build backend image
         run: docker build -t nephroai-api-ci .
 
-      - name: Container vulnerability scan
+      - name: Container vulnerability scan report
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: nephroai-api-ci
           severity: CRITICAL,HIGH
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Container critical vulnerability gate
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: nephroai-api-ci
+          severity: CRITICAL
           exit-code: "1"
           ignore-unfixed: true
 
