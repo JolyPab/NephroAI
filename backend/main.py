@@ -5,7 +5,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends, Web
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.sql import over
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -61,6 +61,7 @@ from backend.database import (
     PatientMemory,
     BloodPressure,
     BodyTemperature,
+    AuditLog,
     save_parsed_records,
 )
 from backend.auth import decode_token, get_current_user_id
@@ -167,6 +168,35 @@ def get_current_user(user_id: int = Depends(get_current_user_id), db: Session = 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+def write_audit_log(
+    db: Session,
+    *,
+    actor_user_id: Optional[int],
+    action: str,
+    resource_type: str,
+    resource_id: Optional[Any] = None,
+    patient_id: Optional[int] = None,
+    doctor_id: Optional[int] = None,
+    actor_role: Optional[str] = None,
+    status: str = "success",
+    metadata: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Record a low-PII audit event without committing the transaction."""
+    db.add(
+        AuditLog(
+            actor_user_id=actor_user_id,
+            actor_role=actor_role,
+            action=action,
+            resource_type=resource_type,
+            resource_id=str(resource_id) if resource_id is not None else None,
+            patient_id=patient_id,
+            doctor_id=doctor_id,
+            status=status,
+            metadata_json=metadata or None,
+        )
+    )
 
 # Load environment variables from .env file
 ENV_PATH = Path(__file__).resolve().parent / ".env"
@@ -1509,6 +1539,16 @@ async def create_v2_document(
                 .scalar()
                 or 0
             )
+            write_audit_log(
+                db,
+                actor_user_id=user_id,
+                actor_role="patient",
+                action="v2_document_duplicate_upload",
+                resource_type="v2_document",
+                resource_id=existing_doc.id,
+                metadata={"num_metrics": int(num_metrics)},
+            )
+            db.commit()
             return {
                 "status": "duplicate",
                 "document_id": existing_doc.id,
@@ -1548,6 +1588,15 @@ async def create_v2_document(
                 )
             )
 
+        write_audit_log(
+            db,
+            actor_user_id=user_id,
+            actor_role="patient",
+            action="v2_document_created",
+            resource_type="v2_document",
+            resource_id=doc.id,
+            metadata={"num_metrics": len(payload.metrics)},
+        )
         db.commit()
         r = _get_redis()
         if r:
@@ -1714,6 +1763,15 @@ async def delete_v2_document(
         or 0
     )
     try:
+        write_audit_log(
+            db,
+            actor_user_id=user_id,
+            actor_role="patient",
+            action="v2_document_deleted",
+            resource_type="v2_document",
+            resource_id=document.id,
+            metadata={"num_metrics_deleted": int(num_metrics)},
+        )
         db.delete(document)
         db.commit()
     except Exception as exc:
@@ -1859,6 +1917,16 @@ async def list_v2_doctor_patients(
         )
 
     result.sort(key=lambda item: ((item.display_name or item.email or "").lower(), item.patient_id))
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor",
+        action="doctor_patient_list_viewed",
+        resource_type="doctor_patient_list",
+        doctor_id=doctor.id,
+        metadata={"patients_returned": len(result)},
+    )
+    db.commit()
     return result
 
 
@@ -1871,7 +1939,20 @@ async def list_v2_doctor_patient_analytes(
     """List V2 analytes for a granted patient in doctor scope."""
     doctor = db.query(User).filter(User.id == user_id).first()
     patient = _ensure_doctor_access(db, doctor, patient_id)
-    return _query_v2_analytes_for_user(db, patient.user_id)
+    result = _query_v2_analytes_for_user(db, patient.user_id)
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor",
+        action="doctor_patient_analytes_viewed",
+        resource_type="patient",
+        resource_id=patient.id,
+        patient_id=patient.id,
+        doctor_id=doctor.id if doctor else None,
+        metadata={"analytes_returned": len(result)},
+    )
+    db.commit()
+    return result
 
 
 @app.get("/api/v2/doctor/patients/{patient_id}/series", response_model=V2SeriesResponse)
@@ -1913,6 +1994,18 @@ async def get_v2_doctor_patient_series(
             }
         )
 
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor",
+        action="doctor_patient_series_viewed",
+        resource_type="patient",
+        resource_id=patient.id,
+        patient_id=patient.id,
+        doctor_id=doctor.id if doctor else None,
+        metadata={"analyte_key": analyte_key, "points_returned": len(points)},
+    )
+    db.commit()
     return {
         "analyte_key": analyte_key,
         "raw_name": latest_raw_name,
@@ -1971,7 +2064,20 @@ async def list_v2_doctor_patient_notes(
         .all()
     )
     doctor_name = (doctor.full_name or doctor.email) if doctor else None
-    return [_serialize_v2_doctor_note(note, doctor_name=doctor_name) for note in rows]
+    result = [_serialize_v2_doctor_note(note, doctor_name=doctor_name) for note in rows]
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor",
+        action="doctor_patient_notes_viewed",
+        resource_type="patient",
+        resource_id=patient.id,
+        patient_id=patient.id,
+        doctor_id=doctor.id if doctor else None,
+        metadata={"analyte_key": analyte_key, "notes_returned": len(result)},
+    )
+    db.commit()
+    return result
 
 
 @app.post("/api/v2/doctor/patients/{patient_id}/notes", response_model=V2DoctorNoteResponse)
@@ -2019,6 +2125,18 @@ async def upsert_v2_doctor_patient_note(
         )
         db.add(note_row)
 
+    db.flush()
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor",
+        action="doctor_note_upserted",
+        resource_type="v2_doctor_note",
+        resource_id=note_row.id,
+        patient_id=patient.id,
+        doctor_id=doctor.id if doctor else None,
+        metadata={"analyte_key": payload.analyte_key},
+    )
     db.commit()
     db.refresh(note_row)
 
@@ -2600,6 +2718,49 @@ async def health():
     """Health check endpoint."""
     return {"status": "healthy"}
 
+
+@app.get("/api/health/ready")
+async def readiness():
+    """Readiness check for dependencies used by production traffic."""
+    checks: Dict[str, str] = {}
+
+    try:
+        db = SessionLocal()
+        try:
+            db.execute(text("SELECT 1"))
+            checks["database"] = "ok"
+        finally:
+            db.close()
+    except Exception:
+        logger.exception("Readiness database check failed")
+        checks["database"] = "error"
+
+    require_redis = (os.getenv("REQUIRE_REDIS_HEALTH") or ("true" if _is_production else "false")).lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    if require_redis:
+        try:
+            redis_client = _get_redis()
+            if redis_client is None:
+                checks["redis"] = "error"
+            else:
+                redis_client.ping()
+                checks["redis"] = "ok"
+        except Exception:
+            logger.exception("Readiness redis check failed")
+            checks["redis"] = "error"
+    else:
+        checks["redis"] = "skipped"
+
+    ready = all(value in {"ok", "skipped"} for value in checks.values())
+    status_code = 200 if ready else 503
+    return JSONResponse(
+        status_code=status_code,
+        content={"status": "ready" if ready else "not_ready", "checks": checks},
+    )
+
 def _ensure_doctor_access(db: Session, doctor_user: User, patient_id: int) -> Patient:
     """Ensure doctor has an active grant to the patient and return patient."""
     if not doctor_user or not doctor_user.is_doctor:
@@ -2884,6 +3045,18 @@ async def grant_doctor_access(
             granted_at=now,
         )
         db.add(grant)
+    db.flush()
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="patient",
+        action="doctor_grant_created",
+        resource_type="doctor_grant",
+        resource_id=grant.id,
+        patient_id=patient.id,
+        doctor_id=doctor_id,
+        metadata={"doctor_email": doctor_email, "can_message": bool(grant.can_message), "can_call": bool(grant.can_call)},
+    )
     db.commit()
     db.refresh(grant)
     doctor_user = _resolve_doctor_user(db, grant.doctor_id, grant.doctor_email)
@@ -2999,6 +3172,18 @@ async def create_consultation_thread(
             db.commit()
 
     thread = _get_or_create_consultation_thread(db, patient, doctor, grant, user_id)
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor" if user.is_doctor else "patient",
+        action="consultation_thread_opened",
+        resource_type="consultation_thread",
+        resource_id=thread.id,
+        patient_id=patient.id,
+        doctor_id=doctor.id,
+        metadata={"grant_id": grant.id},
+    )
+    db.commit()
     item = _serialize_consultation_thread(db, thread, grant, user_id)
     await _broadcast_consultation_event(db, thread, "thread.updated", {"thread": item})
     return item
@@ -3070,6 +3255,16 @@ async def create_consultation_message(
     )
     thread.updated_at = dt.datetime.utcnow()
     db.add(message)
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor" if user.is_doctor else "patient",
+        action="consultation_message_created",
+        resource_type="consultation_thread",
+        resource_id=thread.id,
+        patient_id=thread.patient_id,
+        doctor_id=thread.doctor_id,
+    )
     db.commit()
     db.refresh(message)
     item = ConsultationMessageItem(
@@ -3136,6 +3331,17 @@ async def update_consultation_permissions(
         grant.can_message = payload.can_message
     if payload.can_call is not None:
         grant.can_call = payload.can_call
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="patient",
+        action="doctor_grant_permissions_updated",
+        resource_type="doctor_grant",
+        resource_id=grant.id,
+        patient_id=patient.id,
+        doctor_id=grant.doctor_id,
+        metadata={"can_message": bool(grant.can_message), "can_call": bool(grant.can_call)},
+    )
     db.commit()
     db.refresh(grant)
     thread = (
@@ -3219,6 +3425,18 @@ async def create_consultation_call(
         livekit_room=f"consultation-{thread.id}-{int(dt.datetime.utcnow().timestamp())}",
     )
     db.add(call)
+    db.flush()
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor",
+        action="consultation_call_started",
+        resource_type="consultation_call",
+        resource_id=call.id,
+        patient_id=thread.patient_id,
+        doctor_id=user.id,
+        metadata={"thread_id": thread.id},
+    )
     db.commit()
     db.refresh(call)
     item = _serialize_consultation_call(db, call)
@@ -3273,6 +3491,17 @@ async def update_consultation_call(
     else:
         raise HTTPException(status_code=400, detail="Unsupported call action")
 
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor" if user.is_doctor else "patient",
+        action=f"consultation_call_{action}",
+        resource_type="consultation_call",
+        resource_id=call.id,
+        patient_id=thread.patient_id,
+        doctor_id=call.doctor_id,
+        metadata={"thread_id": thread.id},
+    )
     db.commit()
     db.refresh(call)
     item = _serialize_consultation_call(db, call)
@@ -3645,6 +3874,21 @@ async def doctor_patient_chat_context(
     patient = _ensure_doctor_access(db, doctor, patient_id)
     context = _build_doctor_chat_context(db, patient)
     context = _trim_chat_context(context)
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor",
+        action="doctor_ai_context_viewed",
+        resource_type="patient",
+        resource_id=patient.id,
+        patient_id=patient.id,
+        doctor_id=doctor.id if doctor else None,
+        metadata={
+            "metrics_snapshot_count": len(context.get("metrics_snapshot") or []),
+            "recent_analyses_count": len(context.get("recent_analyses") or []),
+        },
+    )
+    db.commit()
     return context
 
 
@@ -3751,6 +3995,22 @@ async def doctor_patient_chat(
         reply = reply.strip()
     if not reply or _is_low_signal_advice(reply):
         reply = _build_deterministic_advice(metrics_summary, "es", 36500)
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="doctor",
+        action="doctor_ai_chat_completed",
+        resource_type="patient",
+        resource_id=patient.id,
+        patient_id=patient.id,
+        doctor_id=doctor.id if doctor else None,
+        metadata={
+            "metrics_count": len(metrics_summary),
+            "history_count": len(payload.history or []),
+            "reply_chars": len(reply or ""),
+        },
+    )
+    db.commit()
     return DoctorChatResponse(reply=reply, disclaimer=True)
 
 
@@ -3835,6 +4095,17 @@ async def revoke_grant(
     if not grant:
         raise HTTPException(status_code=404, detail="Grant not found")
     grant.revoked_at = dt.datetime.utcnow()
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="patient",
+        action="doctor_grant_revoked",
+        resource_type="doctor_grant",
+        resource_id=grant.id,
+        patient_id=patient.id,
+        doctor_id=grant.doctor_id,
+        metadata={"doctor_email": grant.doctor_email},
+    )
     db.commit()
     db.refresh(grant)
     doctor_user = _resolve_doctor_user(db, grant.doctor_id, grant.doctor_email)
@@ -4060,6 +4331,21 @@ async def get_advice(
 
     if not metrics_summary:
         raise HTTPException(status_code=400, detail="No lab data available for advice.")
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="patient",
+        action="patient_ai_context_built",
+        resource_type="chat_session",
+        resource_id=session.id,
+        patient_id=patient.id if patient else None,
+        metadata={
+            "metrics_count": len(metrics_summary),
+            "days": days,
+            "memory_count": len(memory_facts),
+            "session_id": session.id,
+        },
+    )
 
     # ── 5b. Build compact summary of ALL metrics for Function Calling ──────
     compact_summary = _build_compact_metrics_summary(metrics_summary)
@@ -4162,6 +4448,20 @@ async def get_advice(
     if not session.title:
         session.title = req.question[:60]
     session.updated_at = dt.datetime.utcnow()
+    write_audit_log(
+        db,
+        actor_user_id=user_id,
+        actor_role="patient",
+        action="patient_ai_chat_completed",
+        resource_type="chat_session",
+        resource_id=session.id,
+        patient_id=patient.id if patient else None,
+        metadata={
+            "metrics_count": len(metrics_summary),
+            "reply_chars": len(answer or ""),
+            "session_id": session.id,
+        },
+    )
     db.commit()
 
     # ── 10. Async memory extraction ───────────────────────────────────────

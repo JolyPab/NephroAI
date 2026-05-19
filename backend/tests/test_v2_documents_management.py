@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from backend.database import Base, User, V2Document, V2Metric
+from backend.database import AuditLog, Base, User, V2Document, V2Metric
 from backend.main import delete_v2_document, list_v2_documents
 
 
@@ -104,6 +104,10 @@ def test_list_v2_documents_and_delete_cascades_metrics():
     assert deleted["num_metrics_deleted"] == 2
     assert db.query(V2Document).filter(V2Document.id == doc2.id).count() == 0
     assert db.query(V2Metric).filter(V2Metric.document_id == doc2.id).count() == 0
+    audit = db.query(AuditLog).filter(AuditLog.action == "v2_document_deleted").one()
+    assert audit.actor_user_id == user.id
+    assert audit.resource_id == doc2.id
+    assert audit.metadata_json == {"num_metrics_deleted": 2}
 
     # Foreign user's doc remains untouched.
     assert db.query(V2Document).filter(V2Document.id == foreign_doc.id).count() == 1

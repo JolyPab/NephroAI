@@ -397,6 +397,28 @@ class BodyTemperature(Base):
     user = relationship("User", foreign_keys=[user_id])
 
 
+class AuditLog(Base):
+    """Append-only security audit trail for sensitive access and data changes."""
+
+    __tablename__ = "audit_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    actor_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    actor_role = Column(String(32), nullable=True)
+    action = Column(String(80), nullable=False, index=True)
+    resource_type = Column(String(80), nullable=False, index=True)
+    resource_id = Column(String, nullable=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=True, index=True)
+    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    status = Column(String(24), nullable=False, default="success")
+    metadata_json = Column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
+
+    actor = relationship("User", foreign_keys=[actor_user_id])
+    doctor = relationship("User", foreign_keys=[doctor_id])
+    patient = relationship("Patient", foreign_keys=[patient_id])
+
+
 def get_database_url(default_sqlite: Optional[str] = None) -> str:
     """Get database URL from environment or fallback to local SQLite."""
     if default_sqlite is None:

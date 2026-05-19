@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from backend.database import Base, DoctorGrant, Patient, User
+from backend.database import AuditLog, Base, DoctorGrant, Patient, User
 from backend.main import (
     ConsultationMessageCreate,
     ConsultationThreadCreate,
@@ -123,6 +123,10 @@ def test_patient_can_list_create_and_message_consultation():
 
         doctor_consultations = asyncio.run(list_consultations(user_id=doctor.id, db=db))
         assert doctor_consultations[0].unread_count == 0
+
+        actions = {row.action for row in db.query(AuditLog).all()}
+        assert "consultation_thread_opened" in actions
+        assert "consultation_message_created" in actions
     finally:
         db.close()
 
@@ -208,6 +212,12 @@ def test_call_lifecycle_requires_permission_and_patient_acceptance(monkeypatch):
         )
         assert ended.status == "ended"
         assert ended.ended_at is not None
+
+        actions = {row.action for row in db.query(AuditLog).all()}
+        assert "doctor_grant_permissions_updated" in actions
+        assert "consultation_call_started" in actions
+        assert "consultation_call_accept" in actions
+        assert "consultation_call_end" in actions
     finally:
         db.close()
 

@@ -16,7 +16,7 @@ from backend.auth_routes import (
     resend_email_code,
     verify_email,
 )
-from backend.database import Base, EmailVerificationCode, User
+from backend.database import AuditLog, Base, EmailVerificationCode, User
 
 
 def _setup_db():
@@ -69,6 +69,11 @@ def test_register_verify_and_login_flow(monkeypatch):
     login_response = asyncio.run(login(UserLogin(email="verify@example.com", password="super-secret-123"), db=db))
     assert login_response.accessToken
     assert login_response.user.email_verified is True
+    actions = {row.action for row in db.query(AuditLog).all()}
+    assert "auth_register_started" in actions
+    assert "auth_email_verify_failed" in actions
+    assert "auth_email_verify_success" in actions
+    assert "auth_login_success" in actions
     db.close()
 
 

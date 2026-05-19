@@ -3,7 +3,7 @@ import datetime as dt
 from unittest.mock import patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.database import Base, User, V2Document, V2Metric, ChatSession, ChatMessageRecord
+from backend.database import AuditLog, Base, User, V2Document, V2Metric, ChatSession, ChatMessageRecord
 from backend.main import AdviceRequest, get_advice
 
 
@@ -43,6 +43,9 @@ def test_advice_creates_session_when_none_provided():
     session = db.query(ChatSession).filter_by(user_id=user.id).first()
     assert session is not None
     assert "creatinina" in (session.title or "").lower()
+    actions = {row.action for row in db.query(AuditLog).all()}
+    assert "patient_ai_context_built" in actions
+    assert "patient_ai_chat_completed" in actions
     db.close()
 
 

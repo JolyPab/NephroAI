@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from unittest.mock import patch
 
-from backend.database import Base, DoctorGrant, Patient, User, V2Document, V2Metric
+from backend.database import AuditLog, Base, DoctorGrant, Patient, User, V2Document, V2Metric
 from backend.main import (
     DoctorChatRequest,
     doctor_patient_chat,
@@ -119,6 +119,11 @@ def test_v2_doctor_with_grant_can_fetch_patient_analytes_and_series():
         assert series["unit"] == "U/L"
         assert len(series["points"]) == 1
         assert series["points"][0]["y"] == 36.0
+
+        actions = {row.action for row in db.query(AuditLog).all()}
+        assert "doctor_patient_list_viewed" in actions
+        assert "doctor_patient_analytes_viewed" in actions
+        assert "doctor_patient_series_viewed" in actions
     finally:
         db.close()
 
@@ -169,6 +174,7 @@ def test_doctor_chat_context_uses_patient_v2_metrics():
         metric_names = {item["name"] for item in context["metrics_snapshot"]}
         assert "ALT_SERUM" in metric_names
         assert context["latest_analysis_date"] is not None
+        assert db.query(AuditLog).filter(AuditLog.action == "doctor_ai_context_viewed").count() == 1
     finally:
         db.close()
 
@@ -189,6 +195,7 @@ def test_doctor_chat_sends_patient_v2_metrics_to_tool_chat():
         metrics_arg = mock_llm.call_args.args[2]
         assert "ALT_SERUM" in metrics_arg
         assert metrics_arg["ALT_SERUM"][0]["value"] == 36.0
+        assert db.query(AuditLog).filter(AuditLog.action == "doctor_ai_chat_completed").count() == 1
     finally:
         db.close()
 

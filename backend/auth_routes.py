@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.orm import Session
 from typing import Optional
-from backend.database import EmailVerificationCode, User, SessionLocal
+from backend.database import AuditLog, EmailVerificationCode, User, SessionLocal
 from backend.auth import (
     get_password_hash,
     verify_password,
@@ -161,6 +161,29 @@ def get_db():
         db.close()
 
 
+def _audit_auth_event(
+    db: Session,
+    *,
+    action: str,
+    email: str,
+    status_value: str,
+    user: User | None = None,
+    metadata: dict | None = None,
+) -> None:
+    """Record auth audit events without storing passwords, OTPs, or tokens."""
+    db.add(
+        AuditLog(
+            actor_user_id=user.id if user else None,
+            actor_role="doctor" if user and user.is_doctor else ("patient" if user else None),
+            action=action,
+            resource_type="auth",
+            resource_id=str(user.id) if user else None,
+            status=status_value,
+            metadata_json={"email": email.lower(), **(metadata or {})},
+        )
+    )
+
+
 def _hash_email_code(code: str) -> str:
     digest = hashlib.sha256(f"{EMAIL_CODE_SALT}:{code}".encode("utf-8")).hexdigest()
     return digest
@@ -251,6 +274,15 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     # Check if user exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
+        _audit_auth_event(
+            db,
+            action="auth_register_failed",
+            email=user_data.email,
+            status_value="failure",
+            user=existing_user,
+            metadata={"reason": "email_exists"},
+        )
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
@@ -270,6 +302,13 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         db.add(db_user)
         db.flush()
         _create_verification_code(db, db_user)
+        _audit_auth_event(
+            db,
+            action="auth_register_started",
+            email=db_user.email,
+            status_value="success",
+            user=db_user,
+        )
         db.commit()
     except HTTPException:
         db.rollback()
@@ -294,6 +333,14 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     # Find user
     user = db.query(User).filter(User.email == user_data.email).first()
     if not user:
+        _audit_auth_event(
+            db,
+            action="auth_login_failed",
+            email=user_data.email,
+            status_value="failure",
+            metadata={"reason": "not_found"},
+        )
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
@@ -301,6 +348,15 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     
     # Verify password
     if not verify_password(user_data.password, user.hashed_password):
+        _audit_auth_event(
+            db,
+            action="auth_login_failed",
+            email=user.email,
+            status_value="failure",
+            user=user,
+            metadata={"reason": "bad_password"},
+        )
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
@@ -308,6 +364,15 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     
     # Check if active
     if not user.is_active:
+        _audit_auth_event(
+            db,
+            action="auth_login_failed",
+            email=user.email,
+            status_value="failure",
+            user=user,
+            metadata={"reason": "inactive"},
+        )
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Email not verified. Please verify your email."
@@ -315,6 +380,14 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     
     # Create access token
     access_token = create_access_token(data={"sub": user.id})
+    _audit_auth_event(
+        db,
+        action="auth_login_success",
+        email=user.email,
+        status_value="success",
+        user=user,
+    )
+    db.commit()
     
     # Return user + token for frontend
     return AuthResponse(
@@ -332,6 +405,15 @@ async def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db
 
     if user.email_verified_at is not None and user.is_active:
         access_token = create_access_token(data={"sub": user.id})
+        _audit_auth_event(
+            db,
+            action="auth_email_verify_success",
+            email=user.email,
+            status_value="success",
+            user=user,
+            metadata={"already_verified": True},
+        )
+        db.commit()
         return AuthResponse(accessToken=access_token, user=_build_user_response(user))
 
     code_row = (
@@ -360,12 +442,27 @@ async def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db
     expected_hash = _hash_email_code(payload.code)
     if not hmac.compare_digest(expected_hash, code_row.code_hash):
         code_row.attempts = code_row.attempts + 1
+        _audit_auth_event(
+            db,
+            action="auth_email_verify_failed",
+            email=user.email,
+            status_value="failure",
+            user=user,
+            metadata={"reason": "bad_code", "attempts": code_row.attempts},
+        )
         db.commit()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code.")
 
     user.email_verified_at = now
     user.is_active = True
     code_row.used_at = now
+    _audit_auth_event(
+        db,
+        action="auth_email_verify_success",
+        email=user.email,
+        status_value="success",
+        user=user,
+    )
     db.commit()
     db.refresh(user)
 
@@ -410,9 +507,25 @@ async def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(
     """Send password-reset code. Always returns 200 to prevent account enumeration."""
     user = db.query(User).filter(User.email == payload.email).first()
     if not user:
+        _audit_auth_event(
+            db,
+            action="auth_password_reset_requested",
+            email=payload.email,
+            status_value="success",
+            metadata={"account_exists": False},
+        )
+        db.commit()
         return StatusResponse(status="ok")
     try:
         _create_verification_code(db, user, purpose="password_reset")
+        _audit_auth_event(
+            db,
+            action="auth_password_reset_requested",
+            email=user.email,
+            status_value="success",
+            user=user,
+            metadata={"account_exists": True},
+        )
         db.commit()
     except HTTPException as exc:
         db.rollback()
@@ -463,10 +576,25 @@ async def verify_reset_code(payload: VerifyResetCodeRequest, db: Session = Depen
     expected_hash = _hash_email_code(payload.code)
     if not hmac.compare_digest(expected_hash, code_row.code_hash):
         code_row.attempts = code_row.attempts + 1
+        _audit_auth_event(
+            db,
+            action="auth_password_reset_verify_failed",
+            email=user.email,
+            status_value="failure",
+            user=user,
+            metadata={"reason": "bad_code", "attempts": code_row.attempts},
+        )
         db.commit()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset code.")
 
     code_row.used_at = now
+    _audit_auth_event(
+        db,
+        action="auth_password_reset_verify_success",
+        email=user.email,
+        status_value="success",
+        user=user,
+    )
     db.commit()
 
     reset_token = create_access_token(
@@ -501,6 +629,13 @@ async def reset_password(payload: ResetPasswordRequest, db: Session = Depends(ge
         EmailVerificationCode.used_at.is_(None),
     ).update({"used_at": now})
 
+    _audit_auth_event(
+        db,
+        action="auth_password_reset_completed",
+        email=user.email,
+        status_value="success",
+        user=user,
+    )
     db.commit()
     return StatusResponse(status="ok")
 

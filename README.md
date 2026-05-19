@@ -42,6 +42,7 @@ NephroAI transforms unstructured PDF lab results into interactive charts, tracki
 ```bash
 git clone https://github.com/JolyPab/NephroAI.git
 cd NephroAI
+cp .env.example .env
 docker-compose up --build
 ```
 
@@ -107,6 +108,12 @@ We believe every patient deserves to understand their own health data, regardles
 - [ ] Mobile app
 - [ ] Integration with local lab providers
 - [ ] Latin America expansion
+
+---
+
+## Security and Compliance
+
+SOC 2 readiness materials and security architecture notes live in [`docs/compliance/`](docs/compliance/README.md).
 
 ---
 

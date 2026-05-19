@@ -3,9 +3,9 @@ services:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: medic
-      POSTGRES_PASSWORD: medic
-      POSTGRES_DB: medic
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
@@ -37,12 +37,16 @@ services:
     command: gunicorn -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:8000 --timeout 330 main:app
     working_dir: /app/backend
     environment:
-      DATABASE_URL: postgresql://medic:medic@db:5432/medic
+      DATABASE_URL: postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:?POSTGRES_DB is required}
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: ${JWT_SECRET:-}
       SECRET_KEY: ${SECRET_KEY:-}
+      ENV: ${ENV:-production}
+      APP_ENV: ${APP_ENV:-${ENV:-production}}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://app.nephroai.ec}
+      REQUIRE_REDIS_HEALTH: ${REQUIRE_REDIS_HEALTH:-true}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       UPLOAD_DIR: /app/uploads
       SMTP_HOST: ${SMTP_HOST:-}
@@ -74,12 +78,16 @@ services:
     command: celery -A tasks worker --loglevel=info
     working_dir: /app/backend
     environment:
-      DATABASE_URL: postgresql://medic:medic@db:5432/medic
+      DATABASE_URL: postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:?POSTGRES_DB is required}
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: ${JWT_SECRET:-}
       SECRET_KEY: ${SECRET_KEY:-}
+      ENV: ${ENV:-production}
+      APP_ENV: ${APP_ENV:-${ENV:-production}}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://app.nephroai.ec}
+      REQUIRE_REDIS_HEALTH: ${REQUIRE_REDIS_HEALTH:-true}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       UPLOAD_DIR: /app/uploads
       SMTP_HOST: ${SMTP_HOST:-}

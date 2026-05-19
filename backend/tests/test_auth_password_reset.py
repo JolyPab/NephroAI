@@ -21,7 +21,7 @@ from backend.auth_routes import (
     verify_email,
     login,
 )
-from backend.database import Base, EmailVerificationCode, User
+from backend.database import AuditLog, Base, EmailVerificationCode, User
 
 
 def _setup_db():
@@ -91,6 +91,10 @@ def test_full_reset_flow(monkeypatch):
 
     auth_resp = asyncio.run(login(UserLogin(email="reset@example.com", password="new-password-2"), db=db))
     assert auth_resp.accessToken is not None
+    actions = {row.action for row in db.query(AuditLog).all()}
+    assert "auth_password_reset_requested" in actions
+    assert "auth_password_reset_verify_success" in actions
+    assert "auth_password_reset_completed" in actions
 
 
 def test_reset_code_wrong_code(monkeypatch):
