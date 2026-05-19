@@ -22,7 +22,7 @@ run_capture() {
   } > "$OUT_DIR/$name.txt" 2>&1 || {
     status="$?"
     echo "command failed with status $status" >> "$OUT_DIR/$name.txt"
-    return "$status"
+    return 0
   }
 }
 
