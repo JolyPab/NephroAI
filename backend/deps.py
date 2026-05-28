@@ -43,6 +43,7 @@ from backend.database import (
     get_session_factory,
     init_db,
     get_database_url,
+    SessionLocal,
     DoctorGrant,
     DoctorNote,
     ConsultationThread,
