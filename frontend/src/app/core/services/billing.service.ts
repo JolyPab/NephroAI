@@ -26,8 +26,8 @@ export class BillingService {
     return this.api.get<BillingSubscription>('/billing/subscription');
   }
 
-  createCheckoutSession(): Observable<CheckoutSession> {
-    return this.api.post<CheckoutSession>('/billing/checkout-session', {});
+  createCheckoutSession(interval: 'monthly' | 'yearly' = 'monthly'): Observable<CheckoutSession> {
+    return this.api.post<CheckoutSession>('/billing/checkout-session', { interval });
   }
 
   createPortalSession(): Observable<PortalSession> {

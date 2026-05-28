@@ -38,6 +38,9 @@ class BillingSubscriptionResponse(BaseModel):
     current_period_end: str | None = None
 
 
+class CheckoutSessionRequest(BaseModel):
+    interval: str = "monthly"
+
 class CheckoutSessionResponse(BaseModel):
     checkout_url: str
     session_id: str
@@ -78,10 +81,13 @@ def _app_base_url() -> str:
     return url.rstrip("/")
 
 
-def _stripe_price_id() -> str:
-    price_id = (os.getenv("STRIPE_PRICE_ID") or "").strip()
+def _stripe_price_id(interval: str = "monthly") -> str:
+    env_var = "STRIPE_PRICE_ID_YEARLY" if interval == "yearly" else "STRIPE_PRICE_ID_MONTHLY"
+    price_id = (os.getenv(env_var) or "").strip()
     if not price_id:
-        raise HTTPException(status_code=500, detail="STRIPE_PRICE_ID is not configured.")
+        price_id = (os.getenv("STRIPE_PRICE_ID") or "").strip()
+    if not price_id:
+        raise HTTPException(status_code=500, detail=f"{env_var} is not configured.")
     return price_id
 
 
@@ -168,7 +174,7 @@ def _sync_subscription_from_stripe_object(db: Session, subscription_obj: Any, us
         stripe_subscription_id=stripe_subscription_id,
     )
     subscription.status = _map_subscription_status(_get_value(subscription_obj, "status"))
-    subscription.plan_id = _stripe_price_id()
+    subscription.plan_id = _get_value(_get_value(subscription_obj, "plan", {}), "id") or _stripe_price_id()
     subscription.period_start = _timestamp_to_datetime(_get_value(subscription_obj, "current_period_start"))
     subscription.period_end = _timestamp_to_datetime(_get_value(subscription_obj, "current_period_end"))
 
@@ -230,6 +236,7 @@ async def get_subscription(
 
 @router.post("/checkout-session", response_model=CheckoutSessionResponse)
 async def create_checkout_session(
+    request_data: CheckoutSessionRequest,
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
@@ -251,7 +258,7 @@ async def create_checkout_session(
     session = stripe_client.checkout.Session.create(
         mode="subscription",
         customer=customer_id,
-        line_items=[{"price": _stripe_price_id(), "quantity": 1}],
+        line_items=[{"price": _stripe_price_id(request_data.interval), "quantity": 1}],
         success_url=f"{_app_base_url()}/patient/profile?checkout=success",
         cancel_url=f"{_app_base_url()}/patient/profile?checkout=canceled",
         client_reference_id=str(user_id),
@@ -263,7 +270,7 @@ async def create_checkout_session(
     )
 
     subscription = _find_or_create_subscription(db, user_id=user_id, stripe_customer_id=customer_id)
-    subscription.plan_id = _stripe_price_id()
+    subscription.plan_id = _stripe_price_id(request_data.interval)
     subscription.status = "inactive"
     payment = Payment(
         user_id=user_id,
@@ -327,7 +334,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                 stripe_customer_id=stripe_customer_id,
                 stripe_subscription_id=stripe_subscription_id,
             )
-            subscription.plan_id = _stripe_price_id()
+            subscription.plan_id = _get_value(_get_value(obj, "plan", {}), "id") or _stripe_price_id()
             subscription.status = "active"
             payment = db.query(Payment).filter(Payment.stripe_checkout_session_id == _get_value(obj, "id")).first()
             if payment:

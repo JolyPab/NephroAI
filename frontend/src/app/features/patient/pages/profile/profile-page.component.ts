@@ -42,6 +42,7 @@ export class PatientProfilePageComponent implements OnInit {
   subscriptionLoading = false;
   subscriptionBusy = false;
   subscriptionError = '';
+  selectedInterval: 'monthly' | 'yearly' = 'monthly';
 
   constructor() {
     this.languageService
@@ -164,7 +165,7 @@ export class PatientProfilePageComponent implements OnInit {
       });
       return;
     }
-    this.billingService.createCheckoutSession().subscribe({
+    this.billingService.createCheckoutSession(this.selectedInterval).subscribe({
       next: (session) => {
         window.location.href = session.checkout_url;
       },
