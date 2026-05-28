@@ -271,7 +271,8 @@ async def create_checkout_session(
 
     subscription = _find_or_create_subscription(db, user_id=user_id, stripe_customer_id=customer_id)
     subscription.plan_id = _stripe_price_id(request_data.interval)
-    subscription.status = "inactive"
+    if subscription.status != "active":
+        subscription.status = "inactive"
     payment = Payment(
         user_id=user_id,
         subscription=subscription,
