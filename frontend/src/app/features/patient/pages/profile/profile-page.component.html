@@ -39,16 +39,11 @@
             <p>Plan mensual de NephroAI para análisis y seguimiento de laboratorio.</p>
           </div>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; max-width: 260px;">
-          <button type="button" class="profile-action-btn" style="width: 100%; justify-content: center;" [disabled]="subscriptionBusy || subscriptionLoading" (click)="openBilling()">
-            <span *ngIf="subscriptionBusy" class="loader-dot"></span>
-            <span class="material-symbols-rounded" *ngIf="!subscriptionBusy">credit_card</span>
-            <span>{{ subscriptionActionText() }}</span>
-          </button>
-          <p style="font-size: 0.72rem; color: var(--text-muted); text-align: right; margin: 0; line-height: 1.3;" *ngIf="subscription?.status !== 'active'">
-            Al suscribirte, aceptas nuestros <a href="https://nephroai.ec/terminos.html" target="_blank" style="color: var(--accent); text-decoration: none;">Términos de Servicio</a> y <a href="https://nephroai.ec/privacidad.html" target="_blank" style="color: var(--accent); text-decoration: none;">Política de Privacidad</a>.
-          </p>
-        </div>
+        <button type="button" class="profile-action-btn" [disabled]="subscriptionBusy || subscriptionLoading" (click)="openBilling()">
+          <span *ngIf="subscriptionBusy" class="loader-dot"></span>
+          <span class="material-symbols-rounded" *ngIf="!subscriptionBusy">credit_card</span>
+          <span>{{ subscriptionActionText() }}</span>
+        </button>
       </div>
       <div class="billing-status-row">
         <span class="billing-pill" [class.billing-pill--active]="subscription?.status === 'active'">
@@ -59,6 +54,9 @@
         </span>
       </div>
       <div class="form-message form-message--error" *ngIf="subscriptionError">{{ subscriptionError }}</div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin: 1rem 0 0; padding-top: 0.85rem; border-top: 1px solid rgba(255,255,255,0.06);" *ngIf="subscription?.status !== 'active'">
+        Al suscribirte, aceptas nuestros <a href="https://nephroai.ec/terminos.html" target="_blank" style="color: var(--accent); text-decoration: none;">Términos de Servicio</a> y la <a href="https://nephroai.ec/privacidad.html" target="_blank" style="color: var(--accent); text-decoration: none;">Política de Privacidad</a>.
+      </p>
     </section>
 
     <section class="profile-section glass glass-strong">
