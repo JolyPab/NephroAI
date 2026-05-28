@@ -58,6 +58,7 @@ from backend.database import (
     LabResult,
     User,
     UploadStatus,
+    Subscription,
     V2DoctorNote,
     V2Document,
     V2Metric,
@@ -159,6 +160,13 @@ async def create_v2_document(
     pdf_bytes = await file.read()
     if not pdf_bytes:
         raise HTTPException(status_code=400, detail="Empty file")
+
+    # Hard paywall check
+    user = db.query(User).filter(User.id == user_id).first()
+    if user and user.role != "DOCTOR":
+        sub = db.query(Subscription).filter(Subscription.user_id == user_id, Subscription.status == "active").first()
+        if not sub:
+            raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para subir documentos.")
 
     document_hash = hashlib.sha256(pdf_bytes).hexdigest()
     try:

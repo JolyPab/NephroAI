@@ -55,6 +55,7 @@ from backend.database import (
     LabResult,
     User,
     UploadStatus,
+    Subscription,
     V2DoctorNote,
     V2Document,
     V2Metric,
@@ -162,6 +163,12 @@ async def upload_pdf_file(
     current_user = db.query(User).filter(User.id == user_id).first()
     if not current_user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Hard paywall check
+    if current_user.role != "DOCTOR":
+        sub = db.query(Subscription).filter(Subscription.user_id == user_id, Subscription.status == "active").first()
+        if not sub:
+            raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para subir documentos.")
 
     # Get or create patient for current user
     patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
@@ -321,6 +328,13 @@ async def import_lab_results(
 
         if not pdf_bytes:
             raise HTTPException(status_code=400, detail="Empty file")
+
+        # Hard paywall check
+        current_user = db.query(User).filter(User.id == user_id).first()
+        if current_user and current_user.role != "DOCTOR":
+            sub = db.query(Subscription).filter(Subscription.user_id == user_id, Subscription.status == "active").first()
+            if not sub:
+                raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para subir documentos.")
 
         # Verify patient belongs to authenticated user
         patient = db.query(Patient).filter(
