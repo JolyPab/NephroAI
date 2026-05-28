@@ -181,8 +181,32 @@ jobs:
 
       - name: Public health check
         run: |
-          curl -fsS https://app.nephroai.ec/api/health
-          curl -fsS https://app.nephroai.ec/api/health/ready
-          curl -fsSI https://app.nephroai.ec | grep -i '^strict-transport-security:'
-          curl -fsSI https://app.nephroai.ec | grep -i '^x-content-type-options:'
-          curl -fsSI https://app.nephroai.ec | grep -i '^x-frame-options:'
+          check_url() {
+            local url="$1"
+            for attempt in 1 2 3 4 5; do
+              if curl -fsS "$url"; then
+                return 0
+              fi
+              echo "Waiting for $url (attempt $attempt/5)"
+              sleep 5
+            done
+            curl -fsS "$url"
+          }
+
+          check_header() {
+            local header="$1"
+            for attempt in 1 2 3 4 5; do
+              if curl -fsSI https://app.nephroai.ec | grep -i "^${header}:"; then
+                return 0
+              fi
+              echo "Waiting for header $header (attempt $attempt/5)"
+              sleep 5
+            done
+            curl -fsSI https://app.nephroai.ec | grep -i "^${header}:"
+          }
+
+          check_url https://app.nephroai.ec/api/health
+          check_url https://app.nephroai.ec/api/health/ready
+          check_header strict-transport-security
+          check_header x-content-type-options
+          check_header x-frame-options
