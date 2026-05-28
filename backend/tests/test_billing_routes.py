@@ -74,7 +74,7 @@ def test_create_checkout_session_records_pending_subscription(monkeypatch):
     monkeypatch.setenv("STRIPE_PRICE_ID", "price_test_123")
     monkeypatch.setenv("APP_PUBLIC_URL", "https://app.nephroai.ec")
 
-    response = asyncio.run(billing_routes.create_checkout_session(user_id=1, db=db))
+    response = asyncio.run(billing_routes.create_checkout_session(request_data=billing_routes.CheckoutSessionRequest(interval="monthly"), user_id=1, db=db))
 
     assert response.checkout_url == "https://checkout.stripe.test/session"
     subscription = db.query(Subscription).one()

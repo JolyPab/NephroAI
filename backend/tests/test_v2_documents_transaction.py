@@ -62,6 +62,10 @@ def test_create_v2_document_rolls_back_and_recovers(monkeypatch):
 
     user = User(email="tx@test.local", hashed_password="x", full_name="Tx User", is_active=True, is_doctor=False)
     db.add(user)
+    db.flush()
+    from backend.database import Subscription
+    sub = Subscription(user_id=user.id, stripe_customer_id="cus_test_123", plan_id="price_monthly", status="active")
+    db.add(sub)
     db.commit()
     db.refresh(user)
 

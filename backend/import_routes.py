@@ -165,7 +165,7 @@ async def upload_pdf_file(
         raise HTTPException(status_code=404, detail="User not found")
 
     # Hard paywall check
-    if current_user.role != "DOCTOR":
+    if not current_user.is_doctor:
         sub = db.query(Subscription).filter(Subscription.user_id == user_id, Subscription.status == "active").first()
         if not sub:
             raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para subir documentos.")
@@ -331,7 +331,7 @@ async def import_lab_results(
 
         # Hard paywall check
         current_user = db.query(User).filter(User.id == user_id).first()
-        if current_user and current_user.role != "DOCTOR":
+        if current_user and not current_user.is_doctor:
             sub = db.query(Subscription).filter(Subscription.user_id == user_id, Subscription.status == "active").first()
             if not sub:
                 raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para subir documentos.")
