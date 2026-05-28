@@ -446,28 +446,27 @@ async def get_patient_series(
 
 
 @router.get("/api/me")
-async def get_me_shortcut(user_id: int = Depends(get_current_user_id)):
+async def get_me_shortcut(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
     """Shortcut for /api/auth/me (frontend compatibility)."""
     print(f"[DEBUG] GET /api/me called for user_id={user_id}")
 
-    db = SessionLocal()
-    try:
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            print(f"[DEBUG] User not found: id={user_id}")
-            raise HTTPException(status_code=404, detail="User not found")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        print(f"[DEBUG] User not found: id={user_id}")
+        raise HTTPException(status_code=404, detail="User not found")
 
-        print(f"[DEBUG] Returning user: {user.email}")
-        return {
-            "id": user.id,
-            "email": user.email,
-            "full_name": user.full_name,
-            "is_doctor": user.is_doctor,
-            "is_active": user.is_active,
-            "role": "DOCTOR" if user.is_doctor else "PATIENT"
-        }
-    finally:
-        db.close()
+    print(f"[DEBUG] Returning user: {user.email}")
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "is_doctor": user.is_doctor,
+        "is_active": user.is_active,
+        "role": "DOCTOR" if user.is_doctor else "PATIENT"
+    }
 
 
 @router.patch("/api/me", response_model=AuthUserResponse)
