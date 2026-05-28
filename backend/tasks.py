@@ -15,6 +15,7 @@ except ImportError:  # pragma: no cover - optional dependency
 from backend.database import SessionLocal, UploadStatus, save_parsed_records, ChatMessageRecord, PatientMemory
 from backend.pdf_parser import extract_raw_text
 from backend.parsing.pipeline import coerce_raw_text, parse_with_ocr_fallback
+from backend.encryption import decrypt_file_data
 
 
 
@@ -64,7 +65,7 @@ def _run_process_pdf_task(file_id: int):
         # Read PDF bytes from disk
         try:
             with open(status.file_path, "rb") as f:
-                pdf_bytes = f.read()
+                pdf_bytes = decrypt_file_data(f.read())
         except Exception as e:
             status.status = "error"
             status.error_message = f"File read error: {e}"

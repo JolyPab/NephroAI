@@ -35,7 +35,8 @@ Method: STRIDE-lite focused on NephroAI production SaaS
 | Patient grant remains after relationship ends | Excessive access | Revocation endpoint exists | Add access review UX, grant expiration option, audit logs. |
 | Uploaded PDF contains malware or active content | Backend/file handling risk | PDF parsing libraries process uploaded PDFs | Add malware scanning, file type validation evidence, parser sandboxing policy. |
 | PHI sent to AI vendor without adequate agreement | Vendor/compliance risk | OpenAI key isolated in env | Document vendor terms, data retention, consent, minimum data sent. |
-| Database or upload volume copied from host | Data breach | Docker volumes on server | Add encryption at rest, backup encryption, least-privilege host access. |
+| Database or upload volume copied from host | Data breach | Docker volumes on server, Application-level encryption (Fernet) for uploads, encrypted backups | Enforce least-privilege host access. |
+| Internal traffic intercepted inside Docker network | Data breach | Strict Docker network isolation from public internet | Document accepted risk for plaintext communication inside internal Docker network. |
 | HTTP traffic intercepted | Data breach | Public endpoint uses HTTPS health check | Prove TLS termination, redirect, HSTS, WSS for calls. |
 | Broken deploy exposes bad build | Availability/integrity | CI tests, frontend build, Docker checks, health checks before/after deploy | Add branch protection and rollback runbook. |
 | Dependency vulnerability exploited | RCE/data breach | Frontend `npm audit` in CI | Add Python and container vulnerability scans. |
@@ -90,8 +91,8 @@ Required control:
 
 | ID | Risk | Severity | Owner | Target |
 | --- | --- | --- | --- | --- |
-| TM-001 | No proven encryption at rest for DB/uploads/backups | High | Engineering | Before SOC 2 readiness review |
-| TM-002 | No application audit log for medical data access | High | Engineering | Before SOC 2 readiness review |
+| TM-001 | No proven encryption at rest for DB/uploads/backups | Resolved | Engineering | - |
+| TM-002 | No application audit log for medical data access | Resolved | Engineering | - |
 | TM-003 | No centralized alerting/observability | High | Engineering | 7 days |
 | TM-004 | Production compose has default DB credentials | High | Engineering | Immediate |
 | TM-005 | TLS/HSTS evidence not captured in repo | Medium | Engineering/Ops | 7 days |

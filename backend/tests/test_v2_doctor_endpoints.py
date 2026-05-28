@@ -182,7 +182,7 @@ def test_doctor_chat_context_uses_patient_v2_metrics():
 def test_doctor_chat_sends_patient_v2_metrics_to_tool_chat():
     db, _patient_owner, patient, doctor_with_grant, _doctor_without_grant = _seed_db()
     try:
-        with patch("backend.main._openai_chat_with_tools", return_value="ALT dentro del rango de referencia.") as mock_llm:
+        with patch("backend.doctor_routes._openai_chat_with_tools", return_value="ALT dentro del rango de referencia.") as mock_llm:
             response = asyncio.run(
                 doctor_patient_chat(
                     patient_id=patient.id,

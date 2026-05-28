@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { V2DocumentListItemResponse } from '../../../../core/models/v2.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { BillingService, BillingSubscription } from '../../../../core/services/billing.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { V2Service } from '../../../../core/services/v2.service';
@@ -17,6 +18,7 @@ import { V2Service } from '../../../../core/services/v2.service';
 export class PatientProfilePageComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly themeService = inject(ThemeService);
+  private readonly billingService = inject(BillingService);
   private readonly fb = inject(FormBuilder);
   private readonly languageService = inject(LanguageService);
   private readonly v2Service = inject(V2Service);
@@ -36,6 +38,10 @@ export class PatientProfilePageComponent implements OnInit {
   documentsError = '';
   documentsMessage = '';
   deletingDocumentId: string | null = null;
+  subscription: BillingSubscription | null = null;
+  subscriptionLoading = false;
+  subscriptionBusy = false;
+  subscriptionError = '';
 
   constructor() {
     this.languageService
@@ -48,6 +54,7 @@ export class PatientProfilePageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDocuments();
+    this.loadSubscription();
   }
 
   toggleTheme(): void {
@@ -122,6 +129,73 @@ export class PatientProfilePageComponent implements OnInit {
         this.deletingDocumentId = null;
       },
     });
+  }
+
+  loadSubscription(): void {
+    this.subscriptionLoading = true;
+    this.subscriptionError = '';
+    this.billingService.getSubscription().subscribe({
+      next: (subscription) => {
+        this.subscription = subscription;
+        this.subscriptionLoading = false;
+      },
+      error: (err) => {
+        this.subscriptionError = err?.error?.detail ?? 'No se pudo cargar la suscripción.';
+        this.subscriptionLoading = false;
+      },
+    });
+  }
+
+  openBilling(): void {
+    if (this.subscriptionBusy) {
+      return;
+    }
+    this.subscriptionBusy = true;
+    this.subscriptionError = '';
+    if (this.subscription?.provider === 'stripe') {
+      this.billingService.createPortalSession().subscribe({
+        next: (session) => {
+          window.location.href = session.portal_url;
+        },
+        error: (err) => {
+          this.subscriptionError = err?.error?.detail ?? 'No se pudo abrir Stripe.';
+          this.subscriptionBusy = false;
+        },
+      });
+      return;
+    }
+    this.billingService.createCheckoutSession().subscribe({
+      next: (session) => {
+        window.location.href = session.checkout_url;
+      },
+      error: (err) => {
+        this.subscriptionError = err?.error?.detail ?? 'No se pudo abrir Stripe.';
+        this.subscriptionBusy = false;
+      },
+    });
+  }
+
+  subscriptionTitle(): string {
+    if (this.subscriptionLoading) {
+      return 'Cargando...';
+    }
+    if (this.subscription?.status === 'active') {
+      return 'Activa';
+    }
+    if (this.subscription?.status === 'past_due') {
+      return 'Pago pendiente';
+    }
+    if (this.subscription?.status === 'canceled') {
+      return 'Cancelada';
+    }
+    return 'Sin suscripción';
+  }
+
+  subscriptionActionText(): string {
+    if (this.subscriptionBusy) {
+      return 'Abriendo...';
+    }
+    return this.subscription?.provider === 'stripe' ? 'Gestionar' : 'Suscribirme';
   }
 
   documentDate(document: V2DocumentListItemResponse): string {

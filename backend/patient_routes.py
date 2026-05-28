@@ -1,3 +1,4 @@
+__all__ = ['PatientCreate', 'PatientResponse', 'get_db', 'get_my_patients', 'create_patient', 'get_patient']
 """Patient routes."""
 
 from fastapi import APIRouter, HTTPException, Depends, status

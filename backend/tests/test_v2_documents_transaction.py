@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.database import Base, User, V2Document, V2Metric
-from backend.main import create_v2_document
+from backend.v2_routes import create_v2_document
 from backend.v2.schemas import (
     Context,
     ImportV2,
@@ -70,7 +70,7 @@ def test_create_v2_document_rolls_back_and_recovers(monkeypatch):
     async def fake_extract_v2(_pdf_bytes: bytes) -> ImportV2:
         return payload
 
-    monkeypatch.setattr("backend.main.extract_v2", fake_extract_v2)
+    monkeypatch.setattr("backend.v2_routes.extract_v2", fake_extract_v2)
 
     original_flush = db.flush
     state = {"fail_once": True}

@@ -15,7 +15,10 @@ pillow
 celery
 redis
 requests
+stripe>=13.0.0
 python-jose[cryptography]
 passlib[bcrypt]
 pytest
 pytest-html
+cryptography
+alembic

@@ -1,6 +1,11 @@
 #!/usr/bin/env sh
 set -eu
 
+# NOTE ON UPTIMEROBOT INTEGRATION (SOC 2):
+# To provide continuous external observability, configure UptimeRobot (or similar)
+# to hit $APP_URL/api/health/ready. If this script or the endpoint fails, it should
+# trigger an alert (via Slack/Telegram/Email) to the engineering team.
+
 APP_URL="${APP_URL:-https://app.nephroai.ec}"
 LANDING_URL="${LANDING_URL:-https://nephroai.ec}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-10}"

@@ -220,6 +220,8 @@ class Subscription(Base):
     status = Column(String, nullable=False, default="inactive")  # active, canceled, past_due
     plan_id = Column(String, nullable=True)
     paypal_subscription_id = Column(String, nullable=True, unique=True, index=True)
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True, unique=True, index=True)
     period_start = Column(DateTime, nullable=True)
     period_end = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -240,6 +242,9 @@ class Payment(Base):
     currency = Column(String, nullable=True, default="USD")
     status = Column(String, nullable=False, default="pending")  # pending, completed, failed, refunded
     paypal_payment_id = Column(String, nullable=True, unique=True, index=True)
+    stripe_payment_id = Column(String, nullable=True, unique=True, index=True)
+    stripe_checkout_session_id = Column(String, nullable=True, unique=True, index=True)
+    stripe_invoice_id = Column(String, nullable=True, unique=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     user = relationship("User", foreign_keys=[user_id])

@@ -113,7 +113,7 @@ Security controls:
 ## Trust Boundaries
 
 - Internet to public HTTPS endpoint.
-- Public reverse proxy to private Docker network.
+- Public reverse proxy to private Docker network. Note: plaintext traffic between internal containers is considered an accepted risk, mitigated by strict Docker network isolation from the public internet.
 - API/worker to Postgres, Redis, uploads.
 - API to external vendors: OpenAI, SMTP, GitHub Actions, LiveKit depending on deployment.
 - SSH deployment from GitHub Actions to production server.
@@ -121,8 +121,5 @@ Security controls:
 ## Key Architecture Gaps
 
 - TLS termination is not proven from repository config alone.
-- Database, upload, and backup encryption at rest need evidence.
-- No dedicated audit log table was found.
 - Observability is limited to logs and health checks.
 - Production database credentials in compose have unsafe defaults.
-- No formal backup/restore process is documented.

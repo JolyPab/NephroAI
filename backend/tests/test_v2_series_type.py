@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from backend.main import _classify_v2_series_type
+from backend.utils import _classify_v2_series_type
 
 
 def _row(value_numeric, value_text):

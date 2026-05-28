@@ -33,6 +33,32 @@
     <section class="profile-section glass glass-strong">
       <div class="section-title">
         <div class="section-title-left">
+          <span class="material-symbols-rounded">payments</span>
+          <div>
+            <h3>Suscripción</h3>
+            <p>Plan mensual de NephroAI para análisis y seguimiento de laboratorio.</p>
+          </div>
+        </div>
+        <button type="button" class="profile-action-btn" [disabled]="subscriptionBusy || subscriptionLoading" (click)="openBilling()">
+          <span *ngIf="subscriptionBusy" class="loader-dot"></span>
+          <span class="material-symbols-rounded" *ngIf="!subscriptionBusy">credit_card</span>
+          <span>{{ subscriptionActionText() }}</span>
+        </button>
+      </div>
+      <div class="billing-status-row">
+        <span class="billing-pill" [class.billing-pill--active]="subscription?.status === 'active'">
+          {{ subscriptionTitle() }}
+        </span>
+        <span class="empty-text" *ngIf="subscription?.current_period_end">
+          Renueva el {{ subscription?.current_period_end | date: 'd MMM yyyy' }}
+        </span>
+      </div>
+      <div class="form-message form-message--error" *ngIf="subscriptionError">{{ subscriptionError }}</div>
+    </section>
+
+    <section class="profile-section glass glass-strong">
+      <div class="section-title">
+        <div class="section-title-left">
           <span class="material-symbols-rounded">badge</span>
           <div>
             <h3>{{ 'profile.nameTitle' | translate }}</h3>

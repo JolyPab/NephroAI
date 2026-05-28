@@ -49,7 +49,7 @@ def test_advice_works_with_v2_data_when_patient_row_missing(monkeypatch):
     )
     db.commit()
 
-    monkeypatch.setattr("backend.main._openai_chat_with_tools", lambda *_args, **_kwargs: "ok")
+    monkeypatch.setattr("backend.chat_routes._openai_chat_with_tools", lambda *_args, **_kwargs: "respuesta v2")
     monkeypatch.setattr("backend.main._get_redis", lambda: None)
 
     response = asyncio.run(
@@ -60,7 +60,7 @@ def test_advice_works_with_v2_data_when_patient_row_missing(monkeypatch):
         )
     )
 
-    assert response.answer == "ok"
+    assert response.answer == "respuesta v2"
     assert response.disclaimer is True
     assert len(response.usedMetrics) >= 1
     assert response.usedMetrics[0].name == "ALT_SERUM"

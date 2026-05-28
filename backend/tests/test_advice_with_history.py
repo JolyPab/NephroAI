@@ -32,7 +32,7 @@ def _seed_user_with_metric(db):
 def test_advice_creates_session_when_none_provided():
     db = _setup_db()
     user = _seed_user_with_metric(db)
-    with patch("backend.main._openai_chat_with_tools", return_value="respuesta de prueba"), \
+    with patch("backend.chat_routes._openai_chat_with_tools", return_value="respuesta de prueba"), \
          patch("backend.main._get_redis", return_value=None):
         response = asyncio.run(get_advice(
             req=AdviceRequest(question="Como esta mi creatinina?"),
@@ -60,7 +60,7 @@ def test_advice_reuses_existing_session_and_saves_messages():
     db.add(ChatMessageRecord(session_id=session.id, role="assistant", content="Hola, en que puedo ayudarte?"))
     db.commit()
 
-    with patch("backend.main._openai_chat_with_tools", return_value="bien") as mock_llm, \
+    with patch("backend.chat_routes._openai_chat_with_tools", return_value="bien") as mock_llm, \
          patch("backend.main._get_redis", return_value=None):
         asyncio.run(get_advice(
             req=AdviceRequest(question="Que significa creatinina alta?", session_id=session.id),
@@ -68,8 +68,9 @@ def test_advice_reuses_existing_session_and_saves_messages():
         ))
     # History passed to LLM must include prior messages
     call_args = mock_llm.call_args
-    messages_arg = call_args[0][1]  # second positional arg
+    messages_arg = call_args.args[1]  # second positional arg
     roles = [m["role"] for m in messages_arg]
     assert "user" in roles
     assert "assistant" in roles
+    assert len(messages_arg) >= 3
     db.close()
