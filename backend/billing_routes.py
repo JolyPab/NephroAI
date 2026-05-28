@@ -69,7 +69,13 @@ def _stripe_client():
 
 
 def _app_base_url() -> str:
-    return (os.getenv("APP_PUBLIC_URL") or os.getenv("FRONTEND_PUBLIC_URL") or "http://localhost:4200").rstrip("/")
+    url = (os.getenv("APP_PUBLIC_URL") or "").strip()
+    if not url:
+        url = (os.getenv("FRONTEND_PUBLIC_URL") or "").strip()
+    if not url:
+        env = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").lower()
+        url = "https://app.nephroai.ec" if env in ("prod", "production") else "http://localhost:4200"
+    return url.rstrip("/")
 
 
 def _stripe_price_id() -> str:
