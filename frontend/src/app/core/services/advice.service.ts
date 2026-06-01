@@ -15,6 +15,7 @@ export class AdviceClientService {
     days?: number,
     language?: 'es' | 'en',
     sessionId?: number,
+    persist = true,
   ): Observable<AdviceResponseModel> {
     return this.api.post<AdviceResponseModel>('/advice', {
       question,
@@ -22,6 +23,7 @@ export class AdviceClientService {
       days,
       language,
       session_id: sessionId,
+      persist,
     });
   }
 

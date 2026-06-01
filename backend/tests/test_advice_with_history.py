@@ -157,3 +157,26 @@ def test_chart_advice_includes_positive_trend_context_for_selected_metric():
     assert "Buen progreso" in prompt
     assert "CREATININE__SERUM__NUM" not in prompt
     db.close()
+
+
+def test_non_persistent_chart_advice_does_not_create_chat_session():
+    db = _setup_db()
+    user = _seed_user_with_two_metrics(db)
+
+    with patch("backend.chat_routes._openai_chat_with_tools", return_value="ok"), \
+         patch("backend.main._get_redis", return_value=None):
+        response = asyncio.run(get_advice(
+            req=AdviceRequest(
+                question="Dame un breve analisis de Glucosa",
+                metric_names=["GLUCOSE__SERUM__NUM", "Glucosa"],
+                language="es",
+                persist=False,
+            ),
+            user_id=user.id,
+            db=db,
+        ))
+
+    assert response.session_id is None
+    assert db.query(ChatSession).filter_by(user_id=user.id).count() == 0
+    assert db.query(ChatMessageRecord).count() == 0
+    db.close()

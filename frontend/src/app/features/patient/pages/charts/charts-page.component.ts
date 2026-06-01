@@ -399,6 +399,8 @@ export class PatientChartsPageComponent implements OnInit {
         [analyteKey, name],
         180,
         'es',
+        undefined,
+        false,
       )
       .subscribe({
         next: (res) => {

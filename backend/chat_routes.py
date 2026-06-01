@@ -766,6 +766,7 @@ class AdviceRequest(BaseModel):
     days: Optional[int] = 180
     language: Optional[str] = None
     session_id: Optional[int] = None
+    persist: bool = True
 
 
 class AdviceMetric(BaseModel):
@@ -789,6 +790,8 @@ async def list_chat_sessions(
     sessions = (
         db.query(ChatSession)
         .filter(ChatSession.user_id == user_id, ChatSession.is_archived == False)
+        .filter(~ChatSession.title.like("Dame un breve análisis del estado actual%"))
+        .filter(~ChatSession.title.like("Dame un breve analisis del estado actual%"))
         .order_by(ChatSession.updated_at.desc())
         .limit(50)
         .all()
@@ -921,34 +924,41 @@ async def get_advice(
 
     patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
     days = req.days or 180
+    should_persist = bool(req.persist)
 
     # ── 1. Session management ──────────────────────────────────────────────
-    if req.session_id:
+    if should_persist and req.session_id:
         session = db.query(ChatSession).filter(
             ChatSession.id == req.session_id,
             ChatSession.user_id == user_id,
         ).first()
         if not session:
             raise HTTPException(status_code=404, detail="Chat session not found")
-    else:
+    elif should_persist:
         session = ChatSession(user_id=user_id, title="")
         db.add(session)
         db.commit()
         db.refresh(session)
+    else:
+        session = None
 
     # ── 2. Save user message ───────────────────────────────────────────────
-    db.add(ChatMessageRecord(session_id=session.id, role="user", content=req.question))
-    db.commit()
+    if should_persist and session is not None:
+        db.add(ChatMessageRecord(session_id=session.id, role="user", content=req.question))
+        db.commit()
 
     # ── 3. Load conversation history (last 10 messages) ───────────────────
-    history_records = (
-        db.query(ChatMessageRecord)
-        .filter(ChatMessageRecord.session_id == session.id)
-        .order_by(ChatMessageRecord.created_at.asc())
-        .limit(10)
-        .all()
-    )
-    history_messages = [{"role": m.role, "content": m.content} for m in history_records]
+    if should_persist and session is not None:
+        history_records = (
+            db.query(ChatMessageRecord)
+            .filter(ChatMessageRecord.session_id == session.id)
+            .order_by(ChatMessageRecord.created_at.asc())
+            .limit(10)
+            .all()
+        )
+        history_messages = [{"role": m.role, "content": m.content} for m in history_records]
+    else:
+        history_messages = []
 
     # ── 4. Patient memory ─────────────────────────────────────────────────
     memory_facts = (
@@ -1004,13 +1014,14 @@ async def get_advice(
         actor_role="patient",
         action="patient_ai_context_built",
         resource_type="chat_session",
-        resource_id=session.id,
+        resource_id=session.id if session is not None else None,
         patient_id=patient.id if patient else None,
         metadata={
             "metrics_count": len(metrics_summary),
             "days": days,
             "memory_count": len(memory_facts),
-            "session_id": session.id,
+            "session_id": session.id if session is not None else None,
+            "persist": should_persist,
         },
     )
 
@@ -1117,36 +1128,39 @@ async def get_advice(
         answer = _build_deterministic_advice(metrics_summary, "es", days)
 
     # ── 9. Save assistant message ─────────────────────────────────────────
-    db.add(ChatMessageRecord(session_id=session.id, role="assistant", content=answer))
-    if not session.title:
-        session.title = req.question[:60]
-    session.updated_at = dt.datetime.utcnow()
+    if should_persist and session is not None:
+        db.add(ChatMessageRecord(session_id=session.id, role="assistant", content=answer))
+        if not session.title:
+            session.title = req.question[:60]
+        session.updated_at = dt.datetime.utcnow()
     write_audit_log(
         db,
         actor_user_id=user_id,
         actor_role="patient",
         action="patient_ai_chat_completed",
         resource_type="chat_session",
-        resource_id=session.id,
+        resource_id=session.id if session is not None else None,
         patient_id=patient.id if patient else None,
         metadata={
             "metrics_count": len(metrics_summary),
             "reply_chars": len(answer or ""),
-            "session_id": session.id,
+            "session_id": session.id if session is not None else None,
+            "persist": should_persist,
         },
     )
     db.commit()
 
     # ── 10. Async memory extraction ───────────────────────────────────────
     from backend.tasks import extract_patient_memory, CELERY_ENABLED as _CELERY_ENABLED
-    if _CELERY_ENABLED:
-        extract_patient_memory.delay(session.id, user_id)
-    else:
-        try:
-            from backend.tasks import _run_extract_patient_memory
-            _run_extract_patient_memory(session.id, user_id)
-        except Exception:
-            pass
+    if should_persist and session is not None:
+        if _CELERY_ENABLED:
+            extract_patient_memory.delay(session.id, user_id)
+        else:
+            try:
+                from backend.tasks import _run_extract_patient_memory
+                _run_extract_patient_memory(session.id, user_id)
+            except Exception:
+                pass
 
     # ── 11. Build response ────────────────────────────────────────────────
     used_metrics = [
@@ -1154,4 +1168,9 @@ async def get_advice(
         for name, values in metrics_summary.items()
         if values
     ]
-    return AdviceResponse(answer=answer, usedMetrics=used_metrics, disclaimer=True, session_id=session.id)
+    return AdviceResponse(
+        answer=answer,
+        usedMetrics=used_metrics,
+        disclaimer=True,
+        session_id=session.id if session is not None else None,
+    )

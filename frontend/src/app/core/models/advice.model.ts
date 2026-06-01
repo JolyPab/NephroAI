@@ -9,5 +9,5 @@ export interface AdviceResponseModel {
   answer: string;
   usedMetrics: AdviceMetric[];
   disclaimer: boolean;
-  session_id: number;
+  session_id?: number | null;
 }

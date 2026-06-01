@@ -51,6 +51,27 @@ def test_create_and_list_sessions():
     db.close()
 
 
+def test_list_sessions_hides_chart_advice_sessions():
+    db = _setup_db()
+    user = _make_user(db)
+    visible = ChatSession(user_id=user.id, title="Consulta real")
+    chart_generated = ChatSession(
+        user_id=user.id,
+        title="Dame un breve análisis del estado actual de GLUCOSA basado en",
+    )
+    db.add_all([visible, chart_generated])
+    db.commit()
+
+    client = _make_client(db, user.id)
+    r = client.get("/api/chat/sessions")
+
+    assert r.status_code == 200
+    items = r.json()
+    assert [item["title"] for item in items] == ["Consulta real"]
+    app.dependency_overrides.clear()
+    db.close()
+
+
 def test_get_session_messages():
     db = _setup_db()
     user = _make_user(db)
