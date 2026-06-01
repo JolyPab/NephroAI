@@ -10,6 +10,7 @@ from backend.consultation_routes import *
 from backend.share_routes import *
 from backend.patient_legacy_routes import *
 from backend.billing_routes import *
+from backend.email_routes import *
 
 from backend.import_routes import router as import_router
 from backend.v2_routes import router as v2_router
@@ -19,6 +20,7 @@ from backend.consultation_routes import router as consultation_router
 from backend.share_routes import router as share_router
 from backend.patient_legacy_routes import router as patient_legacy_router
 from backend.billing_routes import router as billing_router
+from backend.email_routes import router as email_router
 from backend.deps import *
 from backend.utils import *
 
@@ -224,6 +226,7 @@ app.add_middleware(
 app.include_router(auth_router)
 
 app.include_router(patient_router)
+app.include_router(email_router)
 
 @app.get("/api/health")
 async def health():
