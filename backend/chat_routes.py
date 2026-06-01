@@ -1,4 +1,4 @@
-__all__ = ['_build_deterministic_advice', '_is_low_signal_advice', '_build_doctor_chat_context', '_summarize_patient_metrics_for_ai', '_trim_chat_context', '_openai_chat_completion', '_openai_chat_completion_with_history', '_openai_chat_with_tools', 'ChatSessionCreate', 'ChatSessionItem', 'ChatSessionMessageItem', 'AdviceRequest', 'AdviceMetric', 'AdviceResponse', 'list_chat_sessions', 'create_chat_session', 'get_session_messages', 'delete_chat_session', 'PatientMemoryItem', 'list_patient_memory', 'delete_patient_memory', 'get_advice']
+__all__ = ['_build_positive_trend_notes', '_build_deterministic_advice', '_is_low_signal_advice', '_build_doctor_chat_context', '_summarize_patient_metrics_for_ai', '_trim_chat_context', '_openai_chat_completion', '_openai_chat_completion_with_history', '_openai_chat_with_tools', 'ChatSessionCreate', 'ChatSessionItem', 'ChatSessionMessageItem', 'AdviceRequest', 'AdviceMetric', 'AdviceResponse', 'list_chat_sessions', 'create_chat_session', 'get_session_messages', 'delete_chat_session', 'PatientMemoryItem', 'list_patient_memory', 'delete_patient_memory', 'get_advice']
 
 from backend.deps import *
 from backend.utils import *
@@ -83,6 +83,76 @@ import redis as redis_lib
 from fastapi import APIRouter
 router = APIRouter()
 
+def _as_float(value: Any) -> Optional[float]:
+    try:
+        if value is None:
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _normal_distance(value: float, ref_min: Optional[float], ref_max: Optional[float]) -> Optional[float]:
+    if ref_min is None and ref_max is None:
+        return None
+    if ref_min is not None and value < ref_min:
+        return ref_min - value
+    if ref_max is not None and value > ref_max:
+        return value - ref_max
+    return 0.0
+
+
+def _value_with_unit(value: float, unit: str) -> str:
+    return f"{_fmt_num(value)}{f' {unit}' if unit else ''}"
+
+
+def _build_positive_trend_notes(metrics_summary: Dict[str, List[Dict[str, Any]]]) -> List[str]:
+    """Return patient-friendly Spanish notes for metrics moving toward range."""
+    notes: List[str] = []
+    for name, values in metrics_summary.items():
+        numeric_values = [
+            item for item in values
+            if _as_float(item.get("value")) is not None
+        ]
+        if len(numeric_values) < 2:
+            continue
+
+        latest = numeric_values[0]
+        previous = numeric_values[1]
+        latest_value = _as_float(latest.get("value"))
+        previous_value = _as_float(previous.get("value"))
+        if latest_value is None or previous_value is None:
+            continue
+
+        ref_min = _as_float(latest.get("ref_min"))
+        ref_max = _as_float(latest.get("ref_max"))
+        previous_distance = _normal_distance(previous_value, ref_min, ref_max)
+        latest_distance = _normal_distance(latest_value, ref_min, ref_max)
+        if previous_distance is None or latest_distance is None:
+            continue
+
+        tolerance = max(abs(previous_value) * 0.005, 0.01)
+        if previous_distance <= latest_distance + tolerance:
+            continue
+
+        unit = str(latest.get("unit") or "")
+        previous_label = _value_with_unit(previous_value, unit)
+        latest_label = _value_with_unit(latest_value, unit)
+
+        if latest_distance == 0:
+            notes.append(
+                f"Buen progreso: {name} mejoró de {previous_label} a {latest_label} "
+                "y ahora está dentro del rango de referencia. Reconoce ese avance y anima a mantener los hábitos que ayudaron."
+            )
+        else:
+            notes.append(
+                f"Buena señal: {name} mejoró de {previous_label} a {latest_label} "
+                "y se está acercando al rango de referencia. Anima a seguir así, sin prometer resultados."
+            )
+
+    return notes[:3]
+
+
 def _build_deterministic_advice(
     metrics_summary: Dict[str, List[Dict[str, Any]]],
     language: str,
@@ -118,6 +188,7 @@ def _build_deterministic_advice(
             no_ref.append(row)
 
     focus = (abnormal + normal + no_ref)[:3]
+    positive_trend_notes = _build_positive_trend_notes(metrics_summary)
 
     if is_es:
         lines = [
@@ -159,6 +230,10 @@ def _build_deterministic_advice(
                 lines.append(f"- {name}: {value_label} ({status_label}; ref {ref_label})")
         else:
             lines.append("- No hay suficientes métricas para resumir.")
+
+        if positive_trend_notes:
+            lines.extend(["", "Avance positivo:"])
+            lines.extend(f"- {note}" for note in positive_trend_notes)
 
         lines.extend(
             [
@@ -210,6 +285,10 @@ def _build_deterministic_advice(
             lines.append(f"- {name}: {value_label} ({status_label}; ref {ref_label})")
     else:
         lines.append("- Not enough metrics to build a useful summary.")
+
+    if positive_trend_notes:
+        lines.extend(["", "Positive progress:"])
+        lines.extend(f"- {note}" for note in positive_trend_notes)
 
     lines.extend(
         [
@@ -886,10 +965,12 @@ async def get_advice(
         patient_memory_text = "Aún no tienes información guardada sobre este paciente."
 
     # ── 5. Analyte snapshot (Redis cache) ─────────────────────────────────
+    requested_metric_names = req.metric_names or None
     cache_key = f"analyte_snapshot:{user_id}"
+    use_snapshot_cache = not requested_metric_names
     r = _get_redis()
     metrics_summary = None
-    if r:
+    if r and use_snapshot_cache:
         try:
             cached = r.get(cache_key)
             if cached:
@@ -898,14 +979,18 @@ async def get_advice(
             pass
 
     if metrics_summary is None:
-        metrics_summary = _summarize_metrics_v2(db, user_id=user_id, metric_names=None, days=days)
+        metrics_summary = _summarize_metrics_v2(db, user_id=user_id, metric_names=requested_metric_names, days=days)
         if not metrics_summary and patient:
-            metrics_summary = _summarize_metrics(db, patient_id=patient.id, metric_names=None, days=days)
+            metrics_summary = _summarize_metrics(db, patient_id=patient.id, metric_names=requested_metric_names, days=days)
+        if not metrics_summary and requested_metric_names:
+            metrics_summary = _summarize_metrics_v2(db, user_id=user_id, metric_names=None, days=days)
+            if not metrics_summary and patient:
+                metrics_summary = _summarize_metrics(db, patient_id=patient.id, metric_names=None, days=days)
         if not metrics_summary:
             metrics_summary = _summarize_metrics_v2(db, user_id=user_id, metric_names=None, days=36500)
         if not metrics_summary and patient:
             metrics_summary = _summarize_metrics(db, patient_id=patient.id, metric_names=None, days=36500)
-        if r and metrics_summary:
+        if r and use_snapshot_cache and metrics_summary:
             try:
                 r.setex(cache_key, 3 * 3600, json.dumps(metrics_summary, ensure_ascii=False))
             except Exception:
@@ -931,6 +1016,7 @@ async def get_advice(
 
     # ── 5b. Build compact summary of ALL metrics for Function Calling ──────
     compact_summary = _build_compact_metrics_summary(metrics_summary)
+    positive_trend_notes = _build_positive_trend_notes(metrics_summary)
 
     # ── 6. Doctor notes ───────────────────────────────────────────────────
     v2_notes = (
@@ -968,6 +1054,8 @@ async def get_advice(
         "- Dar consejos prácticos de alimentación y estilo de vida\n"
         "- Recordar lo que el paciente ha compartido contigo antes\n"
         "- Notar mejoras o cambios en sus tendencias\n\n"
+        "Cuando detectes una mejora real hacia el rango de referencia, incluye una frase breve de ánimo "
+        "y refuerzo positivo (por ejemplo: \"Buen progreso\", \"sigue así\"), sin exagerar ni prometer resultados.\n\n"
         "Adapta tu tono y formato según el tipo de pregunta:\n"
         "- Pregunta simple o conversacional → respuesta corta y directa, sin estructura rígida\n"
         "- Pregunta de revisión general → usa estructura clara con puntos clave\n"
@@ -1004,6 +1092,9 @@ async def get_advice(
         "Resumen de todos los análisis disponibles del paciente (usa get_metric_details para obtener el historial completo de cualquier métrica):",
         compact_summary,
     ]
+    if positive_trend_notes:
+        user_prompt_parts.append("Tendencias positivas detectadas para reforzar con tono motivador:")
+        user_prompt_parts.extend(f"- {note}" for note in positive_trend_notes)
     if bp_text:
         user_prompt_parts.append("Registros de presión arterial del paciente (más recientes primero):")
         user_prompt_parts.append(bp_text)

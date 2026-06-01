@@ -15,6 +15,7 @@ import { VitalsService, BloodPressureItem, TemperatureItem } from '../../../../c
 const COLOR_NORMAL = '#34d399';
 const COLOR_ABNORMAL = '#f87171';
 const COLOR_UNKNOWN = 'rgba(255,255,255,0.22)';
+const COPILOT_CACHE_VERSION = 'v2';
 
 @Component({
   selector: 'app-patient-charts-page',
@@ -395,7 +396,7 @@ export class PatientChartsPageComponent implements OnInit {
     this.adviceService
       .ask(
         `Dame un breve análisis del estado actual de ${name} basado en mis últimos análisis. Responde en 1-2 oraciones.`,
-        [name],
+        [analyteKey, name],
         180,
         'es',
       )
@@ -413,13 +414,13 @@ export class PatientChartsPageComponent implements OnInit {
 
   private getCopilotCache(analyteKey: string): string | null {
     try {
-      return localStorage.getItem(`copilot_${analyteKey}_${this.dataVersion}`);
+      return localStorage.getItem(`copilot_${COPILOT_CACHE_VERSION}_${analyteKey}_${this.dataVersion}`);
     } catch { return null; }
   }
 
   private setCopilotCache(analyteKey: string, message: string): void {
     try {
-      localStorage.setItem(`copilot_${analyteKey}_${this.dataVersion}`, message);
+      localStorage.setItem(`copilot_${COPILOT_CACHE_VERSION}_${analyteKey}_${this.dataVersion}`, message);
     } catch {}
   }
 

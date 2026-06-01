@@ -4,6 +4,7 @@ from unittest.mock import patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from backend.database import AuditLog, Base, User, V2Document, V2Metric, ChatSession, ChatMessageRecord
+from backend.chat_routes import _build_positive_trend_notes
 from backend.main import AdviceRequest, get_advice
 
 
@@ -27,6 +28,63 @@ def _seed_user_with_metric(db):
                     value_numeric=1.2, unit="mg/dL", page=1, evidence="Creat 1.2"))
     db.commit()
     return user
+
+
+def _seed_user_with_two_metrics(db):
+    user = User(email="trend@test.local", hashed_password="x", full_name="Ana García", is_active=True, is_doctor=False)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    old_doc = V2Document(
+        user_id=user.id,
+        document_hash="trend-old",
+        source_filename="old.pdf",
+        analysis_date=dt.datetime(2026, 1, 1),
+        report_date=dt.datetime(2026, 1, 1),
+    )
+    new_doc = V2Document(
+        user_id=user.id,
+        document_hash="trend-new",
+        source_filename="new.pdf",
+        analysis_date=dt.datetime(2026, 2, 1),
+        report_date=dt.datetime(2026, 2, 1),
+    )
+    db.add_all([old_doc, new_doc])
+    db.flush()
+    db.add_all([
+        V2Metric(document_id=old_doc.id, analyte_key="GLUCOSE__SERUM__NUM",
+                 raw_name="Glucosa", specimen="serum", context="random",
+                 value_numeric=156.0, unit="mg/dL", reference_json={"type": "range", "min": 70, "max": 110},
+                 page=1, evidence="Glucosa 156"),
+        V2Metric(document_id=new_doc.id, analyte_key="GLUCOSE__SERUM__NUM",
+                 raw_name="Glucosa", specimen="serum", context="random",
+                 value_numeric=104.0, unit="mg/dL", reference_json={"type": "range", "min": 70, "max": 110},
+                 page=1, evidence="Glucosa 104"),
+        V2Metric(document_id=old_doc.id, analyte_key="CREATININE__SERUM__NUM",
+                 raw_name="Creatinina", specimen="serum", context="random",
+                 value_numeric=1.2, unit="mg/dL", reference_json={"type": "max", "threshold": 1.3},
+                 page=1, evidence="Creatinina 1.2"),
+        V2Metric(document_id=new_doc.id, analyte_key="CREATININE__SERUM__NUM",
+                 raw_name="Creatinina", specimen="serum", context="random",
+                 value_numeric=1.2, unit="mg/dL", reference_json={"type": "max", "threshold": 1.3},
+                 page=1, evidence="Creatinina 1.2"),
+    ])
+    db.commit()
+    return user
+
+
+def test_positive_trend_notes_encourage_real_improvement():
+    notes = _build_positive_trend_notes({
+        "GLUCOSE__SERUM__NUM": [
+            {"value": 104.0, "unit": "mg/dL", "ref_min": 70, "ref_max": 110},
+            {"value": 156.0, "unit": "mg/dL", "ref_min": 70, "ref_max": 110},
+        ]
+    })
+
+    assert len(notes) == 1
+    assert "Buen progreso" in notes[0]
+    assert "dentro del rango" in notes[0]
 
 
 def test_advice_creates_session_when_none_provided():
@@ -73,4 +131,29 @@ def test_advice_reuses_existing_session_and_saves_messages():
     assert "user" in roles
     assert "assistant" in roles
     assert len(messages_arg) >= 3
+    db.close()
+
+
+def test_chart_advice_includes_positive_trend_context_for_selected_metric():
+    db = _setup_db()
+    user = _seed_user_with_two_metrics(db)
+
+    with patch("backend.chat_routes._openai_chat_with_tools", return_value="ok") as mock_llm, \
+         patch("backend.main._get_redis", return_value=None):
+        asyncio.run(get_advice(
+            req=AdviceRequest(
+                question="Dame un breve analisis de Glucosa",
+                metric_names=["GLUCOSE__SERUM__NUM", "Glucosa"],
+                language="es",
+            ),
+            user_id=user.id,
+            db=db,
+        ))
+
+    messages_arg = mock_llm.call_args.args[1]
+    prompt = messages_arg[-1]["content"]
+    assert "Tendencias positivas detectadas" in prompt
+    assert "GLUCOSE__SERUM__NUM" in prompt
+    assert "Buen progreso" in prompt
+    assert "CREATININE__SERUM__NUM" not in prompt
     db.close()
