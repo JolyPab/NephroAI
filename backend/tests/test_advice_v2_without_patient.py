@@ -4,7 +4,7 @@ import datetime as dt
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from backend.database import Base, User, V2Document, V2Metric
+from backend.database import Base, Subscription, User, V2Document, V2Metric
 from backend.main import AdviceRequest, get_advice
 
 
@@ -22,6 +22,7 @@ def test_advice_works_with_v2_data_when_patient_row_missing(monkeypatch):
     db.add(user)
     db.commit()
     db.refresh(user)
+    db.add(Subscription(user_id=user.id, stripe_customer_id="cus_test_123", plan_id="price_test", status="active"))
 
     doc = V2Document(
         user_id=user.id,
