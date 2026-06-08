@@ -1,9 +1,11 @@
 import asyncio
 import datetime as dt
 from unittest.mock import patch
+import pytest
+from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.database import AuditLog, Base, User, V2Document, V2Metric, ChatSession, ChatMessageRecord
+from backend.database import AuditLog, Base, User, V2Document, V2Metric, ChatSession, ChatMessageRecord, Subscription
 from backend.chat_routes import _build_positive_trend_notes
 from backend.main import AdviceRequest, get_advice
 
@@ -19,6 +21,7 @@ def _seed_user_with_metric(db):
     db.add(user)
     db.commit()
     db.refresh(user)
+    db.add(Subscription(user_id=user.id, stripe_customer_id="cus_test_123", plan_id="price_test", status="active"))
     doc = V2Document(user_id=user.id, document_hash="h1", source_filename="a.pdf",
                      analysis_date=dt.datetime(2026, 1, 1), report_date=dt.datetime(2026, 1, 1))
     db.add(doc)
@@ -35,6 +38,7 @@ def _seed_user_with_two_metrics(db):
     db.add(user)
     db.commit()
     db.refresh(user)
+    db.add(Subscription(user_id=user.id, stripe_customer_id="cus_test_123", plan_id="price_test", status="active"))
 
     old_doc = V2Document(
         user_id=user.id,
@@ -131,6 +135,24 @@ def test_advice_reuses_existing_session_and_saves_messages():
     assert "user" in roles
     assert "assistant" in roles
     assert len(messages_arg) >= 3
+    db.close()
+
+
+def test_advice_requires_active_subscription():
+    db = _setup_db()
+    user = User(email="locked@test.local", hashed_password="x", full_name="Ana", is_active=True, is_doctor=False)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(get_advice(
+            req=AdviceRequest(question="Como esta mi creatinina?"),
+            user_id=user.id, db=db,
+        ))
+
+    assert exc.value.status_code == 403
+    assert "suscripción activa" in exc.value.detail
     db.close()
 
 

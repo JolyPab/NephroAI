@@ -71,6 +71,7 @@ def test_create_checkout_session_records_pending_subscription(monkeypatch):
 
     monkeypatch.setattr(billing_routes, "stripe", _FakeStripe)
     monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
+    monkeypatch.setenv("STRIPE_PRICE_ID_MONTHLY", "price_test_123")
     monkeypatch.setenv("STRIPE_PRICE_ID", "price_test_123")
     monkeypatch.setenv("APP_PUBLIC_URL", "https://app.nephroai.ec")
 

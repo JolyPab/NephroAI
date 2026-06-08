@@ -1,4 +1,5 @@
 import { Component, inject } from "@angular/core";
+import { Router } from "@angular/router";
 import { TranslateService } from "@ngx-translate/core";
 
 import { V2Service } from "../../../../core/services/v2.service";
@@ -14,11 +15,13 @@ import { getV2UiStrings } from "../../../v2/i18n/v2-ui-strings";
 export class PatientUploadPageComponent {
   private readonly v2Service = inject(V2Service);
   private readonly translate = inject(TranslateService);
+  private readonly router = inject(Router);
 
   selectedFile: File | null = null;
   isUploading = false;
   uploadMessage = "";
   errorMessage = "";
+  showSubscriptionCta = false;
   isDragging = false;
 
   get uploadAccuracyHint(): string {
@@ -86,19 +89,26 @@ export class PatientUploadPageComponent {
     this.v2Service.uploadDocument(this.selectedFile).subscribe({
       next: (response: V2UploadResponse) => {
         this.isUploading = false;
+        this.showSubscriptionCta = false;
         this.uploadMessage = this.formatV2UploadMessage(response);
       },
       error: (err) => {
         this.isUploading = false;
         this.errorMessage = err?.error?.detail ?? this.translate.instant("ERRORS.UPLOAD_FAILED");
+        this.showSubscriptionCta = err?.status === 403 && this.isSubscriptionError(this.errorMessage);
       },
     });
+  }
+
+  goToSubscription(): void {
+    void this.router.navigate(["/patient/profile"]);
   }
 
   private setFile(file: File): void {
     this.selectedFile = file;
     this.uploadMessage = "";
     this.errorMessage = "";
+    this.showSubscriptionCta = false;
   }
 
   private formatV2UploadMessage(response: V2UploadResponse): string {
@@ -106,5 +116,9 @@ export class PatientUploadPageComponent {
       return `Duplicate document detected. Reused ${response.document_id}.`;
     }
     return `Document processed. Saved ${response.num_metrics} metrics.`;
+  }
+
+  private isSubscriptionError(message: string): boolean {
+    return message.toLowerCase().includes("suscrip");
   }
 }

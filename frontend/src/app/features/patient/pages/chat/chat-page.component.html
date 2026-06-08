@@ -26,7 +26,7 @@
         </span>
         <span class="topbar-title">{{ 'chat.title' | translate }}</span>
       </div>
-      <button class="topbar-btn" (click)="toggleMemoryPanel()" title="{{ 'chat.memory' | translate }}">
+      <button class="topbar-btn" [disabled]="chatLocked" (click)="toggleMemoryPanel()" title="{{ 'chat.memory' | translate }}">
         <span class="material-symbols-rounded">auto_awesome</span>
       </button>
     </div>
@@ -40,7 +40,27 @@
       ></app-chat-memory-panel>
     </div>
 
-    <!-- Chat shell -->
+    <section class="chat-paywall" *ngIf="chatLocked; else chatUnlocked">
+      <div class="chat-paywall__icon">
+        <span class="material-symbols-rounded">{{ billingLoading ? 'hourglass_empty' : 'lock' }}</span>
+      </div>
+      <p class="chat-paywall__eyebrow">Suscripcion requerida</p>
+      <h2>{{ billingLoading ? 'Verificando tu plan' : 'Activa tu suscripcion para usar la IA' }}</h2>
+      <p>
+        {{
+          billingLoading
+            ? 'Estamos revisando el estado de tu cuenta.'
+            : 'El chat de NephroAI esta disponible para pacientes con una suscripcion activa.'
+        }}
+      </p>
+      <button type="button" class="chat-paywall__button" [disabled]="billingLoading" (click)="goToSubscription()">
+        <span class="material-symbols-rounded">credit_card</span>
+        <span>Ver suscripcion</span>
+      </button>
+    </section>
+
+    <ng-template #chatUnlocked>
+      <!-- Chat shell -->
     <app-chat-shell
       [titleKey]="'chat.title'"
       [subtitleKey]="'chat.subtitle'"
@@ -59,5 +79,6 @@
       (submitMessage)="submit()"
       (selectPrompt)="setPrompt($event)"
     ></app-chat-shell>
+    </ng-template>
   </div>
 </div>

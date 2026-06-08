@@ -208,10 +208,29 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
   border-radius: var(--r-lg);
   padding: 0.65rem 0.8rem;
   font-size: 0.86rem;
   border: 1px solid transparent;
+}
+
+.upload-toast__action {
+  margin-left: auto;
+  border: 1px solid rgba(248, 113, 113, 0.36);
+  border-radius: var(--r-md);
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.6rem;
+  white-space: nowrap;
+  transition: background 140ms ease, border-color 140ms ease;
+
+  &:hover {
+    background: rgba(248, 113, 113, 0.18);
+    border-color: rgba(248, 113, 113, 0.52);
+  }
 }
 
 .upload-toast--success {

@@ -52,6 +52,14 @@
     <div *ngIf="errorMessage" class="upload-toast upload-toast--error" role="alert">
       <span class="material-symbols-rounded">error</span>
       <span>{{ errorMessage }}</span>
+      <button
+        *ngIf="showSubscriptionCta"
+        type="button"
+        class="upload-toast__action"
+        (click)="goToSubscription()"
+      >
+        Ver suscripcion
+      </button>
     </div>
 
     <div class="upload-hint glass glass-soft" role="note">

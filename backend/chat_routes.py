@@ -61,6 +61,7 @@ from backend.database import (
     ChatSession,
     ChatMessageRecord,
     PatientMemory,
+    Subscription,
     BloodPressure,
     BodyTemperature,
     AuditLog,
@@ -921,6 +922,13 @@ async def get_advice(
     current_user = db.query(User).filter(User.id == user_id).first()
     if not current_user:
         raise HTTPException(status_code=404, detail="User not found")
+    active_subscription = (
+        db.query(Subscription)
+        .filter(Subscription.user_id == user_id, Subscription.status == "active")
+        .first()
+    )
+    if not active_subscription:
+        raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para usar el chat de IA.")
 
     patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
     days = req.days or 180

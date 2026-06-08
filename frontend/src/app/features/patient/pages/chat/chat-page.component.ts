@@ -1,8 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { AdviceClientService } from '../../../../core/services/advice.service';
+import { BillingService } from '../../../../core/services/billing.service';
 import { AdviceResponseModel } from '../../../../core/models/advice.model';
 import { ChatMessage } from '../../../../core/models/chat.model';
 import { ChatSessionSummary, ChatSessionMessage, PatientMemoryFact } from '../../../../core/models/chat-session.model';
@@ -20,6 +22,8 @@ export class PatientChatPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly adviceService = inject(AdviceClientService);
   private readonly v2Service = inject(V2Service);
+  private readonly billingService = inject(BillingService);
+  private readonly router = inject(Router);
 
   // ── Chat state ─────────────────────────────────────────────────────────
   isLoading = false;
@@ -28,6 +32,8 @@ export class PatientChatPageComponent implements OnInit {
   history: ChatMessage[] = [];
   errorMessage = '';
   language: V2DashboardLang = 'es';
+  billingLoading = true;
+  chatLocked = true;
 
   // ── Session state ──────────────────────────────────────────────────────
   sessions: ChatSessionSummary[] = [];
@@ -59,7 +65,28 @@ export class PatientChatPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.language = 'es';
-    this.loadSessions();
+    this.loadBillingStatus();
+  }
+
+  loadBillingStatus(): void {
+    this.billingLoading = true;
+    this.billingService.getSubscription().subscribe({
+      next: (subscription) => {
+        this.billingLoading = false;
+        this.chatLocked = subscription?.status !== 'active';
+        if (!this.chatLocked) {
+          this.loadSessions();
+          this.loadAnalytes();
+        }
+      },
+      error: () => {
+        this.billingLoading = false;
+        this.chatLocked = true;
+      },
+    });
+  }
+
+  loadAnalytes(): void {
     this.v2Service.listAnalytes().subscribe((analytes) => {
       const sorted = this.sortByRecent(analytes ?? []);
       this.availableMetrics = sorted.map(item => this.getDisplayName(item)).slice(0, 40);
@@ -69,6 +96,9 @@ export class PatientChatPageComponent implements OnInit {
 
   // ── Session management ─────────────────────────────────────────────────
   loadSessions(): void {
+    if (this.chatLocked) {
+      return;
+    }
     this.adviceService.getSessions().subscribe({
       next: (sessions) => {
         this.sessions = sessions;
@@ -81,6 +111,9 @@ export class PatientChatPageComponent implements OnInit {
   }
 
   selectSession(id: number): void {
+    if (this.chatLocked) {
+      return;
+    }
     this.activeSessionId = id;
     this.animateLastMessage = false;
     this.history = [];
@@ -92,6 +125,9 @@ export class PatientChatPageComponent implements OnInit {
   }
 
   startNewChat(): void {
+    if (this.chatLocked) {
+      return;
+    }
     this.adviceService.createSession().subscribe({
       next: (session) => {
         this.sessions = [session, ...this.sessions];
@@ -121,6 +157,9 @@ export class PatientChatPageComponent implements OnInit {
 
   // ── Memory management ──────────────────────────────────────────────────
   toggleMemoryPanel(): void {
+    if (this.chatLocked) {
+      return;
+    }
     if (!this.memoryPanelOpen) {
       this.adviceService.getMemory().subscribe({
         next: (facts) => { this.memoryFacts = facts; },
@@ -141,12 +180,18 @@ export class PatientChatPageComponent implements OnInit {
 
   // ── Quick prompts ──────────────────────────────────────────────────────
   setPrompt(prompt: string): void {
+    if (this.chatLocked) {
+      return;
+    }
     this.chatForm.patchValue({ question: prompt });
     this.submit();
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────
   submit(): void {
+    if (this.chatLocked) {
+      return;
+    }
     if (this.chatForm.invalid) {
       this.chatForm.markAllAsTouched();
       return;
@@ -174,9 +219,16 @@ export class PatientChatPageComponent implements OnInit {
         },
         error: (err) => {
           this.removePendingMessage(pendingIndex);
-          this.errorMessage = err?.error?.detail ?? 'Failed to get advice. Please try again.';
+          this.errorMessage = err?.error?.detail ?? 'No se pudo obtener la respuesta. Intentalo de nuevo.';
+          if (err?.status === 403 && this.isSubscriptionError(this.errorMessage)) {
+            this.chatLocked = true;
+          }
         },
       });
+  }
+
+  goToSubscription(): void {
+    void this.router.navigate(['/patient/profile']);
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────
@@ -250,5 +302,9 @@ export class PatientChatPageComponent implements OnInit {
   private normalizeAdviceAnswer(answer: string | null | undefined): string {
     const text = (answer ?? '').trim();
     return text || 'No pude generar un resumen util con los datos actuales. Intenta con una pregunta mas especifica.';
+  }
+
+  private isSubscriptionError(message: string): boolean {
+    return message.toLowerCase().includes('suscrip');
   }
 }
