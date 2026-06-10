@@ -45,6 +45,7 @@ const routes: Routes = [
           title: 'CHARTS.TITLE',
           subtitle: 'CHARTS.SUBTITLE',
           tabbar: true,
+          fullBleed: true,
         },
       },
       {

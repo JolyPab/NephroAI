@@ -20,6 +20,10 @@
   flex: 1;
 }
 
+.page-container--full-bleed {
+  max-width: none;
+}
+
 .toolbar-section {
   margin-top: 1.5rem;
 }
