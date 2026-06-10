@@ -40,7 +40,6 @@ export class AppComponent {
   showToolbar = true;
   showTabbar = false;
   showBack = false;
-  fullBleed = false;
   tabbarBase = '/patient';
   private backLink?: string;
 
@@ -88,7 +87,6 @@ export class AppComponent {
     this.toolbarAccent = (data['accent'] as ToolbarAccent) ?? 'default';
     this.showToolbar = data['hideToolbar'] !== true;
     this.showTabbar = data['tabbar'] === true;
-    this.fullBleed = data['fullBleed'] === true;
     this.tabbarBase = (data['tabbarBase'] as string) ?? '/patient';
     this.showBack = data['showBack'] === true;
     this.backLink = data['back'] as string | undefined;

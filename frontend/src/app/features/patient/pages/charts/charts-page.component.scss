@@ -9,7 +9,7 @@
   grid-template-columns: 320px minmax(0, 1fr);
   gap: 1rem;
   align-items: stretch;
-  min-height: max(540px, calc(100vh - 250px));
+  min-height: 540px;
 }
 
 // ─── Sidebar ───────────────────────────────────────────────────────────────────
@@ -337,7 +337,7 @@
 
 .chart-card {
   padding: clamp(0.75rem, 2vw, 1rem);
-  flex: 1 0 300px;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   min-height: 300px;
@@ -347,7 +347,7 @@
   app-v2-series-page {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 0 0 auto;
     min-height: 260px;
   }
 }
