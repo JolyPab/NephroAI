@@ -139,6 +139,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
   private readonly route = inject(ActivatedRoute);
   private readonly v2Service = inject(V2Service);
   private readonly themeService = inject(ThemeService);
+  private readonly themeChanges$ = toObservable(this.themeService.theme);
   private readonly destroyRef = inject(DestroyRef);
   @ViewChild(BaseChartDirective) private chartRef?: BaseChartDirective<'line'>;
 
@@ -261,7 +262,7 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.language = this.loadV2Language();
-    toObservable(this.themeService.theme)
+    this.themeChanges$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         if (this.series?.series_type === 'numeric') {
@@ -270,9 +271,18 @@ export class V2SeriesPageComponent implements OnInit, OnChanges {
         }
         this.applyChartThemeColors();
       });
-    if (this.analyteKeyInput && this.analyteKeyInput.trim() && !this.analyteKey) {
-      this.analyteKey = this.analyteKeyInput;
-      this.loadSeries(this.analyteKey);
+    const inputKey = this.analyteKeyInput?.trim() ?? '';
+    if (inputKey) {
+      if (!this.analyteKey) {
+        this.analyteKey = inputKey;
+        this.loadSeries(this.analyteKey);
+      }
+      return;
+    }
+    if (this.embedded) {
+      this.errorMessage = this.copy.missingKey;
+      this.series = null;
+      this.isLoading = false;
       return;
     }
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {

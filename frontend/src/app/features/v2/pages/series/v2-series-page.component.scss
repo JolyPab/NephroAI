@@ -40,7 +40,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 0;
+  min-height: 260px;
   gap: 0.5rem;
 
   // убираем margin от space-y-6 который накладывается поверх gap
@@ -182,13 +182,12 @@
 }
 
 .series-page--embedded {
-  max-height: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .series-page--embedded .series-chart-shell {
-  max-height: clamp(240px, 38vh, 480px);
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
 }
 
 .series-page--embedded .series-chart-canvas {
