@@ -46,7 +46,7 @@ services:
       FERNET_KEY: ${FERNET_KEY:-}
       ENV: ${ENV:-production}
       APP_ENV: ${APP_ENV:-${ENV:-production}}
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://app.nephroai.ec}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://app.nephroai.ec,https://app.nephroai.mx}
       REQUIRE_REDIS_HEALTH: ${REQUIRE_REDIS_HEALTH:-true}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       UPLOAD_DIR: /app/uploads

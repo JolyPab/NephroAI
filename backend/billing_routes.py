@@ -71,7 +71,9 @@ def _stripe_client():
     return stripe
 
 
-def _app_base_url() -> str:
+def _app_base_url(request: Request = None) -> str:
+    if request:
+        return str(request.base_url).rstrip("/")
     url = (os.getenv("APP_PUBLIC_URL") or "").strip()
     if not url:
         url = (os.getenv("FRONTEND_PUBLIC_URL") or "").strip()
@@ -236,6 +238,7 @@ async def get_subscription(
 
 @router.post("/checkout-session", response_model=CheckoutSessionResponse)
 async def create_checkout_session(
+    request: Request,
     request_data: CheckoutSessionRequest,
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
@@ -259,8 +262,8 @@ async def create_checkout_session(
         mode="subscription",
         customer=customer_id,
         line_items=[{"price": _stripe_price_id(request_data.interval), "quantity": 1}],
-        success_url=f"{_app_base_url()}/patient/profile?checkout=success",
-        cancel_url=f"{_app_base_url()}/patient/profile?checkout=canceled",
+        success_url=f"{_app_base_url(request)}/patient/profile?checkout=success",
+        cancel_url=f"{_app_base_url(request)}/patient/profile?checkout=canceled",
         client_reference_id=str(user_id),
         subscription_data={"metadata": {"user_id": str(user_id)}},
         metadata={"user_id": str(user_id)},
@@ -288,6 +291,7 @@ async def create_checkout_session(
 
 @router.post("/portal-session", response_model=PortalSessionResponse)
 async def create_portal_session(
+    request: Request,
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
@@ -297,7 +301,7 @@ async def create_portal_session(
         raise HTTPException(status_code=400, detail="No active Stripe customer found.")
     session = stripe_client.billing_portal.Session.create(
         customer=subscription.stripe_customer_id,
-        return_url=f"{_app_base_url()}/patient/profile",
+        return_url=f"{_app_base_url(request)}/patient/profile",
     )
     return PortalSessionResponse(portal_url=_get_value(session, "url"))
 

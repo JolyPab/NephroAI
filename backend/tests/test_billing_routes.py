@@ -75,7 +75,7 @@ def test_create_checkout_session_records_pending_subscription(monkeypatch):
     monkeypatch.setenv("STRIPE_PRICE_ID", "price_test_123")
     monkeypatch.setenv("APP_PUBLIC_URL", "https://app.nephroai.ec")
 
-    response = asyncio.run(billing_routes.create_checkout_session(request_data=billing_routes.CheckoutSessionRequest(interval="monthly"), user_id=1, db=db))
+    response = asyncio.run(billing_routes.create_checkout_session(request=None, request_data=billing_routes.CheckoutSessionRequest(interval="monthly"), user_id=1, db=db))
 
     assert response.checkout_url == "https://checkout.stripe.test/session"
     subscription = db.query(Subscription).one()
@@ -133,7 +133,7 @@ def test_create_portal_session_uses_existing_customer(monkeypatch):
     monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
     monkeypatch.setenv("APP_PUBLIC_URL", "https://app.nephroai.ec")
 
-    response = asyncio.run(billing_routes.create_portal_session(user_id=1, db=db))
+    response = asyncio.run(billing_routes.create_portal_session(request=None, user_id=1, db=db))
 
     assert response.portal_url == "https://billing.stripe.test/session"
     db.close()
