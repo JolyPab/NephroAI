@@ -173,6 +173,7 @@ jobs:
               level: info
             EOF
             docker compose up -d --build
+            docker compose restart nginx
             docker compose ps
             docker compose exec -T api python -c 'import os; raise SystemExit(0 if (os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY")) else "JWT_SECRET/SECRET_KEY is not visible inside api container")'
             curl -fsS http://localhost/api/health
