@@ -55,6 +55,36 @@
   border-color: rgba(var(--accent-rgb), 0.55);
 }
 
+.pdf-password-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(12rem, 18rem);
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: var(--r-lg);
+  padding: 0.7rem 0.8rem;
+  color: var(--text);
+}
+
+.pdf-password-row > .material-symbols-rounded {
+  color: var(--accent);
+}
+
+.pdf-password-row__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.pdf-password-row__copy small {
+  color: var(--text-dim);
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 :host-context([data-theme='light']) .glass-input-basic {
   border-color: rgba(79, 70, 229, 0.22);
   background: rgba(255, 255, 255, 0.65);
@@ -99,6 +129,14 @@
 @media (max-width: 640px) {
   .filters-grid {
     grid-template-columns: 1fr;
+  }
+
+  .pdf-password-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .pdf-password-row input {
+    grid-column: 1 / -1;
   }
 }
 

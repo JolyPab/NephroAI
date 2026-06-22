@@ -25,6 +25,7 @@ from starlette.requests import Request
 from dotenv import load_dotenv
 import hashlib
 from pathlib import Path
+import fitz
 from backend.models import ImportJson
 from backend.v2.extractor import extract as extract_v2
 from backend.v2.schemas import (
@@ -86,6 +87,40 @@ import redis as redis_lib
 
 from fastapi import APIRouter
 router = APIRouter()
+
+PDF_PASSWORD_REQUIRED_DETAIL = {
+    "code": "pdf_password_required",
+    "message": "Este PDF está protegido con contraseña. Ingresa la contraseña para importarlo.",
+}
+PDF_PASSWORD_INVALID_DETAIL = {
+    "code": "pdf_password_invalid",
+    "message": "La contraseña del PDF no es correcta. Inténtalo de nuevo.",
+}
+
+
+def _prepare_pdf_bytes_for_extraction(pdf_bytes: bytes, pdf_password: str | None = None) -> bytes:
+    """Return unlocked PDF bytes when the upload is password-protected."""
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    except Exception:
+        return pdf_bytes
+
+    try:
+        if not doc.needs_pass:
+            return pdf_bytes
+
+        password = (pdf_password or "").strip()
+        if not password:
+            raise HTTPException(status_code=423, detail=PDF_PASSWORD_REQUIRED_DETAIL)
+
+        if not doc.authenticate(password):
+            raise HTTPException(status_code=400, detail=PDF_PASSWORD_INVALID_DETAIL)
+
+        unlocked = io.BytesIO()
+        doc.save(unlocked, encryption=fitz.PDF_ENCRYPT_NONE, garbage=4, deflate=True)
+        return unlocked.getvalue()
+    finally:
+        doc.close()
 
 def _query_v2_analytes_for_user(db: Session, scoped_user_id: int) -> list[V2AnalyteItemResponse]:
     dt_expr = func.coalesce(V2Document.analysis_date, V2Document.created_at)
@@ -153,6 +188,7 @@ def _query_v2_series_rows_for_user(db: Session, scoped_user_id: int, analyte_key
 @router.post("/api/v2/documents", response_model=V2CreateDocumentResponse | V2CreateDocumentDuplicateResponse)
 async def create_v2_document(
     file: UploadFile = File(...),
+    pdf_password: Optional[str] = Form(None),
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
@@ -169,6 +205,7 @@ async def create_v2_document(
             raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para subir documentos.")
 
     document_hash = hashlib.sha256(pdf_bytes).hexdigest()
+    extraction_pdf_bytes = _prepare_pdf_bytes_for_extraction(pdf_bytes, pdf_password)
     try:
         existing_doc = (
             db.query(V2Document)
@@ -203,7 +240,7 @@ async def create_v2_document(
             }
 
         try:
-            payload = await extract_v2(pdf_bytes)
+            payload = await extract_v2(extraction_pdf_bytes)
         except ValidationError as e:
             raise HTTPException(status_code=422, detail=e.errors())
 

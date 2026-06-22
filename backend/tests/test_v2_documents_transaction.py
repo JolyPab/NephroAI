@@ -2,12 +2,13 @@ import asyncio
 import io
 
 import pytest
+import fitz
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.database import Base, User, V2Document, V2Metric
-from backend.v2_routes import create_v2_document
+from backend.v2_routes import create_v2_document, _prepare_pdf_bytes_for_extraction
 from backend.v2.schemas import (
     Context,
     ImportV2,
@@ -52,6 +53,53 @@ def _build_payload() -> ImportV2:
 
 def _make_upload() -> UploadFile:
     return UploadFile(filename="tx-test.pdf", file=io.BytesIO(b"%PDF-1.4 fake"))
+
+
+def _make_password_pdf(password: str = "cedula123") -> bytes:
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((72, 72), "CREATININA 1.1 mg/dL")
+    out = io.BytesIO()
+    doc.save(
+        out,
+        encryption=fitz.PDF_ENCRYPT_AES_256,
+        owner_pw="owner-secret",
+        user_pw=password,
+    )
+    doc.close()
+    return out.getvalue()
+
+
+def test_prepare_pdf_bytes_requires_password_for_encrypted_pdf():
+    encrypted = _make_password_pdf()
+
+    with pytest.raises(HTTPException) as exc:
+        _prepare_pdf_bytes_for_extraction(encrypted)
+
+    assert exc.value.status_code == 423
+    assert exc.value.detail["code"] == "pdf_password_required"
+
+
+def test_prepare_pdf_bytes_rejects_invalid_pdf_password():
+    encrypted = _make_password_pdf()
+
+    with pytest.raises(HTTPException) as exc:
+        _prepare_pdf_bytes_for_extraction(encrypted, "wrong")
+
+    assert exc.value.status_code == 400
+    assert exc.value.detail["code"] == "pdf_password_invalid"
+
+
+def test_prepare_pdf_bytes_unlocks_encrypted_pdf_with_password():
+    encrypted = _make_password_pdf()
+
+    unlocked = _prepare_pdf_bytes_for_extraction(encrypted, "cedula123")
+    doc = fitz.open(stream=unlocked, filetype="pdf")
+    try:
+        assert not doc.needs_pass
+        assert "CREATININA" in doc[0].get_text()
+    finally:
+        doc.close()
 
 
 def test_create_v2_document_rolls_back_and_recovers(monkeypatch):

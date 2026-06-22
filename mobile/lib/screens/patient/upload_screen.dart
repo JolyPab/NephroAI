@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/document.dart';
@@ -47,9 +48,13 @@ class _UploadScreenState extends State<UploadScreen> {
       _uploadSuccess = false;
     });
 
+    await _uploadPickedFile(file);
+  }
+
+  Future<void> _uploadPickedFile(PlatformFile file, {String? pdfPassword}) async {
     try {
-      final res = await V2Service.uploadDocument(file.path!, file.name);
-      final isDuplicate = res.containsKey('duplicate') && res['duplicate'] == true;
+      final res = await V2Service.uploadDocument(file.path!, file.name, pdfPassword: pdfPassword);
+      final isDuplicate = res['status'] == 'duplicate' || (res.containsKey('duplicate') && res['duplicate'] == true);
       if (mounted) {
         setState(() {
           _uploading = false;
@@ -61,6 +66,26 @@ class _UploadScreenState extends State<UploadScreen> {
         await _loadDocuments();
       }
     } catch (e) {
+      final passwordError = _pdfPasswordErrorCode(e);
+      if (passwordError != null && mounted) {
+        setState(() {
+          _uploading = false;
+          _uploadSuccess = false;
+          _uploadStatus = passwordError == 'pdf_password_invalid'
+              ? 'La contraseña del PDF no es correcta.'
+              : 'Este PDF está protegido con contraseña.';
+        });
+        final password = await _askPdfPassword(invalidPassword: passwordError == 'pdf_password_invalid');
+        if (password != null && password.trim().isNotEmpty && mounted) {
+          setState(() {
+            _uploading = true;
+            _uploadStatus = 'Procesando ${file.name}...';
+            _uploadSuccess = false;
+          });
+          await _uploadPickedFile(file, pdfPassword: password);
+        }
+        return;
+      }
       if (mounted) {
         setState(() {
           _uploading = false;
@@ -68,6 +93,60 @@ class _UploadScreenState extends State<UploadScreen> {
           _uploadStatus = 'Error: ${e.toString().replaceAll('DioException', '').trim()}';
         });
       }
+    }
+  }
+
+  String? _pdfPasswordErrorCode(Object error) {
+    if (error is! DioException) return null;
+    final detail = error.response?.data is Map<String, dynamic>
+        ? (error.response?.data as Map<String, dynamic>)['detail']
+        : null;
+    if (detail is Map<String, dynamic>) {
+      final code = detail['code'];
+      if (code == 'pdf_password_required' || code == 'pdf_password_invalid') {
+        return code as String;
+      }
+    }
+    return null;
+  }
+
+  Future<String?> _askPdfPassword({required bool invalidPassword}) async {
+    final controller = TextEditingController();
+    try {
+      return showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.surfaceCard,
+          title: const Text('Contraseña del PDF'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                invalidPassword
+                    ? 'La contraseña no funcionó. Inténtalo de nuevo.'
+                    : 'Este PDF está protegido. Ingresa la contraseña indicada por el laboratorio.',
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                obscureText: true,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Contraseña',
+                  hintText: 'Cédula, pasaporte u otro ID',
+                ),
+                onSubmitted: (value) => Navigator.pop(ctx, value),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+            TextButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('Continuar')),
+          ],
+        ),
+      );
+    } finally {
+      controller.dispose();
     }
   }
 

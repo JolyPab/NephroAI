@@ -45,6 +45,22 @@
       </button>
     </div>
 
+    <label *ngIf="passwordRequired" class="pdf-password-field glass glass-soft">
+      <span class="material-symbols-rounded">lock</span>
+      <span class="pdf-password-field__text">
+        <span>Contraseña del PDF</span>
+        <small>Puede ser tu cédula, pasaporte u otro identificador usado por el laboratorio.</small>
+      </span>
+      <input
+        type="password"
+        name="pdf-password"
+        autocomplete="off"
+        [(ngModel)]="pdfPassword"
+        [disabled]="isUploading"
+        placeholder="Ingresa la contraseña"
+      />
+    </label>
+
     <div *ngIf="uploadMessage" class="upload-toast upload-toast--success" role="status">
       <span class="material-symbols-rounded">check_circle</span>
       <span>{{ uploadMessage }}</span>
@@ -70,7 +86,7 @@
     <button type="button" class="upload-submit" (click)="submit()" [disabled]="isUploading">
       <span *ngIf="isUploading" class="loader-dot"></span>
       <span class="material-symbols-rounded" *ngIf="!isUploading">auto_awesome</span>
-      <span>{{ isUploading ? ('UPLOAD.PROCESSING' | translate) : ('UPLOAD.UPLOAD_PARSE' | translate) }}</span>
+      <span>{{ isUploading ? ('UPLOAD.PROCESSING' | translate) : (passwordRequired ? 'Reintentar con contraseña' : ('UPLOAD.UPLOAD_PARSE' | translate)) }}</span>
     </button>
   </section>
 </div>

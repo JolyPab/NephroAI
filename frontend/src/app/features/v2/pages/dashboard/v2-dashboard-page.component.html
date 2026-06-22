@@ -49,6 +49,21 @@
       </button>
     </div>
 
+    <label *ngIf="passwordRequired" class="pdf-password-row glass glass-soft">
+      <span class="material-symbols-rounded">lock</span>
+      <span class="pdf-password-row__copy">
+        <span>{{ copy.pdfPasswordLabel }}</span>
+        <small>{{ copy.pdfPasswordHint }}</small>
+      </span>
+      <input
+        type="password"
+        class="glass-input-basic"
+        autocomplete="off"
+        [(ngModel)]="pdfPassword"
+        [disabled]="isUploading"
+      />
+    </label>
+
     <div *ngIf="uploadMessage" class="toast-glass success" role="status">
       <span class="material-symbols-rounded">check_circle</span>
       <span>{{ uploadMessage }}</span>
@@ -60,7 +75,7 @@
 
     <button type="button" appGlassButton (click)="upload()" [glassBlock]="true" [disabled]="isUploading">
       <span *ngIf="isUploading" class="loader-dot"></span>
-      <span>{{ isUploading ? copy.uploading : copy.uploadAction }}</span>
+      <span>{{ isUploading ? copy.uploading : (passwordRequired ? copy.retryWithPassword : copy.uploadAction) }}</span>
     </button>
   </app-glass-card>
 

@@ -27,9 +27,14 @@ class V2Service {
     return list.map((e) => Document.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  static Future<Map<String, dynamic>> uploadDocument(String filePath, String filename) async {
+  static Future<Map<String, dynamic>> uploadDocument(
+    String filePath,
+    String filename, {
+    String? pdfPassword,
+  }) async {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(filePath, filename: filename),
+      if (pdfPassword != null && pdfPassword.trim().isNotEmpty) 'pdf_password': pdfPassword.trim(),
     });
     final res = await _dio.post(
       '/v2/documents',

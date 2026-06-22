@@ -30,6 +30,9 @@ interface DashboardLabels {
   selectPdfError: string;
   uploadFailed: string;
   loadAnalytesFailed: string;
+  pdfPasswordLabel: string;
+  pdfPasswordHint: string;
+  retryWithPassword: string;
 }
 
 const V2_DASHBOARD_COPY: Record<V2DashboardLang, DashboardLabels> = {
@@ -56,6 +59,9 @@ const V2_DASHBOARD_COPY: Record<V2DashboardLang, DashboardLabels> = {
     selectPdfError: 'Please select a PDF file.',
     uploadFailed: 'Upload failed.',
     loadAnalytesFailed: 'Failed to load analytes.',
+    pdfPasswordLabel: 'PDF password',
+    pdfPasswordHint: 'It may be your ID, passport, or another identifier used by the lab.',
+    retryWithPassword: 'Retry with password',
   },
   es: {
     title: 'Subir PDF de laboratorio V2',
@@ -80,6 +86,9 @@ const V2_DASHBOARD_COPY: Record<V2DashboardLang, DashboardLabels> = {
     selectPdfError: 'Por favor selecciona un archivo PDF.',
     uploadFailed: 'Fallo al subir el archivo.',
     loadAnalytesFailed: 'No se pudieron cargar los analitos.',
+    pdfPasswordLabel: 'Contraseña del PDF',
+    pdfPasswordHint: 'Puede ser tu cédula, pasaporte u otro identificador usado por el laboratorio.',
+    retryWithPassword: 'Reintentar con contraseña',
   },
 };
 
@@ -109,6 +118,8 @@ export class V2DashboardPageComponent implements OnInit {
   sortMode: SortMode = 'recent';
   numericOnly = false;
   textOnly = false;
+  pdfPassword = '';
+  passwordRequired = false;
 
   ngOnInit(): void {
     this.language = this.loadLanguage();
@@ -157,15 +168,22 @@ export class V2DashboardPageComponent implements OnInit {
     this.uploadMessage = '';
     this.isUploading = true;
 
-    this.v2Service.uploadDocument(this.selectedFile).subscribe({
+    this.v2Service.uploadDocument(this.selectedFile, this.pdfPassword.trim()).subscribe({
       next: (res) => {
         this.isUploading = false;
+        this.passwordRequired = false;
+        this.pdfPassword = '';
         this.uploadMessage = this.formatUploadMessage(res);
         this.loadAnalytes();
       },
       error: (err) => {
         this.isUploading = false;
-        this.errorMessage = err?.error?.detail ?? this.copy.uploadFailed;
+        const uploadError = this.parseUploadError(err);
+        this.errorMessage = uploadError.message;
+        this.passwordRequired = uploadError.requiresPassword;
+        if (uploadError.requiresPassword && uploadError.code === 'pdf_password_invalid') {
+          this.pdfPassword = '';
+        }
       },
     });
   }
@@ -174,6 +192,8 @@ export class V2DashboardPageComponent implements OnInit {
     this.selectedFile = null;
     this.uploadMessage = '';
     this.errorMessage = '';
+    this.pdfPassword = '';
+    this.passwordRequired = false;
   }
 
   setLanguage(lang: V2DashboardLang): void {
@@ -267,6 +287,8 @@ export class V2DashboardPageComponent implements OnInit {
     this.selectedFile = file;
     this.errorMessage = '';
     this.uploadMessage = '';
+    this.pdfPassword = '';
+    this.passwordRequired = false;
   }
 
   private refreshVisibleAnalytes(): void {
@@ -342,5 +364,21 @@ export class V2DashboardPageComponent implements OnInit {
       return `${this.copy.duplicatePrefix} ${response.document_id}.`;
     }
     return `${this.copy.processedPrefix} ${response.num_metrics}.`;
+  }
+
+  private parseUploadError(err: any): { code: string; message: string; requiresPassword: boolean } {
+    const detail = err?.error?.detail;
+    if (detail?.code === 'pdf_password_required' || detail?.code === 'pdf_password_invalid') {
+      return {
+        code: detail.code,
+        message: detail.message,
+        requiresPassword: true,
+      };
+    }
+    return {
+      code: '',
+      message: typeof detail === 'string' ? detail : this.copy.uploadFailed,
+      requiresPassword: false,
+    };
   }
 }

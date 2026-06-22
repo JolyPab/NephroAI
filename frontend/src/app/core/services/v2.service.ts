@@ -17,9 +17,12 @@ import {
 export class V2Service {
   private readonly api = inject(ApiService);
 
-  uploadDocument(file: File): Observable<V2UploadResponse> {
+  uploadDocument(file: File, pdfPassword?: string): Observable<V2UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
+    if (pdfPassword) {
+      formData.append('pdf_password', pdfPassword);
+    }
     return this.api.postForm<V2UploadResponse>('/v2/documents', formData);
   }
 

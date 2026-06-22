@@ -23,6 +23,8 @@ export class PatientUploadPageComponent {
   errorMessage = "";
   showSubscriptionCta = false;
   isDragging = false;
+  pdfPassword = "";
+  passwordRequired = false;
 
   get uploadAccuracyHint(): string {
     return getV2UiStrings().uploadAccuracyHint;
@@ -86,15 +88,22 @@ export class PatientUploadPageComponent {
     this.uploadMessage = getV2UiStrings().uploadLongRunningStatus;
     this.errorMessage = "";
 
-    this.v2Service.uploadDocument(this.selectedFile).subscribe({
+    this.v2Service.uploadDocument(this.selectedFile, this.pdfPassword.trim()).subscribe({
       next: (response: V2UploadResponse) => {
         this.isUploading = false;
         this.showSubscriptionCta = false;
+        this.passwordRequired = false;
+        this.pdfPassword = "";
         this.uploadMessage = this.formatV2UploadMessage(response);
       },
       error: (err) => {
         this.isUploading = false;
-        this.errorMessage = err?.error?.detail ?? this.translate.instant("ERRORS.UPLOAD_FAILED");
+        const uploadError = this.parseUploadError(err);
+        this.errorMessage = uploadError.message;
+        this.passwordRequired = uploadError.requiresPassword;
+        if (uploadError.requiresPassword && uploadError.code === "pdf_password_invalid") {
+          this.pdfPassword = "";
+        }
         this.showSubscriptionCta = err?.status === 403 && this.isSubscriptionError(this.errorMessage);
       },
     });
@@ -109,6 +118,8 @@ export class PatientUploadPageComponent {
     this.uploadMessage = "";
     this.errorMessage = "";
     this.showSubscriptionCta = false;
+    this.passwordRequired = false;
+    this.pdfPassword = "";
   }
 
   private formatV2UploadMessage(response: V2UploadResponse): string {
@@ -120,5 +131,21 @@ export class PatientUploadPageComponent {
 
   private isSubscriptionError(message: string): boolean {
     return message.toLowerCase().includes("suscrip");
+  }
+
+  private parseUploadError(err: any): { code: string; message: string; requiresPassword: boolean } {
+    const detail = err?.error?.detail;
+    if (detail?.code === "pdf_password_required" || detail?.code === "pdf_password_invalid") {
+      return {
+        code: detail.code,
+        message: detail.message,
+        requiresPassword: true,
+      };
+    }
+    return {
+      code: "",
+      message: typeof detail === "string" ? detail : this.translate.instant("ERRORS.UPLOAD_FAILED"),
+      requiresPassword: false,
+    };
   }
 }
