@@ -286,6 +286,18 @@
       margin-bottom: 2rem; max-width: 480px;
     }
     .hero-desc strong { color: var(--text-dim); font-weight: 500; }
+    .hero-quote {
+      max-width: 520px;
+      margin: -0.5rem 0 2rem;
+      padding: 1rem 1.15rem;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--r-md) var(--r-md) 0;
+      background: rgba(129,140,248,.08);
+      color: var(--text);
+      font-size: 1.02rem;
+      font-weight: 650;
+      line-height: 1.55;
+    }
     .hero-actions { display: flex; align-items: center; gap: .85rem; flex-wrap: wrap; }
 
     .hero-trust {
@@ -717,11 +729,14 @@
 
       /* Hero */
       .hero { padding: 6rem 0 3rem; gap: 1.75rem; }
-      .hero h1 { font-size: clamp(1.9rem, 7.5vw, 2.5rem); }
-      .hero-desc { font-size: 1.08rem; }
+      .hero-badge { font-size: .82rem; }
+      .hero h1 { font-size: clamp(2.15rem, 8.8vw, 2.85rem); }
+      .hero-desc { font-size: 1.16rem; line-height: 1.58; }
+      .hero-quote { font-size: 1.08rem; margin: -0.25rem 0 1.75rem; }
       .hero-actions { flex-direction: column; align-items: stretch; }
-      .hero-actions .btn { justify-content: center; }
+      .hero-actions .btn { justify-content: center; font-size: 1.08rem; padding-top: .95rem; padding-bottom: .95rem; }
       .hero-trust { flex-direction: column; gap: .6rem; margin-top: 1.5rem; padding-top: 1.25rem; }
+      .trust-item { font-size: .9rem; }
       .preview-float-1, .preview-float-2 { display: none; }
 
       /* Sections */
@@ -758,7 +773,11 @@
     /* Small phones ≤400px */
     @media (max-width: 400px) {
       .hero { padding: 5.5rem 0 2.5rem; }
-      .hero h1 { font-size: 1.85rem; }
+      .hero h1 { font-size: 2.08rem; }
+      .hero-desc { font-size: 1.08rem; }
+      .hero-quote { font-size: 1rem; padding: .9rem 1rem; }
+      .hero-actions .btn { font-size: 1rem; }
+      .trust-item { font-size: .84rem; }
       .bento-cell { padding: 1.1rem; }
       .cta-wrap { padding: 2.25rem 1rem; }
       .forwho-card { padding: 1.25rem 1.1rem; }
@@ -817,6 +836,10 @@
         <p class="hero-desc reveal d2">
           Descubre si tu función renal está estable o empeorando comparando todos tus exámenes históricos.
         </p>
+
+        <blockquote class="hero-quote reveal d2">
+          “NephroAI fue creada por pacientes de enfermedad renal crónica para ayudar a otros pacientes a entender sus análisis antes de que sea demasiado tarde.”
+        </blockquote>
 
         <div class="hero-actions reveal d2">
           <a href="https://app.nephroai.ec" class="btn btn-primary">
