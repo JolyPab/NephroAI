@@ -54,7 +54,7 @@ export class AuthPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.applyEmailVerificationParams();
+    this.applyAuthQueryParams();
     this.auth.loadProfile().subscribe((user) => {
       if (user) {
         this.redirectAfterAuth(user);
@@ -264,9 +264,15 @@ export class AuthPageComponent implements OnInit {
     });
   }
 
-  private applyEmailVerificationParams(): void {
+  private applyAuthQueryParams(): void {
     const mode = this.route.snapshot.queryParamMap.get('mode');
     const email = this.route.snapshot.queryParamMap.get('email')?.trim();
+    if (mode === 'register') {
+      this.mode = 'register';
+      this.errorMessage = '';
+      this.infoMessage = '';
+      return;
+    }
     if (mode !== 'verify' || !email) {
       return;
     }
