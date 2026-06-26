@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../../../core/services/auth.service';
@@ -15,6 +15,7 @@ import { User } from '../../../../core/models/user.model';
 export class AuthPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
@@ -53,6 +54,7 @@ export class AuthPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.applyEmailVerificationParams();
     this.auth.loadProfile().subscribe((user) => {
       if (user) {
         this.redirectAfterAuth(user);
@@ -260,6 +262,19 @@ export class AuthPageComponent implements OnInit {
       },
       complete: () => (this.isSubmitting = false),
     });
+  }
+
+  private applyEmailVerificationParams(): void {
+    const mode = this.route.snapshot.queryParamMap.get('mode');
+    const email = this.route.snapshot.queryParamMap.get('email')?.trim();
+    if (mode !== 'verify' || !email) {
+      return;
+    }
+    this.mode = 'verify';
+    this.pendingVerificationEmail = email;
+    this.verifyForm.reset();
+    this.infoMessage = this.translate.instant('AUTH.VERIFICATION_LINK_OPENED', { email });
+    this.errorMessage = '';
   }
 
   private redirectAfterAuth(user: User): void {

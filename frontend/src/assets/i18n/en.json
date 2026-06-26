@@ -38,6 +38,7 @@
     "VERIFY_BUTTON": "Verify email",
     "RESEND_CODE": "Resend code",
     "VERIFICATION_CODE_SENT": "Code sent to {{email}}.",
+    "VERIFICATION_LINK_OPENED": "Enter the code sent to {{email}}.",
     "FULL_NAME_PLACEHOLDER": "Jane Doe",
     "EMAIL_PLACEHOLDER": "you@example.com",
     "PASSWORD_PLACEHOLDER": "Enter password",

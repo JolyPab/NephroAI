@@ -30,8 +30,9 @@ def test_register_verify_and_login_flow(monkeypatch):
     db = _setup_db()
     sent_codes: list[str] = []
 
-    def _fake_send(email: str, code: str):
+    def _fake_send(email: str, code: str, purpose: str = "email_verification"):
         assert email == "verify@example.com"
+        assert purpose == "email_verification"
         sent_codes.append(code)
 
     monkeypatch.setattr(auth_routes, "send_verification_code_email", _fake_send)
@@ -80,7 +81,11 @@ def test_register_verify_and_login_flow(monkeypatch):
 def test_resend_email_code_cooldown(monkeypatch):
     db = _setup_db()
     sent_codes: list[str] = []
-    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda _email, code: sent_codes.append(code))
+    monkeypatch.setattr(
+        auth_routes,
+        "send_verification_code_email",
+        lambda _email, code, purpose="email_verification": sent_codes.append(code),
+    )
 
     reg_payload = UserRegister(
         email="cooldown@example.com",

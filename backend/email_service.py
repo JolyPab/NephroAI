@@ -5,12 +5,27 @@ from __future__ import annotations
 import logging
 import os
 import smtplib
+from html import escape
 from email.message import EmailMessage
+from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
 
-def send_verification_code_email(email: str, code: str) -> None:
+def _public_app_url() -> str:
+    configured_url = (os.getenv("APP_PUBLIC_URL") or os.getenv("FRONTEND_PUBLIC_URL") or "").strip()
+    if configured_url:
+        return configured_url.rstrip("/")
+    app_env = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").strip().lower()
+    return "https://app.nephroai.ec" if app_env in {"prod", "production"} else "http://localhost:4200"
+
+
+def _verification_link(email: str) -> str:
+    query = urlencode({"mode": "verify", "email": email})
+    return f"{_public_app_url()}/auth?{query}"
+
+
+def send_verification_code_email(email: str, code: str, purpose: str = "email_verification") -> None:
     """
     Send a verification code email.
 
@@ -27,13 +42,48 @@ def send_verification_code_email(email: str, code: str) -> None:
     app_env = (os.getenv("ENV") or os.getenv("APP_ENV") or "development").strip().lower()
     allow_dev_fallback = app_env not in {"prod", "production"} and not smtp_require
 
-    subject = "NephroAI - verification code"
-    body = (
-        "Use this code to verify your email:\n\n"
-        f"{code}\n\n"
-        "The code expires in 10 minutes.\n"
-        "If you did not request this, you can ignore this email."
-    )
+    is_reset = purpose == "password_reset"
+    subject = "NephroAI - codigo de verificacion"
+    if is_reset:
+        body = (
+            "Usa este codigo para restablecer tu contrasena:\n\n"
+            f"{code}\n\n"
+            "El codigo vence en 10 minutos.\n"
+            "Si no solicitaste esto, puedes ignorar este correo."
+        )
+        html_body = f"""
+        <div style="font-family:Arial,sans-serif;color:#10202a;line-height:1.5">
+          <h2 style="margin:0 0 12px">Restablece tu contrasena en NephroAI</h2>
+          <p>Usa este codigo para continuar:</p>
+          <p style="font-size:28px;letter-spacing:8px;font-weight:700;margin:20px 0">{escape(code)}</p>
+          <p>El codigo vence en 10 minutos. Si no solicitaste esto, puedes ignorar este correo.</p>
+        </div>
+        """
+    else:
+        link = _verification_link(email)
+        body = (
+            "Gracias por registrarte en NephroAI.\n\n"
+            "1. Abre esta pagina para volver a la verificacion:\n"
+            f"{link}\n\n"
+            "2. Ingresa este codigo:\n\n"
+            f"{code}\n\n"
+            "El codigo vence en 10 minutos.\n"
+            "Si no solicitaste esto, puedes ignorar este correo."
+        )
+        html_body = f"""
+        <div style="font-family:Arial,sans-serif;color:#10202a;line-height:1.5">
+          <h2 style="margin:0 0 12px">Confirma tu correo en NephroAI</h2>
+          <p>Gracias por registrarte. Toca el boton para volver a la pantalla de verificacion.</p>
+          <p style="margin:24px 0">
+            <a href="{escape(link)}" style="background:#0f766e;color:#ffffff;padding:14px 22px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block">
+              Abrir verificacion
+            </a>
+          </p>
+          <p>Luego ingresa este codigo:</p>
+          <p style="font-size:28px;letter-spacing:8px;font-weight:700;margin:20px 0">{escape(code)}</p>
+          <p>El codigo vence en 10 minutos. Si no solicitaste esto, puedes ignorar este correo.</p>
+        </div>
+        """
 
     if not smtp_host:
         logger.warning(
@@ -50,6 +100,7 @@ def send_verification_code_email(email: str, code: str) -> None:
     msg["From"] = smtp_from
     msg["To"] = email
     msg.set_content(body)
+    msg.add_alternative(html_body, subtype="html")
 
     try:
         with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:

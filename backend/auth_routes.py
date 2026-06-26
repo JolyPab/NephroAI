@@ -245,7 +245,7 @@ def _create_verification_code(db: Session, user: User, purpose: str = "email_ver
     db.flush()
 
     try:
-        send_verification_code_email(user.email, code)
+        send_verification_code_email(user.email, code, purpose=purpose)
     except Exception:
         logger.exception("Failed to send verification email to %s", user.email)
         raise HTTPException(
@@ -421,6 +421,7 @@ async def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db
         .filter(
             EmailVerificationCode.user_id == user.id,
             EmailVerificationCode.used_at.is_(None),
+            EmailVerificationCode.purpose == "email_verification",
         )
         .order_by(EmailVerificationCode.created_at.desc())
         .first()

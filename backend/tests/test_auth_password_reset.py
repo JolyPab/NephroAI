@@ -42,7 +42,7 @@ def test_purpose_column_isolation(monkeypatch):
     """A password_reset code must not be rate-limited by email_verification cooldown."""
     db = _setup_db()
     sent_codes: list[str] = []
-    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c: sent_codes.append(c))
+    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c, purpose="email_verification": sent_codes.append(c))
 
     asyncio.run(register(UserRegister(email="iso@example.com", password="password123", full_name="Iso", is_doctor=False), db=db))
     assert len(sent_codes) == 1
@@ -59,7 +59,7 @@ def test_purpose_column_isolation(monkeypatch):
 def test_forgot_password_unknown_email(monkeypatch):
     """Unknown email must return 200 (no account enumeration)."""
     db = _setup_db()
-    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c: None)
+    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c, purpose="email_verification": None)
     resp = asyncio.run(forgot_password(ForgotPasswordRequest(email="nobody@example.com"), db=db))
     assert resp.status == "ok"
 
@@ -68,7 +68,7 @@ def test_full_reset_flow(monkeypatch):
     """Happy path: forgot -> verify code -> reset password -> login with new password."""
     db = _setup_db()
     sent_codes: list[str] = []
-    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c: sent_codes.append(c))
+    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c, purpose="email_verification": sent_codes.append(c))
 
     _register_and_verify("reset@example.com", "old-password-1", db, sent_codes)
 
@@ -101,7 +101,7 @@ def test_reset_code_wrong_code(monkeypatch):
     """Wrong code increments attempts and raises 400."""
     db = _setup_db()
     sent_codes: list[str] = []
-    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c: sent_codes.append(c))
+    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c, purpose="email_verification": sent_codes.append(c))
 
     _register_and_verify("wrong@example.com", "password123", db, sent_codes)
     asyncio.run(forgot_password(ForgotPasswordRequest(email="wrong@example.com"), db=db))
@@ -125,7 +125,7 @@ def test_reset_code_expired(monkeypatch):
     """Expired reset code raises 400."""
     db = _setup_db()
     sent_codes: list[str] = []
-    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c: sent_codes.append(c))
+    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c, purpose="email_verification": sent_codes.append(c))
 
     _register_and_verify("expired@example.com", "password123", db, sent_codes)
     asyncio.run(forgot_password(ForgotPasswordRequest(email="expired@example.com"), db=db))
@@ -163,7 +163,7 @@ def test_reset_codes_invalidated_after_reset(monkeypatch):
     """All active reset codes are marked used after a successful reset."""
     db = _setup_db()
     sent_codes: list[str] = []
-    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c: sent_codes.append(c))
+    monkeypatch.setattr(auth_routes, "send_verification_code_email", lambda e, c, purpose="email_verification": sent_codes.append(c))
 
     _register_and_verify("cleanup@example.com", "password123", db, sent_codes)
     asyncio.run(forgot_password(ForgotPasswordRequest(email="cleanup@example.com"), db=db))

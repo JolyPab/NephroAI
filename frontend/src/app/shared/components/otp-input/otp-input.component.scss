@@ -3,16 +3,20 @@
 }
 
 .otp-root {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(0.25rem, 2vw, 0.5rem);
+  width: 100%;
+  max-width: 20rem;
+  margin-inline: auto;
 }
 
 .otp-box {
-  width: 2.75rem;
-  height: 3.25rem;
+  width: 100%;
+  min-width: 0;
+  height: clamp(2.75rem, 12vw, 3.25rem);
   text-align: center;
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 5vw, 1.5rem);
   font-weight: 600;
   letter-spacing: 0;
   color: var(--text);

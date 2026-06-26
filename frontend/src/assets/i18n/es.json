@@ -38,6 +38,7 @@
     "VERIFY_BUTTON": "Verificar correo",
     "RESEND_CODE": "Reenviar codigo",
     "VERIFICATION_CODE_SENT": "Codigo enviado a {{email}}.",
+    "VERIFICATION_LINK_OPENED": "Ingresa el codigo enviado a {{email}}.",
     "FULL_NAME_PLACEHOLDER": "Juan Perez",
     "EMAIL_PLACEHOLDER": "tu@email.com",
     "PASSWORD_PLACEHOLDER": "Introduce la contrasena",
