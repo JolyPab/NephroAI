@@ -600,18 +600,23 @@
           min-height: 62px;
         }
         .hero-media {
-          min-height: 520px;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
         }
         .hero-media > img {
-          object-position: 34% center;
+          height: 390px;
+          flex: 0 0 390px;
+          object-position: 27% center;
         }
         .result-card {
-          right: 16px;
-          left: 16px;
-          top: auto;
-          bottom: 18px;
+          position: relative;
+          inset: auto;
           width: auto;
+          margin: -32px 16px 20px;
           padding: 21px;
+          z-index: 2;
         }
         .result-status {
           font-size: 19px;
