@@ -40,7 +40,7 @@
   height: 2.4rem;
   border-radius: 12px;
   border: 1px solid rgba(var(--accent-rgb), 0.38);
-  background: linear-gradient(135deg, rgba(109, 40, 217, 0.3), rgba(var(--accent-rgb), 0.2));
+  background: rgba(var(--accent-rgb), 0.1);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -222,7 +222,7 @@
     min-height: 2.35rem;
     border: 1px solid rgba(var(--accent-rgb), 0.28);
     border-radius: var(--r-md);
-    background: rgba(0, 0, 0, 0.16);
+    background: var(--color-surface);
     color: var(--text);
     padding: 0.45rem 0.65rem;
     outline: none;

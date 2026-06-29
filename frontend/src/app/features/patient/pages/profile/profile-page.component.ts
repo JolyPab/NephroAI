@@ -6,7 +6,6 @@ import { V2DocumentListItemResponse } from '../../../../core/models/v2.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { BillingService, BillingSubscription } from '../../../../core/services/billing.service';
 import { LanguageService } from '../../../../core/services/language.service';
-import { ThemeService } from '../../../../core/services/theme.service';
 import { V2Service } from '../../../../core/services/v2.service';
 
 @Component({
@@ -17,14 +16,12 @@ import { V2Service } from '../../../../core/services/v2.service';
 })
 export class PatientProfilePageComponent implements OnInit {
   private readonly auth = inject(AuthService);
-  private readonly themeService = inject(ThemeService);
   private readonly billingService = inject(BillingService);
   private readonly fb = inject(FormBuilder);
   private readonly languageService = inject(LanguageService);
   private readonly v2Service = inject(V2Service);
   private readonly destroyRef = inject(DestroyRef);
   readonly user = this.auth.user;
-  readonly theme = this.themeService.theme;
   currentLang = this.languageService.currentLang;
 
   readonly nameForm = this.fb.nonNullable.group({
@@ -56,14 +53,6 @@ export class PatientProfilePageComponent implements OnInit {
   ngOnInit(): void {
     this.loadDocuments();
     this.loadSubscription();
-  }
-
-  toggleTheme(): void {
-    this.themeService.toggleTheme();
-  }
-
-  setTheme(theme: 'dark' | 'light'): void {
-    this.themeService.setTheme(theme);
   }
 
   setLanguage(lang: string): void {

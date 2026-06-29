@@ -81,6 +81,13 @@ export class AppComponent {
 
   private updateShell(): void {
     const data = this.collectRouteData();
+    const isPatientRoute = this.router.url.startsWith('/patient');
+
+    this.themeService.setThemeOverride(isPatientRoute ? 'light' : null);
+    if (typeof document !== 'undefined') {
+      document.documentElement.toggleAttribute('data-patient-theme', isPatientRoute);
+      document.body?.toggleAttribute('data-patient-theme', isPatientRoute);
+    }
 
     this.toolbarTitle = (data['title'] as string) ?? 'COMMON.APP_NAME';
     this.toolbarSubtitle = (data['subtitle'] as string) ?? '';

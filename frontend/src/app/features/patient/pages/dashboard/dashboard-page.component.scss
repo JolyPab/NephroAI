@@ -36,7 +36,7 @@
   height: 2.4rem;
   border-radius: 12px;
   border: 1px solid rgba(var(--accent-rgb), 0.38);
-  background: linear-gradient(135deg, rgba(109, 40, 217, 0.3), rgba(var(--accent-rgb), 0.2));
+  background: rgba(var(--accent-rgb), 0.1);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -450,8 +450,8 @@
 :host-context([data-theme='light']) .critical-row,
 :host-context([data-theme='light']) .todo-row,
 :host-context([data-theme='light']) .metric-card {
-  border-color: rgba(79, 70, 229, 0.14);
-  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(var(--accent-rgb), 0.14);
+  background: #ffffff;
 }
 
 @media (max-width: 900px) {

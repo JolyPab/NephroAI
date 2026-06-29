@@ -172,24 +172,6 @@
       <div class="preference-list">
         <div class="preference-row">
           <div>
-            <h4>{{ 'profile.themeTitle' | translate }}</h4>
-            <p>{{ 'profile.themeText' | translate }}</p>
-          </div>
-          <button
-            type="button"
-            class="profile-action-btn"
-            (click)="toggleTheme()"
-            [attr.aria-label]="theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate)"
-          >
-            <span class="material-symbols-rounded">
-              {{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
-            </span>
-            <span>{{ theme() === 'dark' ? ('profile.themeLight' | translate) : ('profile.themeDark' | translate) }}</span>
-          </button>
-        </div>
-
-        <div class="preference-row">
-          <div>
             <h4>{{ 'PATIENT.PROFILE.LANGUAGE_TITLE' | translate }}</h4>
             <p>{{ 'PATIENT.PROFILE.LANGUAGE_TEXT' | translate }}</p>
           </div>
