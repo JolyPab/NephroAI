@@ -82,11 +82,13 @@ export class AppComponent {
   private updateShell(): void {
     const data = this.collectRouteData();
     const isPatientRoute = this.router.url.startsWith('/patient');
+    const isAuthRoute = this.router.url.startsWith('/auth');
+    const usesClinicalTheme = isPatientRoute || isAuthRoute;
 
-    this.themeService.setThemeOverride(isPatientRoute ? 'light' : null);
+    this.themeService.setThemeOverride(usesClinicalTheme ? 'light' : null);
     if (typeof document !== 'undefined') {
-      document.documentElement.toggleAttribute('data-patient-theme', isPatientRoute);
-      document.body?.toggleAttribute('data-patient-theme', isPatientRoute);
+      document.documentElement.toggleAttribute('data-patient-theme', usesClinicalTheme);
+      document.body?.toggleAttribute('data-patient-theme', usesClinicalTheme);
     }
 
     this.toolbarTitle = (data['title'] as string) ?? 'COMMON.APP_NAME';
