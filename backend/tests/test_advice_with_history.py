@@ -22,8 +22,9 @@ def _seed_user_with_metric(db):
     db.commit()
     db.refresh(user)
     db.add(Subscription(user_id=user.id, stripe_customer_id="cus_test_123", plan_id="price_test", status="active"))
+    recent_date = dt.datetime.utcnow() - dt.timedelta(days=10)
     doc = V2Document(user_id=user.id, document_hash="h1", source_filename="a.pdf",
-                     analysis_date=dt.datetime(2026, 1, 1), report_date=dt.datetime(2026, 1, 1))
+                     analysis_date=recent_date, report_date=recent_date)
     db.add(doc)
     db.flush()
     db.add(V2Metric(document_id=doc.id, analyte_key="CREATININE__SERUM__NUM",
@@ -40,19 +41,22 @@ def _seed_user_with_two_metrics(db):
     db.refresh(user)
     db.add(Subscription(user_id=user.id, stripe_customer_id="cus_test_123", plan_id="price_test", status="active"))
 
+    now = dt.datetime.utcnow()
+    old_date = now - dt.timedelta(days=60)
+    new_date = now - dt.timedelta(days=10)
     old_doc = V2Document(
         user_id=user.id,
         document_hash="trend-old",
         source_filename="old.pdf",
-        analysis_date=dt.datetime(2026, 1, 1),
-        report_date=dt.datetime(2026, 1, 1),
+        analysis_date=old_date,
+        report_date=old_date,
     )
     new_doc = V2Document(
         user_id=user.id,
         document_hash="trend-new",
         source_filename="new.pdf",
-        analysis_date=dt.datetime(2026, 2, 1),
-        report_date=dt.datetime(2026, 2, 1),
+        analysis_date=new_date,
+        report_date=new_date,
     )
     db.add_all([old_doc, new_doc])
     db.flush()
