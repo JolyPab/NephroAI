@@ -40,7 +40,7 @@
           </div>
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem;">
-          <div class="billing-interval-toggle" *ngIf="subscription?.status !== 'active' && subscription?.provider !== 'stripe'">
+          <div class="billing-interval-toggle" *ngIf="!hasSubscriptionAccess() && subscription?.provider !== 'stripe'">
             <button type="button" class="interval-btn" [class.active]="selectedInterval === 'monthly'" (click)="selectedInterval = 'monthly'">
               Mes (59 MXN)
             </button>
@@ -56,15 +56,19 @@
         </div>
       </div>
       <div class="billing-status-row">
-        <span class="billing-pill" [class.billing-pill--active]="subscription?.status === 'active'">
+        <span class="billing-pill" [class.billing-pill--active]="hasSubscriptionAccess()">
           {{ subscriptionTitle() }}
         </span>
-        <span class="empty-text" *ngIf="subscription?.current_period_end">
+        <span class="empty-text" *ngIf="subscription?.status === 'trialing' && subscription?.trial_end">
+          Primer cobro el {{ subscription?.trial_end | date: 'd MMM yyyy' }}
+        </span>
+        <span class="empty-text" *ngIf="subscription?.status !== 'trialing' && subscription?.current_period_end">
           Renueva el {{ subscription?.current_period_end | date: 'd MMM yyyy' }}
         </span>
       </div>
       <div class="form-message form-message--error" *ngIf="subscriptionError">{{ subscriptionError }}</div>
-      <p style="font-size: 0.75rem; color: var(--text-muted); margin: 1rem 0 0; padding-top: 0.85rem; border-top: 1px solid rgba(255,255,255,0.06);" *ngIf="subscription?.status !== 'active'">
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin: 1rem 0 0; padding-top: 0.85rem; border-top: 1px solid rgba(255,255,255,0.06);" *ngIf="!hasSubscriptionAccess()">
+        <span *ngIf="subscription?.trial_available !== false">No se te cobrará hoy. Después de 7 días, la suscripción se renovará automáticamente según el plan elegido. Puedes cancelar antes desde tu perfil. </span>
         Al suscribirte, aceptas nuestros <a href="https://nephroai.ec/terminos.html" target="_blank" style="color: var(--accent); text-decoration: none;">Términos de Servicio</a> y la <a href="https://nephroai.ec/privacidad.html" target="_blank" style="color: var(--accent); text-decoration: none;">Política de Privacidad</a>.
       </p>
     </section>

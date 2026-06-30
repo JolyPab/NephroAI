@@ -224,6 +224,8 @@ class Subscription(Base):
     stripe_subscription_id = Column(String, nullable=True, unique=True, index=True)
     period_start = Column(DateTime, nullable=True)
     period_end = Column(DateTime, nullable=True)
+    trial_end = Column(DateTime, nullable=True)
+    trial_used_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -496,6 +498,7 @@ def init_db(engine):
     user_added_columns = ensure_users_columns(engine)
     code_added_columns = ensure_email_code_purpose_column(engine)
     grant_added_columns = ensure_doctor_grant_columns(engine)
+    subscription_added_columns = ensure_subscription_columns(engine)
     ensure_chat_tables(engine)
     if added_columns:
         print(f"[DB] added columns: {', '.join(added_columns)}")
@@ -505,6 +508,33 @@ def init_db(engine):
         print(f"[DB] added email_code columns: {', '.join(code_added_columns)}")
     if grant_added_columns:
         print(f"[DB] added doctor_grant columns: {', '.join(grant_added_columns)}")
+    if subscription_added_columns:
+        print(f"[DB] added subscription columns: {', '.join(subscription_added_columns)}")
+
+
+def ensure_subscription_columns(engine) -> list[str]:
+    """Add Stripe trial tracking columns to subscriptions if missing."""
+    try:
+        inspector = inspect(engine)
+        if "subscriptions" not in inspector.get_table_names():
+            return []
+        existing = {col["name"] for col in inspector.get_columns("subscriptions")}
+        additions: list[tuple[str, str]] = []
+        if "trial_end" not in existing:
+            additions.append(("trial_end", "TIMESTAMP"))
+        if "trial_used_at" not in existing:
+            additions.append(("trial_used_at", "TIMESTAMP"))
+
+        if not additions:
+            return []
+
+        with engine.begin() as conn:
+            for name, col_type in additions:
+                conn.execute(text(f"ALTER TABLE subscriptions ADD COLUMN {name} {col_type}"))
+        return [name for name, _ in additions]
+    except Exception as exc:
+        print(f"[WARN] Could not ensure subscription columns: {exc}")
+        return []
 
 
 def ensure_lab_results_columns(engine) -> list[str]:

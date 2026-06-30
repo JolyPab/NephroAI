@@ -21,12 +21,32 @@ class _FakeCustomer:
 
 
 class _FakeCheckoutSession:
+    last_kwargs = None
+
     @staticmethod
     def create(**kwargs):
+        _FakeCheckoutSession.last_kwargs = kwargs
         assert kwargs["mode"] == "subscription"
         assert kwargs["line_items"][0]["price"] == "price_test_123"
         assert kwargs["metadata"]["user_id"] == "1"
         return {"id": "cs_test_123", "url": "https://checkout.stripe.test/session"}
+
+
+class _FakeSubscription:
+    @staticmethod
+    def retrieve(subscription_id):
+        assert subscription_id == "sub_test_123"
+        return {
+            "id": subscription_id,
+            "customer": "cus_test_123",
+            "status": "trialing",
+            "metadata": {"user_id": "1"},
+            "plan": {"id": "price_test_123"},
+            "current_period_start": 1782777600,
+            "current_period_end": 1783382400,
+            "trial_start": 1782777600,
+            "trial_end": 1783382400,
+        }
 
 
 class _FakePortalSession:
@@ -47,6 +67,7 @@ class _FakeWebhook:
 class _FakeStripe:
     api_key = None
     Customer = _FakeCustomer
+    Subscription = _FakeSubscription
 
     class checkout:
         Session = _FakeCheckoutSession
@@ -82,13 +103,14 @@ def test_create_checkout_session_records_pending_subscription(monkeypatch):
     assert subscription.user_id == 1
     assert subscription.stripe_customer_id == "cus_test_123"
     assert subscription.plan_id == "price_test_123"
+    assert _FakeCheckoutSession.last_kwargs["subscription_data"]["trial_period_days"] == 7
     payment = db.query(Payment).one()
     assert payment.status == "pending"
     assert payment.stripe_checkout_session_id == "cs_test_123"
     db.close()
 
 
-def test_webhook_checkout_completed_marks_subscription_active(monkeypatch):
+def test_webhook_checkout_completed_marks_subscription_trialing(monkeypatch):
     db = _setup_db()
     db.add(User(id=1, email="patient@example.com", hashed_password="hash", full_name="Paciente Uno"))
     db.add(Subscription(user_id=1, stripe_customer_id="cus_test_123", status="inactive"))
@@ -116,10 +138,42 @@ def test_webhook_checkout_completed_marks_subscription_active(monkeypatch):
 
     assert response == {"received": True}
     subscription = db.query(Subscription).one()
-    assert subscription.status == "active"
+    assert subscription.status == "trialing"
     assert subscription.stripe_subscription_id == "sub_test_123"
+    assert subscription.trial_end is not None
+    assert subscription.trial_used_at is not None
     payment = db.query(Payment).one()
     assert payment.status == "completed"
+    db.close()
+
+
+def test_checkout_does_not_repeat_trial_after_it_was_used(monkeypatch):
+    db = _setup_db()
+    db.add(User(id=1, email="patient@example.com", hashed_password="hash", full_name="Paciente Uno"))
+    db.add(
+        Subscription(
+            user_id=1,
+            stripe_customer_id="cus_test_123",
+            status="canceled",
+            trial_used_at=billing_routes.dt.datetime.utcnow(),
+        )
+    )
+    db.commit()
+
+    monkeypatch.setattr(billing_routes, "stripe", _FakeStripe)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
+    monkeypatch.setenv("STRIPE_PRICE_ID_MONTHLY", "price_test_123")
+
+    asyncio.run(
+        billing_routes.create_checkout_session(
+            request=None,
+            request_data=billing_routes.CheckoutSessionRequest(interval="monthly"),
+            user_id=1,
+            db=db,
+        )
+    )
+
+    assert "trial_period_days" not in _FakeCheckoutSession.last_kwargs["subscription_data"]
     db.close()
 
 

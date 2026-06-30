@@ -924,7 +924,7 @@ async def get_advice(
         raise HTTPException(status_code=404, detail="User not found")
     active_subscription = (
         db.query(Subscription)
-        .filter(Subscription.user_id == user_id, Subscription.status == "active")
+        .filter(Subscription.user_id == user_id, Subscription.status.in_(("active", "trialing")))
         .first()
     )
     if not active_subscription:

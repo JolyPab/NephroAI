@@ -73,7 +73,7 @@ export class PatientChatPageComponent implements OnInit {
     this.billingService.getSubscription().subscribe({
       next: (subscription) => {
         this.billingLoading = false;
-        this.chatLocked = subscription?.status !== 'active';
+        this.chatLocked = !['active', 'trialing'].includes(subscription?.status ?? '');
         if (!this.chatLocked) {
           this.loadSessions();
           this.loadAnalytes();

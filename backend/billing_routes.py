@@ -22,6 +22,7 @@ except Exception:  # pragma: no cover - exercised only when dependency is missin
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 ACTIVE_STRIPE_STATUSES = {"active", "trialing"}
+TRIAL_DAYS = 7
 PAST_DUE_STRIPE_STATUSES = {"past_due", "unpaid"}
 CANCELED_STRIPE_STATUSES = {"canceled", "incomplete_expired"}
 _configured_stripe_secret_key: str | None = None
@@ -36,6 +37,8 @@ class BillingSubscriptionResponse(BaseModel):
     status: str
     provider: str | None = None
     current_period_end: str | None = None
+    trial_end: str | None = None
+    trial_available: bool = True
 
 
 class CheckoutSessionRequest(BaseModel):
@@ -113,7 +116,9 @@ def _timestamp_to_datetime(value: Any) -> Optional[dt.datetime]:
 
 
 def _map_subscription_status(stripe_status: str | None) -> str:
-    if stripe_status in ACTIVE_STRIPE_STATUSES:
+    if stripe_status == "trialing":
+        return "trialing"
+    if stripe_status == "active":
         return "active"
     if stripe_status in PAST_DUE_STRIPE_STATUSES:
         return "past_due"
@@ -179,6 +184,10 @@ def _sync_subscription_from_stripe_object(db: Session, subscription_obj: Any, us
     subscription.plan_id = _get_value(_get_value(subscription_obj, "plan", {}), "id") or _stripe_price_id()
     subscription.period_start = _timestamp_to_datetime(_get_value(subscription_obj, "current_period_start"))
     subscription.period_end = _timestamp_to_datetime(_get_value(subscription_obj, "current_period_end"))
+    subscription.trial_end = _timestamp_to_datetime(_get_value(subscription_obj, "trial_end"))
+    trial_start = _timestamp_to_datetime(_get_value(subscription_obj, "trial_start"))
+    if trial_start and subscription.trial_used_at is None:
+        subscription.trial_used_at = trial_start
 
 
 def _record_invoice_payment(db: Session, invoice_obj: Any, status_value: str) -> None:
@@ -233,6 +242,8 @@ async def get_subscription(
         status=subscription.status,
         provider="stripe" if subscription.stripe_subscription_id else "paypal" if subscription.paypal_subscription_id else None,
         current_period_end=subscription.period_end.isoformat() if subscription.period_end else None,
+        trial_end=subscription.trial_end.isoformat() if subscription.trial_end else None,
+        trial_available=subscription.trial_used_at is None and not subscription.stripe_subscription_id,
     )
 
 
@@ -258,6 +269,18 @@ async def create_checkout_session(
         )
         customer_id = _get_value(customer, "id")
 
+    trial_available = bool(
+        existing is None
+        or (
+            existing.trial_used_at is None
+            and not existing.stripe_subscription_id
+            and not existing.paypal_subscription_id
+        )
+    )
+    subscription_data: dict[str, Any] = {"metadata": {"user_id": str(user_id)}}
+    if trial_available:
+        subscription_data["trial_period_days"] = TRIAL_DAYS
+
     session = stripe_client.checkout.Session.create(
         mode="subscription",
         customer=customer_id,
@@ -265,7 +288,7 @@ async def create_checkout_session(
         success_url=f"{_app_base_url(request)}/patient/profile?checkout=success",
         cancel_url=f"{_app_base_url(request)}/patient/profile?checkout=canceled",
         client_reference_id=str(user_id),
-        subscription_data={"metadata": {"user_id": str(user_id)}},
+        subscription_data=subscription_data,
         metadata={"user_id": str(user_id)},
         allow_promotion_codes=True,
         adaptive_pricing={"enabled": False},
@@ -339,8 +362,8 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                 stripe_customer_id=stripe_customer_id,
                 stripe_subscription_id=stripe_subscription_id,
             )
-            subscription.plan_id = _get_value(_get_value(obj, "plan", {}), "id") or _stripe_price_id()
-            subscription.status = "active"
+            subscription_obj = stripe_client.Subscription.retrieve(stripe_subscription_id)
+            _sync_subscription_from_stripe_object(db, subscription_obj, user_id=user_id)
             payment = db.query(Payment).filter(Payment.stripe_checkout_session_id == _get_value(obj, "id")).first()
             if payment:
                 payment.status = "completed"

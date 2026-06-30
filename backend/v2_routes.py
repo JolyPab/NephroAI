@@ -200,7 +200,10 @@ async def create_v2_document(
     # Hard paywall check
     user = db.query(User).filter(User.id == user_id).first()
     if user and not user.is_doctor:
-        sub = db.query(Subscription).filter(Subscription.user_id == user_id, Subscription.status == "active").first()
+        sub = db.query(Subscription).filter(
+            Subscription.user_id == user_id,
+            Subscription.status.in_(("active", "trialing")),
+        ).first()
         if not sub:
             raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para subir documentos.")
 

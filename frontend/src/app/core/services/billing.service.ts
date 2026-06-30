@@ -7,6 +7,8 @@ export interface BillingSubscription {
   status: string;
   provider?: string | null;
   current_period_end?: string | null;
+  trial_end?: string | null;
+  trial_available?: boolean;
 }
 
 export interface CheckoutSession {

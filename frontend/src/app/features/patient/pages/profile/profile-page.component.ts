@@ -169,6 +169,10 @@ export class PatientProfilePageComponent implements OnInit {
     if (this.subscriptionLoading) {
       return 'Cargando...';
     }
+    if (this.subscription?.status === 'trialing') {
+      const days = this.trialDaysRemaining();
+      return days === 1 ? 'Prueba gratuita · queda 1 día' : `Prueba gratuita · quedan ${days} días`;
+    }
     if (this.subscription?.status === 'active') {
       return 'Activa';
     }
@@ -181,11 +185,26 @@ export class PatientProfilePageComponent implements OnInit {
     return 'Sin suscripción';
   }
 
+  hasSubscriptionAccess(): boolean {
+    return ['active', 'trialing'].includes(this.subscription?.status ?? '');
+  }
+
+  trialDaysRemaining(): number {
+    if (!this.subscription?.trial_end) {
+      return 0;
+    }
+    const remainingMs = new Date(this.subscription.trial_end).getTime() - Date.now();
+    return Math.max(0, Math.ceil(remainingMs / 86_400_000));
+  }
+
   subscriptionActionText(): string {
     if (this.subscriptionBusy) {
       return 'Abriendo...';
     }
-    return this.subscription?.provider === 'stripe' ? 'Gestionar' : 'Suscribirme';
+    if (this.subscription?.provider === 'stripe') {
+      return 'Gestionar';
+    }
+    return this.subscription?.trial_available === false ? 'Suscribirme' : 'Probar gratis 7 días';
   }
 
   documentDate(document: V2DocumentListItemResponse): string {
