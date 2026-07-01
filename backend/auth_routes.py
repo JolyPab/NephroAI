@@ -343,7 +343,7 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Correo o contraseña incorrectos."
         )
     
     # Verify password
@@ -359,7 +359,7 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Correo o contraseña incorrectos."
         )
     
     # Check if active

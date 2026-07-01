@@ -82,7 +82,9 @@ export class AuthPageComponent implements OnInit {
     this.auth.login(this.loginForm.getRawValue()).subscribe({
       next: (user) => this.redirectAfterAuth(user),
       error: (err) => {
-        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_LOGIN_FAILED');
+        this.errorMessage = err?.status === 401
+          ? this.translate.instant('ERRORS.AUTH_LOGIN_FAILED')
+          : (err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_LOGIN_FAILED'));
         this.isSubmitting = false;
       },
       complete: () => (this.isSubmitting = false),

@@ -150,7 +150,7 @@
     "CATEGORICAL_TITLE": "Resultados cualitativos"
   },
   "ERRORS": {
-    "AUTH_LOGIN_FAILED": "No se pudo iniciar sesion. Verifica correo y contrasena.",
+    "AUTH_LOGIN_FAILED": "Correo o contraseña incorrectos.",
     "AUTH_REGISTER_FAILED": "No se pudo registrar. Intenta de nuevo.",
     "AUTH_VERIFY_FAILED": "No se pudo verificar el correo. Intenta de nuevo.",
     "AUTH_RESEND_FAILED": "No se pudo reenviar el codigo. Intenta de nuevo.",
