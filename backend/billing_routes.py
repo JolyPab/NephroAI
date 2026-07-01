@@ -260,6 +260,8 @@ async def create_checkout_session(
         raise HTTPException(status_code=404, detail="User not found")
 
     existing = db.query(Subscription).filter(Subscription.user_id == user_id).order_by(Subscription.id.desc()).first()
+    if existing and existing.status in ACTIVE_STRIPE_STATUSES:
+        raise HTTPException(status_code=409, detail="Ya tienes una suscripción activa.")
     customer_id = existing.stripe_customer_id if existing else None
     if not customer_id:
         customer = stripe_client.Customer.create(

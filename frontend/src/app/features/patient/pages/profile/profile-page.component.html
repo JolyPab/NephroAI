@@ -48,7 +48,7 @@
               Año (349 MXN) <span class="discount-badge">-50%</span>
             </button>
           </div>
-          <button type="button" class="profile-action-btn" [disabled]="subscriptionBusy || subscriptionLoading" (click)="openBilling()">
+          <button *ngIf="showBillingAction()" type="button" class="profile-action-btn" [disabled]="subscriptionBusy || subscriptionLoading" (click)="openBilling()">
             <span *ngIf="subscriptionBusy" class="loader-dot"></span>
             <span class="material-symbols-rounded" *ngIf="!subscriptionBusy">credit_card</span>
             <span>{{ subscriptionActionText() }}</span>

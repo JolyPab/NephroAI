@@ -1,5 +1,7 @@
 import asyncio
 
+import pytest
+from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -174,6 +176,30 @@ def test_checkout_does_not_repeat_trial_after_it_was_used(monkeypatch):
     )
 
     assert "trial_period_days" not in _FakeCheckoutSession.last_kwargs["subscription_data"]
+    db.close()
+
+
+def test_checkout_rejects_user_with_active_subscription(monkeypatch):
+    db = _setup_db()
+    db.add(User(id=1, email="patient@example.com", hashed_password="hash", full_name="Paciente Uno"))
+    db.add(Subscription(user_id=1, status="active"))
+    db.commit()
+
+    monkeypatch.setattr(billing_routes, "stripe", _FakeStripe)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
+
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(
+            billing_routes.create_checkout_session(
+                request=None,
+                request_data=billing_routes.CheckoutSessionRequest(interval="monthly"),
+                user_id=1,
+                db=db,
+            )
+        )
+
+    assert exc.value.status_code == 409
+    assert "suscripción activa" in exc.value.detail
     db.close()
 
 

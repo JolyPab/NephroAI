@@ -140,6 +140,9 @@ export class PatientProfilePageComponent implements OnInit {
     if (this.subscriptionBusy) {
       return;
     }
+    if (this.hasSubscriptionAccess() && this.subscription?.provider !== 'stripe') {
+      return;
+    }
     this.subscriptionBusy = true;
     this.subscriptionError = '';
     if (this.subscription?.provider === 'stripe') {
@@ -187,6 +190,10 @@ export class PatientProfilePageComponent implements OnInit {
 
   hasSubscriptionAccess(): boolean {
     return ['active', 'trialing'].includes(this.subscription?.status ?? '');
+  }
+
+  showBillingAction(): boolean {
+    return !this.hasSubscriptionAccess() || this.subscription?.provider === 'stripe';
   }
 
   trialDaysRemaining(): number {
