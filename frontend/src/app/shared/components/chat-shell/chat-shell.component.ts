@@ -63,7 +63,7 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
 
     if (Number.isNaN(date.getTime())) return '';
 
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat('es-ES', {
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
