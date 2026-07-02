@@ -13,6 +13,7 @@ import { User } from '../../../../core/models/user.model';
   styleUrls: ['./auth-page.component.scss'],
 })
 export class AuthPageComponent implements OnInit {
+  private static readonly TRIAL_WELCOME_KEY = 'nephroai.showTrialWelcome';
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
@@ -130,7 +131,13 @@ export class AuthPageComponent implements OnInit {
     this.infoMessage = '';
     const { code } = this.verifyForm.getRawValue();
     this.auth.verifyEmail({ email: this.pendingVerificationEmail, code }).subscribe({
-      next: (user) => this.redirectAfterAuth(user),
+      next: (user) => {
+        const isDoctor = user.role === 'DOCTOR' || user.is_doctor === true;
+        if (!isDoctor) {
+          sessionStorage.setItem(AuthPageComponent.TRIAL_WELCOME_KEY, 'true');
+        }
+        this.redirectAfterAuth(user);
+      },
       error: (err) => {
         this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_VERIFY_FAILED');
         this.isSubmitting = false;

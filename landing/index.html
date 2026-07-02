@@ -558,6 +558,162 @@
         opacity: 1;
         transform: none;
       }
+      .hero-v2 {
+        padding: 76px 0 0;
+        overflow: hidden;
+      }
+      .hero-v2-copy {
+        width: min(1060px, calc(100% - 80px));
+        margin: 0 auto;
+        text-align: center;
+      }
+      .hero-v2 h1 {
+        max-width: 980px;
+        margin: 0 auto 24px;
+        font-family: "DM Sans", sans-serif;
+        font-size: clamp(52px, 5.4vw, 82px);
+        font-weight: 700;
+        line-height: 1.02;
+        letter-spacing: -0.055em;
+      }
+      .hero-v2 h1 span { color: #139c70; }
+      .hero-v2-lede {
+        max-width: 790px;
+        margin: 0 auto;
+        color: var(--copy);
+        font-size: 21px;
+        line-height: 1.55;
+      }
+      .journey {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        width: min(1100px, calc(100% - 80px));
+        margin: 46px auto 34px;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+      .journey-item {
+        padding: 27px 24px 25px;
+        border-right: 1px solid var(--line);
+        text-align: center;
+      }
+      .journey-item:last-child { border-right: 0; }
+      .journey-icon {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 13px;
+        color: #139c70;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .journey-item h2 {
+        margin: 0;
+        color: #233654;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+      .hero-v2-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .hero-v2-actions .button {
+        width: min(680px, calc(100% - 40px));
+        min-height: 70px;
+        font-size: 21px;
+      }
+      .hero-v2-actions .micro { justify-content: center; }
+      .hero-showcase {
+        position: relative;
+        width: min(1280px, calc(100% - 80px));
+        min-height: 610px;
+        margin: 46px auto 0;
+        overflow: hidden;
+        border-radius: 30px 30px 0 0;
+        background: #e9edf0;
+      }
+      .hero-showcase > img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 42% center;
+      }
+      .testimonial-card,
+      .kidney-card {
+        position: absolute;
+        z-index: 2;
+        border: 1px solid rgba(210, 222, 231, 0.9);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 24px 70px rgba(10, 38, 66, 0.17);
+        backdrop-filter: blur(12px);
+      }
+      .testimonial-card {
+        left: 4.5%;
+        bottom: 8%;
+        width: 300px;
+        padding: 28px;
+        border-radius: 22px;
+      }
+      .quote-mark {
+        height: 34px;
+        color: #139c70;
+        font-family: Georgia, serif;
+        font-size: 55px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .testimonial-card blockquote {
+        margin: 10px 0 19px;
+        color: #1c304d;
+        font-size: 18px;
+        line-height: 1.52;
+      }
+      .testimonial-stars {
+        color: #139c70;
+        font-size: 17px;
+        letter-spacing: 2px;
+      }
+      .testimonial-card cite {
+        display: block;
+        margin-top: 8px;
+        color: #66758a;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 600;
+      }
+      .kidney-card {
+        right: 4.5%;
+        top: 8%;
+        width: 375px;
+        padding: 24px;
+        border-radius: 24px;
+      }
+      .kidney-card-title {
+        margin-bottom: 16px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .kidney-chart {
+        padding: 16px 16px 10px;
+        border: 1px solid #e4eaf0;
+        border-radius: 16px;
+        background: #fff;
+      }
+      .kidney-chart-label { color: #40506d; font-size: 11px; font-weight: 700; }
+      .kidney-chart svg { display: block; width: 100%; height: 120px; margin-top: 5px; }
+      .kidney-results { margin-top: 14px; overflow: hidden; border: 1px solid #e4eaf0; border-radius: 15px; background: #fff; }
+      .kidney-results-head,
+      .kidney-result-row { display: grid; grid-template-columns: 1.2fr 0.9fr 0.65fr; align-items: center; gap: 8px; }
+      .kidney-results-head { padding: 12px 14px; border-bottom: 1px solid #edf1f4; font-size: 12px; font-weight: 700; }
+      .kidney-results-head a { color: var(--blue); font-size: 10px; text-align: right; text-decoration: none; }
+      .kidney-result-row { padding: 12px 14px; border-bottom: 1px solid #edf1f4; color: #253553; font-size: 12px; }
+      .kidney-result-row:last-child { border-bottom: 0; }
+      .kidney-result-row strong { font-size: 13px; }
+      .kidney-result-row span:last-child { color: #139c70; font-size: 10px; font-weight: 700; text-align: right; }
+
       @media (max-width: 1050px) {
         .wrap {
           width: min(100% - 40px, var(--max));
@@ -726,6 +882,48 @@
           font-size: 13px;
         }
       }
+      @media (max-width: 1050px) {
+        .hero-v2-copy { width: min(100% - 40px, 900px); }
+        .journey { width: calc(100% - 40px); }
+        .hero-showcase { width: calc(100% - 40px); }
+      }
+      @media (max-width: 650px) {
+        .hero-v2 { padding-top: 42px; }
+        .hero-v2-copy { width: calc(100% - 40px); text-align: left; }
+        .hero-v2 h1 { margin-bottom: 22px; font-size: 44px; line-height: 1.03; letter-spacing: -0.045em; }
+        .hero-v2-lede { font-size: 18px; line-height: 1.55; }
+        .journey {
+          grid-template-columns: 1fr 1fr;
+          width: calc(100% - 40px);
+          margin: 34px auto 28px;
+        }
+        .journey-item { min-height: 156px; padding: 22px 12px 18px; border-bottom: 1px solid var(--line); }
+        .journey-item:nth-child(2) { border-right: 0; }
+        .journey-item:nth-child(3), .journey-item:nth-child(4) { border-bottom: 0; }
+        .journey-icon { width: 40px; height: 40px; margin-bottom: 11px; }
+        .journey-item h2 { font-size: 14px; }
+        .hero-v2-actions .button { width: calc(100% - 40px); min-height: 64px; padding: 0 14px; font-size: 18px; }
+        .hero-v2-actions .micro { width: calc(100% - 40px); align-items: flex-start; font-size: 13px; line-height: 1.4; }
+        .hero-v2-actions .micro svg { flex: 0 0 auto; margin-top: 1px; }
+        .hero-showcase {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          min-height: 0;
+          margin-top: 38px;
+          padding-top: 355px;
+          overflow: visible;
+          border-radius: 0;
+          background: #f3f7fb;
+        }
+        .hero-showcase > img { height: 390px; object-position: 30% center; }
+        .testimonial-card,
+        .kidney-card { position: relative; inset: auto; width: auto; backdrop-filter: none; }
+        .testimonial-card { order: 2; margin: -35px 20px 16px; padding: 23px; }
+        .testimonial-card blockquote { font-size: 16px; }
+        .kidney-card { order: 3; margin: 0 20px 28px; padding: 18px; }
+        .kidney-chart svg { height: 105px; }
+      }
       @media (prefers-reduced-motion: reduce) {
         html {
           scroll-behavior: auto;
@@ -761,150 +959,55 @@
       </div>
     </header>
     <main>
-      <section class="hero">
-        <div class="hero-copy reveal">
-          <h1>Entienda sus análisis. Vuelva a sentir que tiene el control.</h1>
-          <p class="hero-lede">
-            Suba sus análisis de laboratorio. NephroAI los organiza, los compara
-            y le explica los cambios de forma sencilla.
-          </p>
-          <a
-            class="button cta"
-            href="https://app.nephroai.ec/auth?mode=register"
-            data-place="hero"
-            ><svg
-              width="25"
-              height="25"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M12 16V4m0 0L7 9m5-5 5 5" />
-              <path d="M5 15v4h14v-4" /></svg
-            >Probar gratis por 7 días</a
-          >
-          <div class="micro">
-            <svg
-              width="19"
-              height="19"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="9" />
-              <path d="m8 12 2.5 2.5L16 9" /></svg
-            >7 días gratis&nbsp; · &nbsp;Después, desde US$2/mes&nbsp; ·
-            &nbsp;Cancele cuando quiera
-          </div>
+      <section class="hero-v2" id="como-funciona">
+        <div class="hero-v2-copy reveal">
+          <h1>No espere a la próxima consulta para saber cómo van sus <span>riñones.</span></h1>
+          <p class="hero-v2-lede">Comprenda la evolución de su salud renal, detecte cambios importantes a tiempo y llegue a cada cita médica con mayor tranquilidad.</p>
         </div>
-        <div class="hero-media">
-          <img
-            src="/hero-patient-v2.png"
-            alt="Paciente revisando sus resultados de laboratorio en NephroAI"
-          />
-          <div class="result-card reveal">
-            <div class="result-label">Resumen de sus resultados</div>
-            <div class="result-status">
-              <span class="check-circle">✓</span>Sus resultados se mantienen
-              estables
-            </div>
-            <div class="chart-label">Evolución de sus resultados</div>
-            <div class="chart">
-              <span class="chart-range-label">Rango habitual</span>
-              <svg viewBox="0 0 300 80" preserveAspectRatio="none">
-                <polyline
-                  points="0,47 60,43 120,44 180,41 240,42 300,40"
-                  fill="none"
-                  stroke="#72e18c"
-                  stroke-width="3"
-                />
-                <g fill="#72e18c">
-                  <circle cx="0" cy="47" r="4" />
-                  <circle cx="60" cy="43" r="4" />
-                  <circle cx="120" cy="44" r="4" />
-                  <circle cx="180" cy="41" r="4" />
-                  <circle cx="240" cy="42" r="4" />
-                  <circle cx="300" cy="40" r="4" />
-                </g>
-              </svg>
-              <div class="chart-dates">
-                <span>Ene 2024</span><span>Jul 2024</span><span>Ene 2025</span>
-              </div>
-            </div>
-            <div class="result-note">
-              <span>ⓘ</span
-              ><span
-                >Sus resultados están dentro de su rango habitual. Continúe con
-                sus controles médicos.</span
-              >
-            </div>
-          </div>
+
+        <div class="journey" aria-label="Cómo funciona NephroAI">
+          <article class="journey-item reveal">
+            <svg class="journey-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 34H9a7 7 0 0 1 0-14 11 11 0 0 1 21-3 8 8 0 0 1 2 16h-4"/><path d="M20 39V23m0 0-6 6m6-6 6 6"/></svg>
+            <h2>Suba sus análisis de laboratorio</h2>
+          </article>
+          <article class="journey-item reveal">
+            <svg class="journey-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 39h34M10 34l9-10 7 5 12-16"/><circle cx="19" cy="24" r="2"/><circle cx="26" cy="29" r="2"/><circle cx="38" cy="13" r="2"/></svg>
+            <h2>Comparamos cada resultado con los anteriores</h2>
+          </article>
+          <article class="journey-item reveal">
+            <svg class="journey-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h18l8 8v30H11z"/><path d="M29 5v9h8M17 24h14M17 30h10"/><circle cx="34" cy="35" r="7"/><path d="m32 35 2 2 4-5"/></svg>
+            <h2>Le explicamos los cambios en un lenguaje claro</h2>
+          </article>
+          <article class="journey-item reveal">
+            <svg class="journey-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M24 4 41 11v12c0 11-7 17-17 21C14 40 7 34 7 23V11z"/><path d="M24 32s-9-5-9-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6-9 11-9 11Z"/></svg>
+            <h2>Tome decisiones con más confianza</h2>
+          </article>
         </div>
-      </section>
-      <section class="how" id="como-funciona">
-        <div class="wrap split">
-          <div>
-            <h2 class="section-title">Así de fácil</h2>
-            <div class="steps">
-              <article class="step reveal">
-                <svg
-                  class="step-icon"
-                  viewBox="0 0 48 48"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M11 5h18l8 8v30H11z" />
-                  <path d="M29 5v9h8M18 30l6-6 6 6M24 24v13" />
-                </svg>
-                <h3><span>1.</span>Suba una foto o PDF</h3>
-                <p>Tome una foto clara o suba el PDF de sus análisis.</p>
-              </article>
-              <article class="step reveal">
-                <svg
-                  class="step-icon"
-                  viewBox="0 0 48 48"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="21" cy="21" r="13" />
-                  <path d="m31 31 11 11M15 25v-7m6 7V14m6 11v-4" />
-                </svg>
-                <h3><span>2.</span>Comparamos sus resultados</h3>
-                <p>Los organizamos y comparamos con sus análisis anteriores.</p>
-              </article>
-              <article class="step reveal">
-                <svg
-                  class="step-icon"
-                  viewBox="0 0 48 48"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M7 39h34M10 34l9-10 7 5 12-16" />
-                  <circle cx="19" cy="24" r="2" />
-                  <circle cx="26" cy="29" r="2" />
-                  <circle cx="38" cy="13" r="2" />
-                </svg>
-                <h3><span>3.</span>Vea qué cambió</h3>
-                <p>Reciba un resumen claro y sencillo de sus resultados.</p>
-              </article>
+
+        <div class="hero-v2-actions reveal">
+          <a class="button cta" href="https://app.nephroai.ec/auth?mode=register" data-place="hero"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 15v4h14v-4"/></svg>Empiece gratis durante 7 días</a>
+          <div class="micro"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>7 días gratis&nbsp; · &nbsp;Después, desde US$2/mes&nbsp; · &nbsp;Cancele cuando quiera</div>
+        </div>
+
+        <div class="hero-showcase">
+          <img src="/hero-patient-v2.png" alt="Paciente revisando sus resultados de laboratorio en NephroAI" />
+          <figure class="testimonial-card reveal">
+            <div class="quote-mark" aria-hidden="true">“</div>
+            <blockquote>NephroAI me ayuda a entender mis análisis y a seguir la evolución de mi salud renal día a día.</blockquote>
+            <div class="testimonial-stars" aria-label="5 de 5 estrellas">★★★★★</div>
+            <cite>Usuario de NephroAI</cite>
+          </figure>
+          <div class="kidney-card reveal" aria-label="Ejemplo de evolución de resultados">
+            <div class="kidney-card-title">Evolución de su función renal</div>
+            <div class="kidney-chart">
+              <div class="kidney-chart-label">eGFR (ml/min/1.73m²)</div>
+              <svg viewBox="0 0 300 120" role="img" aria-label="Gráfico de evolución de eGFR"><g stroke="#e5ebef" stroke-width="1"><path d="M20 15h270M20 45h270M20 75h270M20 105h270"/></g><polyline points="24,25 75,43 126,45 177,66 228,67 282,92" fill="none" stroke="#159c9c" stroke-width="3"/><g fill="#159c9c"><circle cx="24" cy="25" r="4"/><circle cx="75" cy="43" r="4"/><circle cx="126" cy="45" r="4"/><circle cx="177" cy="66" r="4"/><circle cx="228" cy="67" r="4"/><circle cx="282" cy="92" r="4"/></g></svg>
             </div>
-          </div>
-          <div class="compare reveal">
-            <h2>Un antes y después que se entiende</h2>
-            <div class="compare-row">
-              <div class="lab">
-                Resultado anterior<strong>52</strong>Octubre 2024
-              </div>
-              <div class="arrow">→</div>
-              <div class="lab after">
-                Resultado reciente<strong>59</strong>Abril 2025
-              </div>
-              <div class="stable">✓ Sus resultados se mantienen estables</div>
+            <div class="kidney-results">
+              <div class="kidney-results-head"><span>Resultados recientes</span><span></span><a href="#como-funciona">Ver todos</a></div>
+              <div class="kidney-result-row"><strong>Creatinina</strong><span>2.1 mg/dL</span><span>Mejoró</span></div>
+              <div class="kidney-result-row"><strong>eGFR</strong><span>38 ml/min</span><span>Estable</span></div>
+              <div class="kidney-result-row"><strong>Albuminuria</strong><span>120 mg/g</span><span>Mejoró</span></div>
             </div>
           </div>
         </div>

@@ -16,3 +16,203 @@ section {
   min-height: 0;
   width: 100%;
 }
+
+.trial-welcome-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  overflow-y: auto;
+  background: rgba(15, 37, 58, 0.48);
+  backdrop-filter: blur(8px);
+  animation: trial-backdrop-in 180ms ease-out;
+}
+
+.trial-welcome-modal {
+  position: relative;
+  width: min(100%, 36rem);
+  padding: 2rem;
+  border: 1px solid rgba(76, 150, 203, 0.2);
+  border-radius: 1.5rem;
+  background: #fff;
+  color: #17324d;
+  box-shadow: 0 24px 70px rgba(15, 52, 78, 0.25);
+  animation: trial-modal-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.trial-welcome-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #edf6fb;
+  color: #547086;
+  cursor: pointer;
+}
+
+.trial-welcome-close:hover { background: #e1f0f8; color: #244a66; }
+.trial-welcome-close:disabled { cursor: default; opacity: 0.55; }
+
+.trial-welcome-icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 1.25rem;
+  place-items: center;
+  border-radius: 1.1rem;
+  background: linear-gradient(145deg, #dff5ff, #e9e8ff);
+  color: #347fbd;
+}
+
+.trial-welcome-icon .material-symbols-rounded { font-size: 1.9rem; }
+
+h2 {
+  max-width: 29rem;
+  margin: 0;
+  color: #122f48;
+  font-size: clamp(1.55rem, 4vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.trial-welcome-lead {
+  margin: 0.85rem 0 1.35rem;
+  color: #577084;
+  font-size: 0.98rem;
+  line-height: 1.58;
+}
+
+.trial-welcome-benefits {
+  padding: 1.1rem 1.2rem;
+  border-radius: 1rem;
+  background: #f5fafe;
+}
+
+.trial-welcome-benefits > p {
+  margin: 0 0 0.75rem;
+  color: #294b64;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.trial-welcome-benefits ul {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trial-welcome-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  color: #466278;
+  font-size: 0.88rem;
+  line-height: 1.38;
+}
+
+.trial-welcome-benefits li .material-symbols-rounded {
+  flex: 0 0 auto;
+  color: #36a579;
+  font-size: 1.15rem;
+}
+
+.trial-welcome-offer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid #cceadf;
+  border-radius: 0.9rem;
+  background: #effaf6;
+  color: #315e50;
+}
+
+.trial-welcome-offer > .material-symbols-rounded { flex: 0 0 auto; color: #26956e; font-size: 1.25rem; }
+.trial-welcome-offer p { margin: 0; font-size: 0.83rem; line-height: 1.45; }
+
+.trial-welcome-error {
+  margin: 0 0 0.75rem;
+  color: #b23a48;
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.trial-welcome-primary,
+.trial-welcome-later {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.trial-welcome-primary {
+  display: flex;
+  min-height: 3.15rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, #2d8ac7, #576ed2);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(52, 120, 184, 0.24);
+  font-size: 0.96rem;
+  font-weight: 750;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.trial-welcome-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 13px 28px rgba(52, 120, 184, 0.3); }
+.trial-welcome-primary:disabled { cursor: wait; opacity: 0.72; }
+.trial-welcome-primary .material-symbols-rounded { font-size: 1.2rem; }
+
+.trial-welcome-later {
+  margin-top: 0.65rem;
+  padding: 0.55rem;
+  background: transparent;
+  color: #6b7f90;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.trial-welcome-later:hover:not(:disabled) { color: #2e566f; }
+
+.trial-welcome-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: trial-spin 700ms linear infinite;
+}
+
+@keyframes trial-backdrop-in { from { opacity: 0; } }
+@keyframes trial-modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } }
+@keyframes trial-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 640px) {
+  .trial-welcome-backdrop { place-items: end center; padding: 0; }
+  .trial-welcome-modal {
+    max-height: 94dvh;
+    overflow-y: auto;
+    padding: 1.5rem 1.15rem 1.15rem;
+    border-radius: 1.4rem 1.4rem 0 0;
+  }
+  .trial-welcome-icon { width: 3rem; height: 3rem; margin-bottom: 1rem; }
+  .trial-welcome-lead { margin-bottom: 1rem; font-size: 0.92rem; }
+  .trial-welcome-benefits { padding: 0.95rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trial-welcome-backdrop,
+  .trial-welcome-modal,
+  .trial-welcome-spinner { animation: none; }
+}

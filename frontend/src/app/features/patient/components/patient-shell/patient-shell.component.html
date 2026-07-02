@@ -1,3 +1,61 @@
 <section [class]="isChat ? 'chat-full-height' : 'space-y-6 pb-24 md:pb-12'">
   <router-outlet></router-outlet>
 </section>
+
+<div
+  *ngIf="showTrialWelcome"
+  class="trial-welcome-backdrop"
+  role="presentation"
+  (mousedown)="$event.target === $event.currentTarget && closeTrialWelcome()">
+  <article
+    class="trial-welcome-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="trial-welcome-title"
+    aria-describedby="trial-welcome-description">
+    <button
+      type="button"
+      class="trial-welcome-close"
+      aria-label="Cerrar"
+      [disabled]="checkoutBusy"
+      (click)="closeTrialWelcome()">
+      <span class="material-symbols-rounded" aria-hidden="true">close</span>
+    </button>
+
+    <div class="trial-welcome-icon" aria-hidden="true">
+      <span class="material-symbols-rounded">celebration</span>
+    </div>
+
+    <h2 id="trial-welcome-title">¡Felicitaciones! Tu cuenta está lista</h2>
+    <p id="trial-welcome-description" class="trial-welcome-lead">
+      Ya completaste el paso más importante para empezar a cuidar mejor tu salud.
+      Solo te falta activar tu suscripción para comenzar a usar NephroAI.
+    </p>
+
+    <div class="trial-welcome-benefits">
+      <p>Con tu suscripción podrás:</p>
+      <ul>
+        <li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>Subir tus análisis de laboratorio en PDF.</li>
+        <li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>Entender tus resultados con ayuda de la IA.</li>
+        <li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>Seguir la evolución de tus indicadores mediante gráficos.</li>
+        <li><span class="material-symbols-rounded" aria-hidden="true">check_circle</span>Mantener tu información organizada y compartirla con tu médico.</li>
+      </ul>
+    </div>
+
+    <div class="trial-welcome-offer">
+      <span class="material-symbols-rounded" aria-hidden="true">verified</span>
+      <p><strong>Empieza hoy con 7 días gratis.</strong> No realizaremos ningún cobro ahora y podrás cancelar antes de que termine el periodo de prueba.</p>
+    </div>
+
+    <p *ngIf="checkoutError" class="trial-welcome-error" role="alert">{{ checkoutError }}</p>
+
+    <button type="button" class="trial-welcome-primary" [disabled]="checkoutBusy" (click)="startTrial()">
+      <span *ngIf="checkoutBusy" class="trial-welcome-spinner" aria-hidden="true"></span>
+      <span>{{ checkoutBusy ? 'Abriendo pago seguro…' : 'Activar mis 7 días gratis' }}</span>
+      <span *ngIf="!checkoutBusy" class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
+    </button>
+    <button type="button" class="trial-welcome-later" [disabled]="checkoutBusy" (click)="closeTrialWelcome()">
+      Lo haré más tarde
+    </button>
+  </article>
+</div>
