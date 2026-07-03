@@ -32,7 +32,7 @@
         appGlassButton
         class="auth-back-button"
         (click)="backToLogin()"
-        *ngIf="mode === 'verify' || mode === 'forgot' || mode === 'reset-verify' || mode === 'reset-password'">
+        *ngIf="mode === 'forgot' || mode === 'reset-verify' || mode === 'reset-password'">
         <span class="material-symbols-rounded">login</span>
         <span>{{ 'AUTH.SWITCH_TO_LOGIN' | translate }}</span>
       </button>
@@ -119,13 +119,11 @@
       </button>
     </form>
 
-    <div class="auth-mode-switch" *ngIf="mode === 'login' || mode === 'register'">
-      <span>
-        {{ mode === 'login' ? ('AUTH.LOGIN_PROMPT' | translate) : ('AUTH.REGISTER_PROMPT' | translate) }}
-      </span>
+    <div class="auth-mode-switch" *ngIf="mode === 'login'">
+      <span>{{ 'AUTH.LOGIN_PROMPT' | translate }}</span>
       <button type="button" (click)="toggleMode()">
-        <span class="material-symbols-rounded" aria-hidden="true">{{ mode === 'login' ? 'person_add' : 'login' }}</span>
-        <span>{{ mode === 'login' ? ('AUTH.SWITCH_TO_REGISTER' | translate) : ('AUTH.SWITCH_TO_LOGIN' | translate) }}</span>
+        <span class="material-symbols-rounded" aria-hidden="true">person_add</span>
+        <span>{{ 'AUTH.SWITCH_TO_REGISTER' | translate }}</span>
       </button>
     </div>
 
