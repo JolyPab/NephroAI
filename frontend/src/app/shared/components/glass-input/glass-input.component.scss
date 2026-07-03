@@ -24,6 +24,56 @@
   color: var(--text-dim);
 }
 
+.glass-input__control {
+  position: relative;
+}
+
+.glass-input__control .input-glass {
+  width: 100%;
+}
+
+.input-glass--password {
+  padding-right: 3.25rem;
+}
+
+.glass-input__visibility {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.glass-input__visibility:hover:not(:disabled),
+.glass-input__visibility:focus-visible {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+
+.glass-input__visibility:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.glass-input__visibility:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.glass-input__visibility .material-symbols-rounded {
+  font-size: 1.25rem;
+}
+
 :host(.has-error) .input-glass {
   border-color: var(--danger);
   box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35);

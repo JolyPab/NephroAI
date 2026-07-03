@@ -1,17 +1,30 @@
 <div class="glass glass-input-wrapper">
   <label class="glass-input__label" *ngIf="label">{{ label }}</label>
-  <input
-    class="input-glass"
-    [attr.type]="type"
-    [attr.name]="name"
-    [attr.autocomplete]="autocomplete"
-    [attr.placeholder]="placeholder"
-    [disabled]="disabled"
-    [value]="value"
-    (input)="handleInput($event)"
-    (blur)="handleBlur()"
-    (keydown)="handleKeydown($event)"
-  />
+  <div class="glass-input__control">
+    <input
+      class="input-glass"
+      [class.input-glass--password]="type === 'password'"
+      [attr.type]="inputType"
+      [attr.name]="name"
+      [attr.autocomplete]="autocomplete"
+      [attr.placeholder]="placeholder"
+      [disabled]="disabled"
+      [value]="value"
+      (input)="handleInput($event)"
+      (blur)="handleBlur()"
+      (keydown)="handleKeydown($event)"
+    />
+    <button
+      *ngIf="type === 'password'"
+      type="button"
+      class="glass-input__visibility"
+      [disabled]="disabled"
+      [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+      [attr.aria-pressed]="passwordVisible"
+      (click)="togglePasswordVisibility()">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ passwordVisible ? 'visibility_off' : 'visibility' }}</span>
+    </button>
+  </div>
 </div>
 <small *ngIf="hint" class="glass-input__hint">{{ hint }}</small>
 <ng-content></ng-content>

@@ -30,6 +30,11 @@ export class GlassInputComponent implements ControlValueAccessor {
 
   value = '';
   disabled = false;
+  passwordVisible = false;
+
+  get inputType(): string {
+    return this.type === 'password' && this.passwordVisible ? 'text' : this.type;
+  }
 
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
@@ -63,6 +68,12 @@ export class GlassInputComponent implements ControlValueAccessor {
   handleKeydown(event: KeyboardEvent): void {
     if (event.key === 'Enter') {
       this.enter.emit(this.value);
+    }
+  }
+
+  togglePasswordVisibility(): void {
+    if (!this.disabled && this.type === 'password') {
+      this.passwordVisible = !this.passwordVisible;
     }
   }
 }
