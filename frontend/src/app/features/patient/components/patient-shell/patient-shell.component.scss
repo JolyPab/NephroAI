@@ -32,7 +32,7 @@ section {
 
 .trial-welcome-modal {
   position: relative;
-  width: min(100%, 36rem);
+  width: min(100%, 31rem);
   padding: 2rem;
   border: 1px solid rgba(76, 150, 203, 0.2);
   border-radius: 1.5rem;
@@ -60,19 +60,6 @@ section {
 .trial-welcome-close:hover { background: #e1f0f8; color: #244a66; }
 .trial-welcome-close:disabled { cursor: default; opacity: 0.55; }
 
-.trial-welcome-icon {
-  display: grid;
-  width: 3.5rem;
-  height: 3.5rem;
-  margin-bottom: 1.25rem;
-  place-items: center;
-  border-radius: 1.1rem;
-  background: linear-gradient(145deg, #dff5ff, #e9e8ff);
-  color: #347fbd;
-}
-
-.trial-welcome-icon .material-symbols-rounded { font-size: 1.9rem; }
-
 h2 {
   max-width: 29rem;
   margin: 0;
@@ -82,54 +69,11 @@ h2 {
   letter-spacing: -0.025em;
 }
 
-.trial-welcome-lead {
-  margin: 0.85rem 0 1.35rem;
-  color: #577084;
-  font-size: 0.98rem;
-  line-height: 1.58;
-}
-
-.trial-welcome-benefits {
-  padding: 1.1rem 1.2rem;
-  border-radius: 1rem;
-  background: #f5fafe;
-}
-
-.trial-welcome-benefits > p {
-  margin: 0 0 0.75rem;
-  color: #294b64;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.trial-welcome-benefits ul {
-  display: grid;
-  gap: 0.65rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.trial-welcome-benefits li {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  color: #466278;
-  font-size: 0.88rem;
-  line-height: 1.38;
-}
-
-.trial-welcome-benefits li .material-symbols-rounded {
-  flex: 0 0 auto;
-  color: #36a579;
-  font-size: 1.15rem;
-}
-
 .trial-welcome-offer {
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
-  margin: 1rem 0;
+  margin: 1.25rem 0 1rem;
   padding: 0.9rem 1rem;
   border: 1px solid #cceadf;
   border-radius: 0.9rem;
@@ -147,8 +91,7 @@ h2 {
   text-align: center;
 }
 
-.trial-welcome-primary,
-.trial-welcome-later {
+.trial-welcome-primary {
   width: 100%;
   border: 0;
   font: inherit;
@@ -174,17 +117,6 @@ h2 {
 .trial-welcome-primary:disabled { cursor: wait; opacity: 0.72; }
 .trial-welcome-primary .material-symbols-rounded { font-size: 1.2rem; }
 
-.trial-welcome-later {
-  margin-top: 0.65rem;
-  padding: 0.55rem;
-  background: transparent;
-  color: #6b7f90;
-  font-size: 0.86rem;
-  font-weight: 650;
-}
-
-.trial-welcome-later:hover:not(:disabled) { color: #2e566f; }
-
 .trial-welcome-spinner {
   width: 1rem;
   height: 1rem;
@@ -206,9 +138,6 @@ h2 {
     padding: 1.5rem 1.15rem 1.15rem;
     border-radius: 1.4rem 1.4rem 0 0;
   }
-  .trial-welcome-icon { width: 3rem; height: 3rem; margin-bottom: 1rem; }
-  .trial-welcome-lead { margin-bottom: 1rem; font-size: 0.92rem; }
-  .trial-welcome-benefits { padding: 0.95rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
