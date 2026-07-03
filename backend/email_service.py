@@ -90,7 +90,7 @@ def send_verification_code_email(email: str, code: str, purpose: str = "email_ve
           <p>Gracias por registrarte. Toca el boton para volver a la pantalla de verificacion.</p>
           <p style="margin:24px 0">
             <a href="{escape(link)}" style="background:#0f766e;color:#ffffff;padding:14px 22px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block">
-              Abrir verificacion
+              Confirmar mi cuenta
             </a>
           </p>
           <p>Luego ingresa este codigo:</p>
