@@ -127,6 +127,15 @@
         font-size: 15px;
         padding: 0 24px;
       }
+      .button .cta-icon {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+      }
+      .button.small .cta-icon {
+        width: 18px;
+        height: 18px;
+      }
       .hero {
         display: grid;
         grid-template-columns: minmax(460px, 0.87fr) minmax(620px, 1.13fr);
@@ -530,8 +539,11 @@
         color: #cad5e8;
       }
       .final .button {
-        background: #fff;
-        color: var(--ink);
+        background: var(--blue);
+        color: #fff;
+      }
+      .final .button:hover {
+        background: #064fc9;
       }
       footer {
         padding: 28px 0;
@@ -953,7 +965,7 @@
             class="button small cta"
             href="https://app.nephroai.ec/auth?mode=register"
             data-place="header"
-            >Probar 7 días gratis</a
+            ><svg class="cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 15v4h14v-4"/></svg>Probar gratis por 7 días</a
           >
         </nav>
       </div>
@@ -985,7 +997,7 @@
         </div>
 
         <div class="hero-v2-actions reveal">
-          <a class="button cta" href="https://app.nephroai.ec/auth?mode=register" data-place="hero"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 15v4h14v-4"/></svg>Empiece gratis durante 7 días</a>
+          <a class="button cta" href="https://app.nephroai.ec/auth?mode=register" data-place="hero"><svg class="cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 15v4h14v-4"/></svg>Probar gratis por 7 días</a>
           <div class="micro"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>7 días gratis&nbsp; · &nbsp;Después, desde US$2/mes&nbsp; · &nbsp;Cancele cuando quiera</div>
         </div>
 
@@ -1160,7 +1172,7 @@
           class="button cta"
           href="https://app.nephroai.ec/auth?mode=register"
           data-place="footer"
-          >Probar gratis por 7 días</a
+          ><svg class="cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 15v4h14v-4"/></svg>Probar gratis por 7 días</a
         >
       </section>
     </main>
