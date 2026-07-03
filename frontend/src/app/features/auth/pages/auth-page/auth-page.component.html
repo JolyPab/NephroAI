@@ -167,7 +167,7 @@
         <span>{{ errorMessage }}</span>
       </div>
 
-      <button type="submit" appGlassButton [glassBlock]="true" [disabled]="isSubmitting">
+      <button type="submit" appGlassButton="accent" [glassBlock]="true" [disabled]="isSubmitting">
         <span *ngIf="isSubmitting" class="loader-dot"></span>
         <span>{{ isSubmitting ? ('AUTH.RESET_VERIFYING' | translate) : ('AUTH.RESET_VERIFY_BUTTON' | translate) }}</span>
       </button>
