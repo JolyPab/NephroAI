@@ -10,6 +10,59 @@
   padding: 3rem 1.5rem 4rem;
 }
 
+.auth-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.auth-back-button {
+  flex: 0 0 auto;
+}
+
+.auth-mode-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  color: var(--text-dim);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.auth-mode-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-mode-switch button:hover {
+  color: var(--accent-strong, var(--accent));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-mode-switch .material-symbols-rounded {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 520px) {
+  .auth-mode-switch {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+}
+
 .loader-dot {
   display: inline-block;
   width: 0.85rem;

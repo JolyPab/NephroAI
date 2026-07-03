@@ -1,8 +1,16 @@
 <div class="auth-shell">
   <app-glass-card [extraClass]="'w-full max-w-xl glass-strong space-y-6'">
-    <div class="flex items-center justify-between">
+    <div class="auth-heading">
       <div>
-        <h1 class="text-2xl sm:text-3xl font-semibold text-[var(--text)]">{{ 'COMMON.APP_NAME' | translate }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-semibold text-[var(--text)]">
+          {{
+            mode === 'login'
+              ? ('AUTH.LOGIN_TITLE' | translate)
+              : mode === 'register'
+                ? ('AUTH.REGISTER_TITLE' | translate)
+                : ('COMMON.APP_NAME' | translate)
+          }}
+        </h1>
         <p class="text-sm text-[var(--text-dim)]">
           {{
             mode === 'login'
@@ -22,18 +30,11 @@
       <button
         type="button"
         appGlassButton
+        class="auth-back-button"
         (click)="backToLogin()"
         *ngIf="mode === 'verify' || mode === 'forgot' || mode === 'reset-verify' || mode === 'reset-password'">
         <span class="material-symbols-rounded">login</span>
         <span>{{ 'AUTH.SWITCH_TO_LOGIN' | translate }}</span>
-      </button>
-      <button
-        type="button"
-        appGlassButton
-        (click)="toggleMode()"
-        *ngIf="mode === 'login' || mode === 'register'">
-        <span class="material-symbols-rounded">{{ mode === 'login' ? 'person_add' : 'login' }}</span>
-        <span>{{ mode === 'login' ? ('AUTH.SWITCH_TO_REGISTER' | translate) : ('AUTH.SWITCH_TO_LOGIN' | translate) }}</span>
       </button>
     </div>
 
@@ -117,6 +118,16 @@
         <span>{{ isSubmitting ? ('AUTH.CREATING' | translate) : ('AUTH.CREATE_BUTTON' | translate) }}</span>
       </button>
     </form>
+
+    <div class="auth-mode-switch" *ngIf="mode === 'login' || mode === 'register'">
+      <span>
+        {{ mode === 'login' ? ('AUTH.LOGIN_PROMPT' | translate) : ('AUTH.REGISTER_PROMPT' | translate) }}
+      </span>
+      <button type="button" (click)="toggleMode()">
+        <span class="material-symbols-rounded" aria-hidden="true">{{ mode === 'login' ? 'person_add' : 'login' }}</span>
+        <span>{{ mode === 'login' ? ('AUTH.SWITCH_TO_REGISTER' | translate) : ('AUTH.SWITCH_TO_LOGIN' | translate) }}</span>
+      </button>
+    </div>
 
     <form *ngIf="mode === 'forgot'" [formGroup]="forgotForm" (ngSubmit)="submitForgot()" class="space-y-5">
       <app-glass-input

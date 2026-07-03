@@ -1,6 +1,7 @@
 <div class="app-shell">
   <div class="page-container">
     <app-glass-toolbar
+      *ngIf="showToolbar"
       [title]="toolbarTitle | translate"
       [subtitle]="toolbarSubtitle | translate"
       [showBack]="showBack"

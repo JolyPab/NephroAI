@@ -15,8 +15,12 @@
     "BRAND_NAME": "NephroAI"
   },
   "AUTH": {
-    "TITLE": "Iniciar sesion / Registrarse",
+    "TITLE": "Acceso a NephroAI",
     "SUBTITLE": "Acceso seguro a tus datos de laboratorio",
+    "LOGIN_TITLE": "Iniciar sesión",
+    "REGISTER_TITLE": "Crear una cuenta",
+    "LOGIN_PROMPT": "¿Aún no tienes una cuenta?",
+    "REGISTER_PROMPT": "¿Ya tienes una cuenta?",
     "WELCOME_LOGIN": "Bienvenido de nuevo. Ingresa para continuar.",
     "WELCOME_REGISTER": "Crea una cuenta para compartir tus analisis y tendencias.",
     "WELCOME_VERIFY": "Verifica tu correo para activar la cuenta.",
