@@ -282,6 +282,14 @@ export class AuthPageComponent implements OnInit {
       this.infoMessage = '';
       return;
     }
+    if (mode === 'reset-verify' && email) {
+      this.mode = 'reset-verify';
+      this.pendingResetEmail = email;
+      this.verifyForm.reset();
+      this.infoMessage = this.translate.instant('AUTH.RESET_LINK_OPENED', { email });
+      this.errorMessage = '';
+      return;
+    }
     if (mode !== 'verify' || !email) {
       return;
     }

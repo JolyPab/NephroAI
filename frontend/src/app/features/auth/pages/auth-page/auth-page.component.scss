@@ -56,6 +56,25 @@
   font-size: 1.1rem;
 }
 
+.verification-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--text-dim);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.verification-hint .material-symbols-rounded {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 1.25rem;
+}
+
 @media (max-width: 520px) {
   .auth-mode-switch {
     flex-direction: column;

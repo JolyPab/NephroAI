@@ -213,6 +213,11 @@
         <app-otp-input formControlName="code"></app-otp-input>
       </div>
 
+      <div class="verification-hint" role="note">
+        <span class="material-symbols-rounded" aria-hidden="true">mark_email_unread</span>
+        <span>{{ 'AUTH.VERIFICATION_SPAM_HINT' | translate }}</span>
+      </div>
+
       <div *ngIf="infoMessage" class="toast-glass success" role="status">
         <span class="material-symbols-rounded">info</span>
         <span>{{ infoMessage }}</span>

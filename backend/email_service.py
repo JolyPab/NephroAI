@@ -25,6 +25,11 @@ def _verification_link(email: str) -> str:
     return f"{_public_app_url()}/auth?{query}"
 
 
+def _password_reset_link(email: str) -> str:
+    query = urlencode({"mode": "reset-verify", "email": email})
+    return f"{_public_app_url()}/auth?{query}"
+
+
 def send_verification_code_email(email: str, code: str, purpose: str = "email_verification") -> None:
     """
     Send a verification code email.
@@ -45,8 +50,11 @@ def send_verification_code_email(email: str, code: str, purpose: str = "email_ve
     is_reset = purpose == "password_reset"
     subject = "NephroAI - codigo de verificacion"
     if is_reset:
+        link = _password_reset_link(email)
         body = (
-            "Usa este codigo para restablecer tu contrasena:\n\n"
+            "Abre esta pagina para continuar con la recuperacion de tu contrasena:\n"
+            f"{link}\n\n"
+            "Luego usa este codigo:\n\n"
             f"{code}\n\n"
             "El codigo vence en 10 minutos.\n"
             "Si no solicitaste esto, puedes ignorar este correo."
@@ -54,7 +62,13 @@ def send_verification_code_email(email: str, code: str, purpose: str = "email_ve
         html_body = f"""
         <div style="font-family:Arial,sans-serif;color:#10202a;line-height:1.5">
           <h2 style="margin:0 0 12px">Restablece tu contrasena en NephroAI</h2>
-          <p>Usa este codigo para continuar:</p>
+          <p>Toca el boton para volver a la pantalla de recuperacion.</p>
+          <p style="margin:24px 0">
+            <a href="{escape(link)}" style="background:#0f766e;color:#ffffff;padding:14px 22px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block">
+              Continuar con la recuperacion
+            </a>
+          </p>
+          <p>Luego ingresa este codigo:</p>
           <p style="font-size:28px;letter-spacing:8px;font-weight:700;margin:20px 0">{escape(code)}</p>
           <p>El codigo vence en 10 minutos. Si no solicitaste esto, puedes ignorar este correo.</p>
         </div>

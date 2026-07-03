@@ -41,6 +41,7 @@
     "CREATE_BUTTON": "Crear cuenta",
     "VERIFY_BUTTON": "Verificar correo",
     "RESEND_CODE": "Reenviar codigo",
+    "VERIFICATION_SPAM_HINT": "Si no recibe el correo en un minuto, revise la carpeta de spam o correo no deseado.",
     "VERIFICATION_CODE_SENT": "Codigo enviado a {{email}}.",
     "VERIFICATION_LINK_OPENED": "Ingresa el codigo enviado a {{email}}.",
     "FULL_NAME_PLACEHOLDER": "Juan Perez",
@@ -62,6 +63,7 @@
     "RESET_PASSWORD_BUTTON": "Guardar contraseña",
     "RESET_PASSWORD_SAVING": "Guardando...",
     "RESET_CODE_SENT": "Código enviado a {{email}}.",
+    "RESET_LINK_OPENED": "Ingresa el código de recuperación enviado a {{email}}.",
     "RESET_PASSWORD_SUCCESS": "Contraseña actualizada. Inicia sesión."
   },
   "UPLOAD": {

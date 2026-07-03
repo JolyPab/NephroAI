@@ -41,6 +41,7 @@
     "CREATE_BUTTON": "Create account",
     "VERIFY_BUTTON": "Verify email",
     "RESEND_CODE": "Resend code",
+    "VERIFICATION_SPAM_HINT": "Если письмо не пришло в течение минуты, проверьте папку «Спам».",
     "VERIFICATION_CODE_SENT": "Code sent to {{email}}.",
     "VERIFICATION_LINK_OPENED": "Enter the code sent to {{email}}.",
     "FULL_NAME_PLACEHOLDER": "Jane Doe",
@@ -62,6 +63,7 @@
     "RESET_PASSWORD_BUTTON": "Сохранить пароль",
     "RESET_PASSWORD_SAVING": "Сохраняем...",
     "RESET_CODE_SENT": "Код отправлен на {{email}}.",
+    "RESET_LINK_OPENED": "Введите код восстановления, отправленный на {{email}}.",
     "RESET_PASSWORD_SUCCESS": "Пароль обновлён. Войдите снова."
   },
   "UPLOAD": {
