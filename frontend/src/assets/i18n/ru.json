@@ -26,6 +26,7 @@
     "WELCOME_VERIFY": "Verify your email to activate your account.",
     "SWITCH_TO_REGISTER": "Register",
     "SWITCH_TO_LOGIN": "Sign in",
+    "BACK_TO_LOGIN": "Вернуться ко входу",
     "FULL_NAME": "Full name",
     "EMAIL": "Email",
     "PASSWORD": "Password",
