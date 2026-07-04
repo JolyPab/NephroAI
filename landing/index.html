@@ -102,6 +102,35 @@
         font-weight: 600;
         font-size: 15px;
       }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .header-login {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 18px;
+        border: 1px solid #cbd9ee;
+        border-radius: 10px;
+        background: #fff;
+        color: #52647e;
+        white-space: nowrap;
+        transition: 0.2s;
+      }
+      .header-login:hover {
+        border-color: #8eb5ef;
+        background: #f6f9ff;
+        color: var(--blue);
+      }
+      .header-login strong {
+        color: var(--blue);
+      }
+      .header-action-short {
+        display: none;
+      }
       .button {
         display: inline-flex;
         align-items: center;
@@ -766,19 +795,43 @@
         .wrap {
           width: calc(100% - 32px);
         }
+        .nav {
+          position: relative;
+          gap: 8px;
+        }
         .site-header {
           height: 70px;
         }
         .brand img {
-          width: 148px;
+          width: 132px;
         }
         .nav-links {
+          position: absolute;
+          right: 0;
+          width: max-content;
           gap: 10px;
+        }
+        .header-actions {
+          gap: 7px;
+        }
+        .header-login {
+          min-height: 42px;
+          padding: 0 11px;
+          font-size: 13px;
+        }
+        .header-action-full {
+          display: none;
+        }
+        .header-action-short {
+          display: inline;
         }
         .nav-links .button {
           font-size: 13px;
-          padding: 0 14px;
+          padding: 0 12px;
           min-height: 42px;
+        }
+        .nav-links .button .cta-icon {
+          display: none;
         }
         .hero-copy {
           padding: 44px 20px 38px;
@@ -894,6 +947,11 @@
           font-size: 13px;
         }
       }
+      @media (max-width: 440px) {
+        .brand img { width: 100px; }
+        .header-login { padding: 0 8px; font-size: 12px; }
+        .nav-links .button { padding: 0 8px; font-size: 12px; }
+      }
       @media (max-width: 1050px) {
         .hero-v2-copy { width: min(100% - 40px, 900px); }
         .journey { width: calc(100% - 40px); }
@@ -961,12 +1019,18 @@
           <a href="#como-funciona">Cómo funciona</a
           ><a href="#seguridad">Seguridad</a
           ><a href="#preguntas">Preguntas frecuentes</a
-          ><a
-            class="button small cta"
-            href="https://app.nephroai.ec/auth?mode=register"
-            data-place="header"
-            ><svg class="cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 15v4h14v-4"/></svg>Probar gratis por 7 días</a
-          >
+          ><span class="header-actions">
+            <a class="header-login" href="https://app.nephroai.ec/auth">
+              <span class="header-action-full">¿Ya tienes cuenta? <strong>Inicia sesión</strong></span>
+              <span class="header-action-short">Ingresar</span>
+            </a>
+            <a
+              class="button small cta"
+              href="https://app.nephroai.ec/auth?mode=register"
+              data-place="header"
+              ><svg class="cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 15v4h14v-4"/></svg><span class="header-action-full">Probar gratis por 7 días</span><span class="header-action-short">Probar 7 días</span></a
+            >
+          </span>
         </nav>
       </div>
     </header>
