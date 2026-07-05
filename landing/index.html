@@ -441,6 +441,72 @@
         color: var(--copy);
         margin: 0;
       }
+      .contact-support {
+        padding: 54px 0;
+        border-top: 1px solid #dbe8f7;
+        border-bottom: 1px solid #dbe8f7;
+        background: #f4f8fe;
+      }
+      .contact-support-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 48px;
+      }
+      .contact-support h2 {
+        margin: 0 0 10px;
+        font-size: 30px;
+        line-height: 1.15;
+      }
+      .contact-support p {
+        max-width: 670px;
+        margin: 0;
+        color: var(--copy);
+        font-size: 17px;
+        line-height: 1.55;
+      }
+      .contact-support-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .contact-action {
+        display: inline-flex;
+        min-height: 54px;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 0 20px;
+        border: 1px solid #b9cdea;
+        border-radius: 10px;
+        background: #fff;
+        color: #1258b8;
+        font-size: 15px;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: 0.2s;
+      }
+      .contact-action:hover {
+        border-color: #7fa8e2;
+        background: #f8fbff;
+        transform: translateY(-1px);
+      }
+      .contact-action svg {
+        width: 21px;
+        height: 21px;
+        fill: currentColor;
+      }
+      .contact-action--whatsapp {
+        border-color: #159c52;
+        background: #159c52;
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(21, 156, 82, 0.18);
+      }
+      .contact-action--whatsapp:hover {
+        border-color: #108443;
+        background: #108443;
+      }
       .explain {
         background: var(--soft);
         padding: 90px 0;
@@ -961,6 +1027,27 @@
           border-right: 0;
           border-bottom: 1px solid var(--line);
         }
+        .contact-support {
+          padding: 42px 0;
+        }
+        .contact-support-inner {
+          grid-template-columns: 1fr;
+          gap: 24px;
+          text-align: center;
+        }
+        .contact-support h2 {
+          font-size: 27px;
+        }
+        .contact-support p {
+          font-size: 16px;
+        }
+        .contact-support-actions {
+          width: 100%;
+          flex-direction: column;
+        }
+        .contact-action {
+          width: 100%;
+        }
         .explain,
         .faq {
           padding: 65px 0;
@@ -1186,6 +1273,32 @@
               </p>
             </div>
           </article>
+        </div>
+      </section>
+      <section class="contact-support" aria-labelledby="contact-support-title">
+        <div class="wrap contact-support-inner">
+          <div>
+            <h2 id="contact-support-title">¿Necesita ayuda? Estamos para ayudarle.</h2>
+            <p>Si tiene preguntas sobre NephroAI, su cuenta o cómo empezar, escríbanos. Le responderemos de forma clara y sencilla.</p>
+          </div>
+          <div class="contact-support-actions">
+            <a
+              class="contact-action contact-action--whatsapp"
+              href="https://wa.me/5219989378858"
+              target="_blank"
+              rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.52 3.48A11.82 11.82 0 0 0 12.08 0C5.53 0 .2 5.33.2 11.88c0 2.1.55 4.14 1.6 5.94L.1 24l6.32-1.66a11.86 11.86 0 0 0 5.66 1.44h.01c6.55 0 11.88-5.33 11.88-11.88 0-3.18-1.23-6.16-3.45-8.42ZM12.09 21.77h-.01a9.83 9.83 0 0 1-5.01-1.37l-.36-.22-3.75.99 1-3.66-.24-.37a9.84 9.84 0 1 1 8.37 4.63Zm5.4-7.37c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.76.96-.94 1.16-.17.2-.34.22-.64.07-.3-.15-1.25-.46-2.38-1.47a8.9 8.9 0 0 1-1.65-2.05c-.17-.3-.02-.46.13-.6.13-.13.3-.34.44-.52.15-.17.2-.3.3-.49.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.01-1.04 2.47s1.06 2.87 1.21 3.07c.15.2 2.09 3.19 5.06 4.47.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.75-.72 2-1.41.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35Z"/></svg>
+              Hablar por WhatsApp
+            </a>
+            <a
+              class="contact-action"
+              href="https://www.facebook.com/profile.php?id=61590435673504"
+              target="_blank"
+              rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-9h3l.45-3.5H13.5V7.27c0-1.01.28-1.7 1.73-1.7H17V2.45A23.7 23.7 0 0 0 14.42 2C11.87 2 10.1 3.56 10.1 6.44V9.5H7.2V13h2.9v9h3.4Z"/></svg>
+              Visitar nuestro Facebook
+            </a>
+          </div>
         </div>
       </section>
       <section class="explain">
