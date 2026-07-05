@@ -595,6 +595,44 @@
       .footer-links a {
         text-decoration: none;
       }
+      .footer-end {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .footer-socials {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .footer-social {
+        display: inline-grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        padding: 0;
+        border: 1px solid #d8e1ed;
+        border-radius: 50%;
+        background: #fff;
+        color: #607089;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .footer-social:hover {
+        border-color: #9bb9e8;
+        background: #f5f8fd;
+        color: var(--blue);
+        transform: translateY(-1px);
+      }
+      .footer-social svg {
+        width: 19px;
+        height: 19px;
+        fill: currentColor;
+      }
+      .footer-social--whatsapp:hover {
+        color: #25d366;
+        border-color: #a9dfbd;
+      }
       .reveal {
         opacity: 1;
         transform: none;
@@ -943,6 +981,10 @@
           flex-wrap: wrap;
           justify-content: center;
         }
+        .footer-end {
+          flex-direction: column;
+          gap: 16px;
+        }
         .micro {
           font-size: 13px;
         }
@@ -1240,15 +1282,37 @@
         >
       </section>
     </main>
-    <footer>
+    <footer id="site-footer">
       <div class="wrap footer-row">
         <img src="/logo-header-v2.png" alt="NephroAI" /><span
           >© 2026 NephroAI · Todos los derechos reservados.</span
         >
-        <div class="footer-links">
-          <a href="/privacidad.html">Privacidad</a
-          ><a href="/terminos.html">Términos</a
-          ><a href="mailto:info@nephroai.ec">Contacto</a>
+        <div class="footer-end">
+          <div class="footer-links">
+            <a href="/privacidad.html">Privacidad</a
+            ><a href="/terminos.html">Términos</a
+            ><a href="mailto:info@nephroai.ec">Contacto</a>
+          </div>
+          <div class="footer-socials" aria-label="Redes sociales">
+            <a
+              class="footer-social"
+              href="https://www.facebook.com/profile.php?id=61590435673504"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook de NephroAI"
+              title="Facebook">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-9h3l.45-3.5H13.5V7.27c0-1.01.28-1.7 1.73-1.7H17V2.45A23.7 23.7 0 0 0 14.42 2C11.87 2 10.1 3.56 10.1 6.44V9.5H7.2V13h2.9v9h3.4Z"/></svg>
+            </a>
+            <a
+              class="footer-social footer-social--whatsapp"
+              href="https://wa.me/5219989378858"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp de NephroAI"
+              title="WhatsApp">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.52 3.48A11.82 11.82 0 0 0 12.08 0C5.53 0 .2 5.33.2 11.88c0 2.1.55 4.14 1.6 5.94L.1 24l6.32-1.66a11.86 11.86 0 0 0 5.66 1.44h.01c6.55 0 11.88-5.33 11.88-11.88 0-3.18-1.23-6.16-3.45-8.42ZM12.09 21.77h-.01a9.83 9.83 0 0 1-5.01-1.37l-.36-.22-3.75.99 1-3.66-.24-.37a9.84 9.84 0 1 1 8.37 4.63Zm5.4-7.37c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.76.96-.94 1.16-.17.2-.34.22-.64.07-.3-.15-1.25-.46-2.38-1.47a8.9 8.9 0 0 1-1.65-2.05c-.17-.3-.02-.46.13-.6.13-.13.3-.34.44-.52.15-.17.2-.3.3-.49.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.01-1.04 2.47s1.06 2.87 1.21 3.07c.15.2 2.09 3.19 5.06 4.47.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.75-.72 2-1.41.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35Z"/></svg>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
