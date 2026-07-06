@@ -83,9 +83,21 @@ export class AuthPageComponent implements OnInit {
     this.auth.login(this.loginForm.getRawValue()).subscribe({
       next: (user) => this.redirectAfterAuth(user),
       error: (err) => {
+        const detail = err?.error?.detail;
+        if (err?.status === 403 && detail?.code === 'email_not_verified') {
+          this.pendingVerificationEmail = detail.email || this.loginForm.getRawValue().email;
+          this.mode = 'verify';
+          this.verifyForm.reset();
+          this.infoMessage = this.translate.instant('AUTH.VERIFICATION_RESUMED', {
+            email: this.pendingVerificationEmail,
+          });
+          this.errorMessage = '';
+          this.isSubmitting = false;
+          return;
+        }
         this.errorMessage = err?.status === 401
           ? this.translate.instant('ERRORS.AUTH_LOGIN_FAILED')
-          : (err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_LOGIN_FAILED'));
+          : this.getErrorMessage(err, 'ERRORS.AUTH_LOGIN_FAILED');
         this.isSubmitting = false;
       },
       complete: () => (this.isSubmitting = false),
@@ -113,7 +125,7 @@ export class AuthPageComponent implements OnInit {
         this.infoMessage = this.translate.instant('AUTH.VERIFICATION_CODE_SENT', { email: response.email });
       },
       error: (err) => {
-        this.errorMessage = err?.error?.detail ?? this.translate.instant('ERRORS.AUTH_REGISTER_FAILED');
+        this.errorMessage = this.getErrorMessage(err, 'ERRORS.AUTH_REGISTER_FAILED');
         this.isSubmitting = false;
       },
       complete: () => (this.isSubmitting = false),
@@ -298,6 +310,17 @@ export class AuthPageComponent implements OnInit {
     this.verifyForm.reset();
     this.infoMessage = this.translate.instant('AUTH.VERIFICATION_LINK_OPENED', { email });
     this.errorMessage = '';
+  }
+
+  private getErrorMessage(err: any, fallbackKey: string): string {
+    const detail = err?.error?.detail;
+    if (typeof detail === 'string') {
+      return detail;
+    }
+    if (detail && typeof detail.message === 'string') {
+      return detail.message;
+    }
+    return this.translate.instant(fallbackKey);
   }
 
   private redirectAfterAuth(user: User): void {

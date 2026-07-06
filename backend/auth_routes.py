@@ -256,6 +256,30 @@ def _create_verification_code(db: Session, user: User, purpose: str = "email_ver
     return code_row
 
 
+def _ensure_email_verification_code(db: Session, user: User) -> bool:
+    """Keep a usable verification code available, sending a new one only when needed."""
+    now = dt.datetime.utcnow()
+    latest_code = (
+        db.query(EmailVerificationCode)
+        .filter(
+            EmailVerificationCode.user_id == user.id,
+            EmailVerificationCode.used_at.is_(None),
+            EmailVerificationCode.purpose == "email_verification",
+        )
+        .order_by(EmailVerificationCode.created_at.desc())
+        .first()
+    )
+    if (
+        latest_code
+        and latest_code.expires_at >= now
+        and latest_code.attempts < EMAIL_CODE_MAX_ATTEMPTS
+    ):
+        return False
+
+    _create_verification_code(db, user)
+    return True
+
+
 def _build_user_response(user: User) -> UserResponse:
     return UserResponse(
         id=user.id,
@@ -274,6 +298,33 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     # Check if user exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
+        if existing_user.email_verified_at is None:
+            try:
+                code_sent = _ensure_email_verification_code(db, existing_user)
+                _audit_auth_event(
+                    db,
+                    action="auth_register_resumed",
+                    email=existing_user.email,
+                    status_value="success",
+                    user=existing_user,
+                    metadata={"new_code_sent": code_sent},
+                )
+                db.commit()
+            except HTTPException:
+                db.rollback()
+                raise
+            except Exception:
+                db.rollback()
+                logger.exception("Registration recovery failed for email=%s", user_data.email)
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="No se pudo reanudar la verificación. Inténtalo de nuevo.",
+                )
+            return RegisterResponse(
+                email=existing_user.email,
+                message="Verification code available.",
+            )
+
         _audit_auth_event(
             db,
             action="auth_register_failed",
@@ -285,7 +336,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Este correo ya está registrado. Inicia sesión."
         )
 
     hashed_password = get_password_hash(user_data.password)
@@ -363,6 +414,37 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         )
     
     # Check if active
+    if user.email_verified_at is None:
+        try:
+            code_sent = _ensure_email_verification_code(db, user)
+            _audit_auth_event(
+                db,
+                action="auth_email_verification_resumed",
+                email=user.email,
+                status_value="success",
+                user=user,
+                metadata={"new_code_sent": code_sent, "source": "login"},
+            )
+            db.commit()
+        except HTTPException:
+            db.rollback()
+            raise
+        except Exception:
+            db.rollback()
+            logger.exception("Login verification recovery failed for email=%s", user.email)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="No se pudo enviar el código de verificación. Inténtalo de nuevo.",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "email_not_verified",
+                "message": "Tu correo aún no está verificado. Ingresa el código que te enviamos.",
+                "email": user.email,
+            },
+        )
+
     if not user.is_active:
         _audit_auth_event(
             db,
@@ -375,7 +457,7 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Email not verified. Please verify your email."
+            detail="Esta cuenta está desactivada.",
         )
     
     # Create access token

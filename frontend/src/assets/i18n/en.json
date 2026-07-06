@@ -45,6 +45,7 @@
     "VERIFICATION_SPAM_HINT": "If the email does not arrive within one minute, check your spam or junk folder.",
     "VERIFICATION_CODE_SENT": "Code sent to {{email}}.",
     "VERIFICATION_LINK_OPENED": "Enter the code sent to {{email}}.",
+    "VERIFICATION_RESUMED": "Your account is awaiting verification. Enter the code sent to {{email}}.",
     "FULL_NAME_PLACEHOLDER": "Jane Doe",
     "EMAIL_PLACEHOLDER": "you@example.com",
     "PASSWORD_PLACEHOLDER": "Enter password",

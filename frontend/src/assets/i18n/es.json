@@ -45,6 +45,7 @@
     "VERIFICATION_SPAM_HINT": "Si no recibe el correo en un minuto, revise la carpeta de spam o correo no deseado.",
     "VERIFICATION_CODE_SENT": "Codigo enviado a {{email}}.",
     "VERIFICATION_LINK_OPENED": "Ingresa el codigo enviado a {{email}}.",
+    "VERIFICATION_RESUMED": "Tu cuenta está pendiente de verificación. Ingresa el código enviado a {{email}}.",
     "FULL_NAME_PLACEHOLDER": "Juan Perez",
     "EMAIL_PLACEHOLDER": "tu@email.com",
     "PASSWORD_PLACEHOLDER": "Introduce la contrasena",
