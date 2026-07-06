@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import logging
 import os
 from typing import Any, Optional
 
@@ -11,7 +12,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.auth import get_current_user_id
-from backend.database import Payment, SessionLocal, Subscription, User
+from backend.database import Payment, SessionLocal, SubscriberWelcomeEmail, Subscription, User
+from backend.email_service import send_subscriber_welcome_email
 
 try:
     import stripe
@@ -20,6 +22,7 @@ except Exception:  # pragma: no cover - exercised only when dependency is missin
 
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
+logger = logging.getLogger(__name__)
 
 ACTIVE_STRIPE_STATUSES = {"active", "trialing"}
 TRIAL_DAYS = 7
@@ -222,6 +225,52 @@ def _record_invoice_payment(db: Session, invoice_obj: Any, status_value: str) ->
     payment.stripe_payment_id = _get_value(invoice_obj, "payment_intent")
 
 
+def _checkout_is_confirmed(checkout_obj: Any, stripe_status: str) -> bool:
+    if _get_value(checkout_obj, "status") != "complete":
+        return False
+    payment_status = _get_value(checkout_obj, "payment_status")
+    if stripe_status == "trialing":
+        return payment_status in {"paid", "no_payment_required"}
+    return stripe_status == "active" and payment_status == "paid"
+
+
+def _send_welcome_once(db: Session, subscription: Subscription, user: User) -> None:
+    delivery = db.query(SubscriberWelcomeEmail).filter(
+        SubscriberWelcomeEmail.subscription_id == subscription.id,
+    ).first()
+    if delivery and delivery.status == "sent":
+        return
+    if delivery is None:
+        delivery = SubscriberWelcomeEmail(
+            user_id=user.id,
+            subscription_id=subscription.id,
+            stripe_subscription_id=subscription.stripe_subscription_id,
+            status="pending",
+        )
+        db.add(delivery)
+    delivery.attempt_count = (delivery.attempt_count or 0) + 1
+    delivery.updated_at = dt.datetime.utcnow()
+    db.commit()
+
+    try:
+        send_subscriber_welcome_email(
+            user.email,
+            is_trial=subscription.status == "trialing",
+            idempotency_key=f"subscriber-welcome-{subscription.stripe_subscription_id}",
+        )
+    except Exception as exc:
+        delivery.last_error = type(exc).__name__
+        delivery.updated_at = dt.datetime.utcnow()
+        db.commit()
+        raise HTTPException(status_code=503, detail="Welcome email delivery failed; Stripe should retry.") from exc
+
+    delivery.status = "sent"
+    delivery.sent_at = dt.datetime.utcnow()
+    delivery.last_error = None
+    delivery.updated_at = dt.datetime.utcnow()
+    db.commit()
+
+
 @router.get("/config", response_model=BillingConfigResponse)
 async def billing_config():
     return BillingConfigResponse(
@@ -357,18 +406,36 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             user_id = None
         stripe_subscription_id = _get_value(obj, "subscription")
         stripe_customer_id = _get_value(obj, "customer")
-        if user_id is not None:
+        if user_id is not None and stripe_subscription_id:
+            user = db.query(User).filter(User.id == user_id).first()
+            subscription_obj = stripe_client.Subscription.retrieve(stripe_subscription_id)
+            subscription_metadata = _get_value(subscription_obj, "metadata", {}) or {}
+            subscription_user_id = _get_value(subscription_metadata, "user_id")
+            subscription_customer_id = _get_value(subscription_obj, "customer")
+            identity_confirmed = (
+                user is not None
+                and str(subscription_user_id) == str(user_id)
+                and str(subscription_customer_id) == str(stripe_customer_id)
+            )
+            if not identity_confirmed:
+                logger.error("Stripe Checkout identity mismatch for session %s", _get_value(obj, "id"))
+                db.commit()
+                return {"received": True}
             subscription = _find_or_create_subscription(
                 db,
                 user_id=user_id,
                 stripe_customer_id=stripe_customer_id,
                 stripe_subscription_id=stripe_subscription_id,
             )
-            subscription_obj = stripe_client.Subscription.retrieve(stripe_subscription_id)
             _sync_subscription_from_stripe_object(db, subscription_obj, user_id=user_id)
             payment = db.query(Payment).filter(Payment.stripe_checkout_session_id == _get_value(obj, "id")).first()
-            if payment:
+            stripe_status = _get_value(subscription_obj, "status")
+            checkout_confirmed = _checkout_is_confirmed(obj, stripe_status)
+            if payment and checkout_confirmed:
                 payment.status = "completed"
+            db.commit()
+            if checkout_confirmed and subscription.status in ACTIVE_STRIPE_STATUSES:
+                _send_welcome_once(db, subscription, user)
     elif event_type in {"customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"}:
         _sync_subscription_from_stripe_object(db, obj)
     elif event_type == "invoice.paid":

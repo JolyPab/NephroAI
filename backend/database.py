@@ -232,6 +232,26 @@ class Subscription(Base):
     user = relationship("User", foreign_keys=[user_id])
 
 
+class SubscriberWelcomeEmail(Base):
+    """Idempotency record for the welcome email sent after Stripe Checkout."""
+
+    __tablename__ = "subscriber_welcome_emails"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=False, unique=True, index=True)
+    stripe_subscription_id = Column(String, nullable=False, unique=True, index=True)
+    status = Column(String, nullable=False, default="pending")  # pending, sent
+    attempt_count = Column(Integer, nullable=False, default=0)
+    last_error = Column(Text, nullable=True)
+    sent_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id])
+    subscription = relationship("Subscription", foreign_keys=[subscription_id])
+
+
 class Payment(Base):
     """Payment records for subscriptions."""
 

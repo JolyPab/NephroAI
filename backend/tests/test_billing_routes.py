@@ -6,7 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend import billing_routes
-from backend.database import Base, Payment, Subscription, User
+from backend import email_service
+from backend.database import Base, Payment, SubscriberWelcomeEmail, Subscription, User
 
 
 def _setup_db():
@@ -35,13 +36,15 @@ class _FakeCheckoutSession:
 
 
 class _FakeSubscription:
+    status = "trialing"
+
     @staticmethod
     def retrieve(subscription_id):
         assert subscription_id == "sub_test_123"
         return {
             "id": subscription_id,
             "customer": "cus_test_123",
-            "status": "trialing",
+            "status": _FakeSubscription.status,
             "metadata": {"user_id": "1"},
             "plan": {"id": "price_test_123"},
             "current_period_start": 1782777600,
@@ -128,6 +131,8 @@ def test_webhook_checkout_completed_marks_subscription_trialing(monkeypatch):
                 "subscription": "sub_test_123",
                 "client_reference_id": "1",
                 "metadata": {"user_id": "1"},
+                "status": "complete",
+                "payment_status": "no_payment_required",
             }
         },
     }
@@ -135,6 +140,12 @@ def test_webhook_checkout_completed_marks_subscription_trialing(monkeypatch):
     monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
     monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_fake")
     monkeypatch.setenv("STRIPE_PRICE_ID", "price_test_123")
+    sent = []
+    monkeypatch.setattr(
+        billing_routes,
+        "send_subscriber_welcome_email",
+        lambda email, **kwargs: sent.append((email, kwargs)),
+    )
 
     response = asyncio.run(billing_routes.stripe_webhook(_FakeRequest(), db=db))
 
@@ -146,7 +157,166 @@ def test_webhook_checkout_completed_marks_subscription_trialing(monkeypatch):
     assert subscription.trial_used_at is not None
     payment = db.query(Payment).one()
     assert payment.status == "completed"
+    assert sent == [("patient@example.com", {"is_trial": True, "idempotency_key": "subscriber-welcome-sub_test_123"})]
+    assert db.query(SubscriberWelcomeEmail).one().status == "sent"
     db.close()
+
+
+def test_webhook_sends_welcome_for_active_subscription_without_trial(monkeypatch):
+    db = _setup_db()
+    db.add(User(id=1, email="patient@example.com", hashed_password="hash", full_name="Paciente Uno"))
+    db.add(Subscription(user_id=1, stripe_customer_id="cus_test_123", status="inactive"))
+    db.commit()
+    _FakeSubscription.status = "active"
+    _FakeWebhook.event = {
+        "type": "checkout.session.completed",
+        "data": {"object": {
+            "id": "cs_active", "customer": "cus_test_123", "subscription": "sub_test_123",
+            "client_reference_id": "1", "metadata": {"user_id": "1"},
+            "status": "complete", "payment_status": "paid",
+        }},
+    }
+    sent = []
+    monkeypatch.setattr(billing_routes, "stripe", _FakeStripe)
+    monkeypatch.setattr(billing_routes, "send_subscriber_welcome_email", lambda email, **kwargs: sent.append((email, kwargs)))
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_fake")
+    monkeypatch.setenv("STRIPE_PRICE_ID", "price_test_123")
+
+    asyncio.run(billing_routes.stripe_webhook(_FakeRequest(), db=db))
+
+    assert db.query(Subscription).one().status == "active"
+    assert sent[0][1]["is_trial"] is False
+    assert db.query(SubscriberWelcomeEmail).one().status == "sent"
+    _FakeSubscription.status = "trialing"
+    db.close()
+
+
+def test_webhook_replay_does_not_repeat_welcome(monkeypatch):
+    db = _setup_db()
+    db.add(User(id=1, email="patient@example.com", hashed_password="hash", full_name="Paciente Uno"))
+    db.add(Subscription(user_id=1, stripe_customer_id="cus_test_123", status="inactive"))
+    db.commit()
+    _FakeSubscription.status = "trialing"
+    _FakeWebhook.event = {
+        "type": "checkout.session.completed",
+        "data": {"object": {
+            "id": "cs_replay", "customer": "cus_test_123", "subscription": "sub_test_123",
+            "client_reference_id": "1", "metadata": {"user_id": "1"},
+            "status": "complete", "payment_status": "no_payment_required",
+        }},
+    }
+    sent = []
+    monkeypatch.setattr(billing_routes, "stripe", _FakeStripe)
+    monkeypatch.setattr(billing_routes, "send_subscriber_welcome_email", lambda email, **kwargs: sent.append(kwargs))
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_fake")
+    monkeypatch.setenv("STRIPE_PRICE_ID", "price_test_123")
+
+    asyncio.run(billing_routes.stripe_webhook(_FakeRequest(), db=db))
+    asyncio.run(billing_routes.stripe_webhook(_FakeRequest(), db=db))
+
+    assert len(sent) == 1
+    assert db.query(SubscriberWelcomeEmail).count() == 1
+    db.close()
+
+
+def test_webhook_does_not_send_for_unsuccessful_checkout(monkeypatch):
+    db = _setup_db()
+    db.add(User(id=1, email="patient@example.com", hashed_password="hash", full_name="Paciente Uno"))
+    db.add(Subscription(user_id=1, stripe_customer_id="cus_test_123", status="inactive"))
+    db.add(Payment(user_id=1, status="pending", stripe_checkout_session_id="cs_unpaid"))
+    db.commit()
+    _FakeSubscription.status = "active"
+    _FakeWebhook.event = {
+        "type": "checkout.session.completed",
+        "data": {"object": {
+            "id": "cs_unpaid", "customer": "cus_test_123", "subscription": "sub_test_123",
+            "client_reference_id": "1", "metadata": {"user_id": "1"},
+            "status": "complete", "payment_status": "unpaid",
+        }},
+    }
+    sent = []
+    monkeypatch.setattr(billing_routes, "stripe", _FakeStripe)
+    monkeypatch.setattr(billing_routes, "send_subscriber_welcome_email", lambda *args, **kwargs: sent.append(kwargs))
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_fake")
+    monkeypatch.setenv("STRIPE_PRICE_ID", "price_test_123")
+
+    asyncio.run(billing_routes.stripe_webhook(_FakeRequest(), db=db))
+
+    assert sent == []
+    assert db.query(SubscriberWelcomeEmail).count() == 0
+    assert db.query(Payment).one().status == "pending"
+    _FakeSubscription.status = "trialing"
+    db.close()
+
+
+def test_resend_error_retries_with_same_idempotency_key(monkeypatch):
+    db = _setup_db()
+    db.add(User(id=1, email="patient@example.com", hashed_password="hash", full_name="Paciente Uno"))
+    db.add(Subscription(user_id=1, stripe_customer_id="cus_test_123", status="inactive"))
+    db.commit()
+    _FakeSubscription.status = "trialing"
+    _FakeWebhook.event = {
+        "type": "checkout.session.completed",
+        "data": {"object": {
+            "id": "cs_retry", "customer": "cus_test_123", "subscription": "sub_test_123",
+            "client_reference_id": "1", "metadata": {"user_id": "1"},
+            "status": "complete", "payment_status": "no_payment_required",
+        }},
+    }
+    keys = []
+    def flaky_send(_email, **kwargs):
+        keys.append(kwargs["idempotency_key"])
+        if len(keys) == 1:
+            raise RuntimeError("network timeout")
+    monkeypatch.setattr(billing_routes, "stripe", _FakeStripe)
+    monkeypatch.setattr(billing_routes, "send_subscriber_welcome_email", flaky_send)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_fake")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_fake")
+    monkeypatch.setenv("STRIPE_PRICE_ID", "price_test_123")
+
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(billing_routes.stripe_webhook(_FakeRequest(), db=db))
+    assert exc.value.status_code == 503
+    assert db.query(SubscriberWelcomeEmail).one().status == "pending"
+
+    asyncio.run(billing_routes.stripe_webhook(_FakeRequest(), db=db))
+
+    assert keys == ["subscriber-welcome-sub_test_123", "subscriber-welcome-sub_test_123"]
+    delivery = db.query(SubscriberWelcomeEmail).one()
+    assert delivery.status == "sent"
+    assert delivery.attempt_count == 2
+    db.close()
+
+
+def test_welcome_email_uses_configured_sender_and_spanish_multipart_content(monkeypatch):
+    captured = {}
+    class _Response:
+        status_code = 200
+    def fake_post(url, **kwargs):
+        captured["url"] = url
+        captured.update(kwargs)
+        return _Response()
+    monkeypatch.setattr(email_service.requests, "post", fake_post)
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    monkeypatch.setenv("SMTP_FROM_EMAIL", "info@example.test")
+    monkeypatch.setenv("APP_PUBLIC_URL", "https://app.example.test")
+
+    email_service.send_subscriber_welcome_email(
+        "patient@example.test",
+        is_trial=True,
+        idempotency_key="subscriber-welcome-sub_test_123",
+    )
+
+    assert captured["headers"]["Idempotency-Key"] == "subscriber-welcome-sub_test_123"
+    assert captured["json"]["from"] == "NephroAI <info@example.test>"
+    assert captured["json"]["to"] == ["patient@example.test"]
+    assert captured["json"]["subject"] == "¡Bienvenido(a) a NephroAI! 💙"
+    assert "período de prueba" in captured["json"]["text"]
+    assert "https://app.example.test" in captured["json"]["html"]
+    assert "Equipo NephroAI" in captured["json"]["text"]
 
 
 def test_checkout_does_not_repeat_trial_after_it_was_used(monkeypatch):
