@@ -16,7 +16,7 @@ celery
 redis
 requests
 stripe>=13.0.0
-python-jose[cryptography]
+PyJWT>=2.13.0
 passlib[bcrypt]
 pytest
 pytest-html

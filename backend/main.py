@@ -44,8 +44,6 @@ from sqlalchemy.orm import Session
 
 from sqlalchemy.exc import IntegrityError
 
-from jose import jwt
-
 from pydantic import BaseModel, ValidationError
 
 from typing import Any, Dict, List, Optional, Tuple
