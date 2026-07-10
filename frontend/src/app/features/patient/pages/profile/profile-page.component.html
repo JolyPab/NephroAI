@@ -42,10 +42,10 @@
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem;">
           <div class="billing-interval-toggle" *ngIf="!hasSubscriptionAccess() && subscription?.provider !== 'stripe'">
             <button type="button" class="interval-btn" [class.active]="selectedInterval === 'monthly'" (click)="selectedInterval = 'monthly'">
-              Mes (59 MXN)
+              Mes (US$2.99)
             </button>
             <button type="button" class="interval-btn" [class.active]="selectedInterval === 'yearly'" (click)="selectedInterval = 'yearly'">
-              Año (349 MXN) <span class="discount-badge">-50%</span>
+              Año (US$17.99) <span class="discount-badge">-50%</span>
             </button>
           </div>
           <button *ngIf="showBillingAction()" type="button" class="profile-action-btn" [disabled]="subscriptionBusy || subscriptionLoading" (click)="openBilling()">

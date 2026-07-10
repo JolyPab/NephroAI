@@ -354,7 +354,7 @@ async def create_checkout_session(
         user_id=user_id,
         subscription=subscription,
         status="pending",
-        currency="MXN",
+        currency="USD",
         stripe_checkout_session_id=_get_value(session, "id"),
     )
     db.add(payment)

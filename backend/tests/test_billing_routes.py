@@ -109,8 +109,10 @@ def test_create_checkout_session_records_pending_subscription(monkeypatch):
     assert subscription.stripe_customer_id == "cus_test_123"
     assert subscription.plan_id == "price_test_123"
     assert _FakeCheckoutSession.last_kwargs["subscription_data"]["trial_period_days"] == 7
+    assert _FakeCheckoutSession.last_kwargs["adaptive_pricing"] == {"enabled": False}
     payment = db.query(Payment).one()
     assert payment.status == "pending"
+    assert payment.currency == "USD"
     assert payment.stripe_checkout_session_id == "cs_test_123"
     db.close()
 
