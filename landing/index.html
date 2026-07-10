@@ -859,6 +859,58 @@
       .kidney-result-row strong { font-size: 13px; }
       .kidney-result-row span:last-child { color: #139c70; font-size: 10px; font-weight: 700; text-align: right; }
 
+      .product-tour {
+        padding: 88px 0;
+        border-top: 1px solid var(--line);
+        background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+      }
+      .product-tour-head {
+        max-width: 760px;
+        margin: 0 auto 38px;
+        text-align: center;
+      }
+      .product-tour-kicker {
+        margin: 0 0 12px;
+        color: #075be8;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .product-tour h2 {
+        margin: 0 0 16px;
+        font-family: "Newsreader", serif;
+        font-size: clamp(40px, 4vw, 58px);
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+      }
+      .product-tour-head > p:last-child {
+        margin: 0;
+        color: var(--copy);
+        font-size: 19px;
+        line-height: 1.55;
+      }
+      .product-tour-frame {
+        max-width: 1200px;
+        margin: 0 auto;
+        overflow: hidden;
+        border: 1px solid #d9e4f1;
+        border-radius: 28px;
+        background: #eef6ff;
+        box-shadow: 0 30px 80px rgba(7, 27, 70, 0.14);
+      }
+      .product-tour-frame img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .product-tour-note {
+        margin: 20px 0 0;
+        color: #63718a;
+        font-size: 13px;
+        text-align: center;
+      }
+
       @media (max-width: 1050px) {
         .wrap {
           width: min(100% - 40px, var(--max));
@@ -923,6 +975,11 @@
           padding: 0 11px;
           font-size: 13px;
         }
+        .product-tour { padding: 60px 0; }
+        .product-tour-head { margin-bottom: 26px; text-align: left; }
+        .product-tour h2 { font-size: 38px; }
+        .product-tour-head > p:last-child { font-size: 17px; }
+        .product-tour-frame { border-radius: 18px; }
         .header-action-full {
           display: none;
         }
@@ -1215,6 +1272,28 @@
               <div class="kidney-result-row"><strong>Albuminuria</strong><span>85 mg/g</span><span>Mejoró</span></div>
             </div>
           </div>
+        </div>
+      </section>
+      <section class="product-tour" id="recorrido" aria-labelledby="product-tour-title">
+        <div class="wrap">
+          <div class="product-tour-head reveal">
+            <p class="product-tour-kicker">Recorrido rápido</p>
+            <h2 id="product-tour-title">Así se usa NephroAI.</h2>
+            <p>Desde el primer PDF hasta una conversación mejor preparada con su médico.</p>
+          </div>
+          <div class="product-tour-frame reveal">
+            <picture>
+              <source media="(max-width: 650px)" srcset="/tutorial/nephroai-tour-mobile.webp?v=3" />
+              <img
+                src="/tutorial/nephroai-tour.webp?v=3"
+                alt="Recorrido visual por el resumen, la carga de análisis, los gráficos, la IA y las consultas de NephroAI"
+                width="1200"
+                height="820"
+                loading="lazy"
+              />
+            </picture>
+          </div>
+          <p class="product-tour-note">Ejemplo ilustrativo. NephroAI no sustituye el diagnóstico ni la consulta médica.</p>
         </div>
       </section>
       <section class="trust" id="seguridad">
