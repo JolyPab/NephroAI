@@ -38,6 +38,19 @@
   padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+.app-shell.admin-layout {
+  padding-bottom: 0;
+}
+
+.page-container.admin-layout__container {
+  max-width: none;
+  padding: 0;
+}
+
+.page-content.admin-content {
+  padding: 0;
+}
+
 @media (max-width: 640px) {
   .page-container {
     padding: 0 1rem;
@@ -49,6 +62,10 @@
 
   .page-content {
     padding: 1.5rem 0 2.5rem;
+  }
+
+  .page-content.admin-content {
+    padding: 0;
   }
 
   .with-tabbar-padding {

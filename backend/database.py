@@ -446,6 +446,22 @@ class AuditLog(Base):
     patient = relationship("Patient", foreign_keys=[patient_id])
 
 
+class AnalyticsEvent(Base):
+    """Low-PII first-party events for acquisition and funnel analytics."""
+
+    __tablename__ = "analytics_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_name = Column(String(40), nullable=False, index=True)
+    anonymous_id = Column(String(64), nullable=False, index=True)
+    path = Column(String(255), nullable=False, default="/")
+    source = Column(String(120), nullable=True, index=True)
+    medium = Column(String(120), nullable=True)
+    campaign = Column(String(160), nullable=True, index=True)
+    click_id = Column(String(255), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+
 def get_database_url(default_sqlite: Optional[str] = None) -> str:
     """Get database URL from environment or fallback to local SQLite."""
     if default_sqlite is None:

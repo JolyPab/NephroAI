@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { AuthService } from './core/services/auth.service';
+import { AnalyticsService } from './core/services/analytics.service';
 import { LanguageService } from './core/services/language.service';
 import { ThemeService } from './core/services/theme.service';
 import { GlassToolbarComponent } from './shared/components/glass-toolbar/glass-toolbar.component';
@@ -23,6 +24,7 @@ type ToolbarAccent = 'default' | 'doctor';
 })
 export class AppComponent {
   private readonly auth = inject(AuthService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -40,6 +42,7 @@ export class AppComponent {
   showToolbar = true;
   showTabbar = false;
   showBack = false;
+  isAdminRoute = false;
   tabbarBase = '/patient';
   private backLink?: string;
 
@@ -56,6 +59,7 @@ export class AppComponent {
 
   ngOnInit(): void {
     this.languageService.init();
+    this.analytics.track('landing_view');
     // Restore authenticated user on page reload so toolbar/logout stay in sync
     this.auth.loadProfile().subscribe();
   }
@@ -83,7 +87,8 @@ export class AppComponent {
     const data = this.collectRouteData();
     const isPatientRoute = this.router.url.startsWith('/patient');
     const isAuthRoute = this.router.url.startsWith('/auth');
-    const usesClinicalTheme = isPatientRoute || isAuthRoute;
+    this.isAdminRoute = this.router.url.startsWith('/admin');
+    const usesClinicalTheme = isPatientRoute || isAuthRoute || this.isAdminRoute;
 
     this.themeService.setThemeOverride(usesClinicalTheme ? 'light' : null);
     if (typeof document !== 'undefined') {

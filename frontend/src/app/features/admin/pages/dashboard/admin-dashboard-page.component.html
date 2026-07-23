@@ -1,0 +1,204 @@
+<div class="admin-shell" [class.nav-open]="navOpen">
+  <aside class="admin-nav">
+    <div class="brand">
+      <img src="assets/brand/logoWhite.png" alt="NephroAI" />
+    </div>
+    <nav aria-label="Navegación de administración">
+      <a class="active" href="#resumen">
+        <span class="material-symbols-rounded">dashboard</span>
+        Resumen
+      </a>
+      <a href="#usuarios">
+        <span class="material-symbols-rounded">group</span>
+        Usuarios
+      </a>
+      <a href="#adquisicion">
+        <span class="material-symbols-rounded">monitoring</span>
+        Adquisición
+      </a>
+      <a href="#suscripciones">
+        <span class="material-symbols-rounded">credit_card</span>
+        Suscripciones
+      </a>
+      <a href="#sistema">
+        <span class="material-symbols-rounded">settings</span>
+        Sistema
+      </a>
+    </nav>
+    <button type="button" class="logout" (click)="logout()">
+      <span class="material-symbols-rounded">logout</span>
+      Cerrar sesión
+    </button>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-header">
+      <button type="button" class="menu-button" (click)="navOpen = !navOpen" aria-label="Abrir menú">
+        <span class="material-symbols-rounded">menu</span>
+      </button>
+      <h1>Panel de administración</h1>
+      <div class="period-controls">
+        <label>
+          <span>Desde</span>
+          <input type="date" [(ngModel)]="dateFrom" [max]="dateTo" />
+        </label>
+        <label>
+          <span>Hasta</span>
+          <input type="date" [(ngModel)]="dateTo" [min]="dateFrom" [max]="today" />
+        </label>
+        <button type="button" class="refresh" (click)="load()" [disabled]="loading">
+          <span class="material-symbols-rounded" [class.spinning]="loading">refresh</span>
+          Actualizar
+        </button>
+      </div>
+    </header>
+
+    <main id="resumen">
+      <div *ngIf="loading && !overview" class="screen-state">
+        <span class="loading-ring"></span>
+        Actualizando métricas…
+      </div>
+
+      <div *ngIf="error && !overview" class="screen-state error-state">
+        <span class="material-symbols-rounded">error</span>
+        {{ error }}
+        <button type="button" (click)="load()">Reintentar</button>
+      </div>
+
+      <ng-container *ngIf="overview as data">
+        <section class="kpi-strip" aria-label="Resumen del embudo">
+          <div *ngFor="let stage of funnelLabels">
+            <span>{{ stage.label }}</span>
+            <strong>{{ data.funnel[stage.key] | number }}</strong>
+          </div>
+        </section>
+
+        <p *ngIf="error" class="inline-error">{{ error }}</p>
+
+        <div class="analytics-grid">
+          <section class="trend-panel" id="adquisicion">
+            <div class="section-heading">
+              <div>
+                <h2>Registros y activación</h2>
+                <p>Usuarios creados durante el periodo seleccionado</p>
+              </div>
+              <div class="legend" aria-label="Leyenda">
+                <span><i class="registered"></i>Registrados</span>
+                <span><i class="verified"></i>Verificados</span>
+                <span><i class="activated"></i>Activados</span>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <svg viewBox="0 0 640 210" role="img" aria-label="Registros, verificaciones y activaciones por día">
+                <line *ngFor="let y of [34, 78, 122, 166]" x1="24" x2="616" [attr.y1]="y" [attr.y2]="y" class="grid-line" />
+                <path [attr.d]="chartPath('registered')" class="chart-line registered-line" />
+                <path [attr.d]="chartPath('verified')" class="chart-line verified-line" />
+                <path [attr.d]="chartPath('activated')" class="chart-line activated-line" />
+                <g *ngFor="let point of data.series; let i = index">
+                  <text [attr.x]="chartX(i)" y="198" text-anchor="middle">{{ formatDay(point.date) }}</text>
+                </g>
+              </svg>
+            </div>
+          </section>
+
+          <section class="funnel-panel">
+            <div class="section-heading">
+              <div>
+                <h2>Embudo de conversión</h2>
+                <p>Conversión desde la primera visita</p>
+              </div>
+            </div>
+            <div class="funnel-list">
+              <div *ngFor="let stage of funnelLabels">
+                <span>{{ stage.label }}</span>
+                <strong>{{ data.funnel[stage.key] | number }}</strong>
+                <div class="bar"><i [style.width.%]="funnelWidth(stage.key)"></i></div>
+                <small>{{ funnelPercent(stage.key) }}</small>
+              </div>
+            </div>
+            <p class="tracking-note" *ngIf="!data.system.trackingSince">
+              <span class="material-symbols-rounded">info</span>
+              Las visitas se medirán desde este despliegue; los registros históricos ya están incluidos.
+            </p>
+          </section>
+
+          <aside class="system-panel" id="sistema">
+            <div class="section-heading">
+              <div>
+                <h2>Estado del sistema</h2>
+                <p>Salud y frescura de los datos</p>
+              </div>
+            </div>
+            <div class="health-item good">
+              <span class="material-symbols-rounded">check_circle</span>
+              <div><strong>API estable</strong><small>Base de datos operativa</small></div>
+            </div>
+            <div class="health-item" [class.good]="data.system.errors15m === 0" [class.warning]="data.system.errors15m > 0">
+              <span class="material-symbols-rounded">{{ data.system.errors15m === 0 ? 'verified' : 'warning' }}</span>
+              <div>
+                <strong>{{ data.system.errors15m }} errores</strong>
+                <small>Últimos 15 minutos</small>
+              </div>
+            </div>
+            <div class="health-item" [class.warning]="data.funnel.activated === 0" [class.good]="data.funnel.activated > 0">
+              <span class="material-symbols-rounded">{{ data.funnel.activated === 0 ? 'person_off' : 'rocket_launch' }}</span>
+              <div>
+                <strong>{{ data.funnel.activated === 0 ? 'Sin actividad' : 'Usuarios activados' }}</strong>
+                <small>{{ data.funnel.activated }} con upload o chat</small>
+              </div>
+            </div>
+            <dl class="system-stats">
+              <div><dt>Usuarios totales</dt><dd>{{ data.totals.users }}</dd></div>
+              <div><dt>Suscripciones activas</dt><dd>{{ data.totals.activeSubscriptions }}</dd></div>
+              <div><dt>Datos actualizados</dt><dd>{{ formatDate(data.system.generatedAt) }}</dd></div>
+            </dl>
+          </aside>
+        </div>
+
+        <section class="users-section" id="usuarios">
+          <div class="section-heading">
+            <div>
+              <h2>Usuarios recientes</h2>
+              <p>Emails enmascarados; acciones de producto y estado de pago</p>
+            </div>
+            <span class="row-count">{{ data.recentUsers.length }} usuarios</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Registro</th>
+                  <th>Email verificado</th>
+                  <th>Primer laboratorio</th>
+                  <th>Primer chat con IA</th>
+                  <th>Suscripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let user of data.recentUsers">
+                  <td class="email-cell">{{ user.email }}</td>
+                  <td>{{ formatDate(user.registeredAt) }}</td>
+                  <td>
+                    <span class="status-dot" [class.complete]="user.verifiedAt"></span>
+                    {{ formatDate(user.verifiedAt) }}
+                  </td>
+                  <td>{{ formatDate(user.firstUploadAt) }}</td>
+                  <td>{{ formatDate(user.firstChatAt) }}</td>
+                  <td>
+                    <span class="subscription-state" [attr.data-status]="user.subscription">
+                      {{ subscriptionLabel(user.subscription) }}
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="!data.recentUsers.length">
+                  <td colspan="6" class="empty-row">No hubo registros en este periodo.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </ng-container>
+    </main>
+  </div>
+</div>

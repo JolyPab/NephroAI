@@ -21,6 +21,8 @@ from backend.share_routes import router as share_router
 from backend.patient_legacy_routes import router as patient_legacy_router
 from backend.billing_routes import router as billing_router
 from backend.email_routes import router as email_router
+from backend.admin_routes import router as admin_router
+from backend.analytics_routes import router as analytics_router
 from backend.deps import *
 from backend.utils import *
 
@@ -225,6 +227,8 @@ app.include_router(auth_router)
 
 app.include_router(patient_router)
 app.include_router(email_router)
+app.include_router(admin_router)
+app.include_router(analytics_router)
 
 @app.get("/api/health")
 async def health():

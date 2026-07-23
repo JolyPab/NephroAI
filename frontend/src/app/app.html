@@ -1,5 +1,5 @@
-<div class="app-shell">
-  <div class="page-container">
+<div class="app-shell" [class.admin-layout]="isAdminRoute">
+  <div class="page-container" [class.admin-layout__container]="isAdminRoute">
     <app-glass-toolbar
       *ngIf="showToolbar"
       [title]="toolbarTitle | translate"
@@ -29,6 +29,7 @@
 
     <main
       class="page-content transition-padding"
+      [class.admin-content]="isAdminRoute"
       [class.with-tabbar-padding]="showTabbar && isAuthenticated()"
     >
       <router-outlet></router-outlet>

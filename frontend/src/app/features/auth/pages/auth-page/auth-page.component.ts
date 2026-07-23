@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { AnalyticsService } from '../../../../core/services/analytics.service';
 import { User } from '../../../../core/models/user.model';
 
 @Component({
@@ -16,6 +17,7 @@ export class AuthPageComponent implements OnInit {
   private static readonly TRIAL_WELCOME_KEY = 'nephroai.showTrialWelcome';
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
@@ -55,6 +57,7 @@ export class AuthPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.analytics.track('auth_view');
     this.applyAuthQueryParams();
     this.auth.loadProfile().subscribe((user) => {
       if (user) {
@@ -324,6 +327,10 @@ export class AuthPageComponent implements OnInit {
   }
 
   private redirectAfterAuth(user: User): void {
+    if (user.role === 'ADMIN') {
+      void this.router.navigateByUrl('/admin');
+      return;
+    }
     const isDoctor = user.role === 'DOCTOR' || user.is_doctor === true;
     const target = isDoctor ? '/doctor' : '/patient';
     void this.router.navigateByUrl(target);

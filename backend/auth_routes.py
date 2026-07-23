@@ -18,6 +18,7 @@ from backend.auth import (
     decode_token,
     get_current_user_id,
 )
+from backend.admin_auth import is_admin_email
 from backend.email_service import send_verification_code_email
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -281,6 +282,7 @@ def _ensure_email_verification_code(db: Session, user: User) -> bool:
 
 
 def _build_user_response(user: User) -> UserResponse:
+    role = "ADMIN" if is_admin_email(user.email) else ("DOCTOR" if user.is_doctor else "PATIENT")
     return UserResponse(
         id=user.id,
         email=user.email,
@@ -288,7 +290,7 @@ def _build_user_response(user: User) -> UserResponse:
         is_doctor=user.is_doctor,
         is_active=user.is_active,
         email_verified=user.email_verified_at is not None,
-        role="DOCTOR" if user.is_doctor else "PATIENT",
+        role=role,
     )
 
 

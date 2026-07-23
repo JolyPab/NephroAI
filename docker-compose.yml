@@ -43,6 +43,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: ${JWT_SECRET:-}
       SECRET_KEY: ${SECRET_KEY:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       FERNET_KEY: ${FERNET_KEY:-}
       ENV: ${ENV:-production}
       APP_ENV: ${APP_ENV:-${ENV:-production}}
