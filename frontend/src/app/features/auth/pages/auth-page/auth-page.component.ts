@@ -1,9 +1,13 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 
-import { AuthService } from '../../../../core/services/auth.service';
+import {
+  AuthService,
+  SocialProviderConfig,
+} from '../../../../core/services/auth.service';
+import { SocialAuthSdkService } from '../../../../core/services/social-auth-sdk.service';
 import { AnalyticsService } from '../../../../core/services/analytics.service';
 import { User } from '../../../../core/models/user.model';
 
@@ -13,14 +17,17 @@ import { User } from '../../../../core/models/user.model';
   templateUrl: './auth-page.component.html',
   styleUrls: ['./auth-page.component.scss'],
 })
-export class AuthPageComponent implements OnInit {
+export class AuthPageComponent implements OnInit, AfterViewInit {
   private static readonly TRIAL_WELCOME_KEY = 'nephroai.showTrialWelcome';
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly socialSdk = inject(SocialAuthSdkService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
+
+  @ViewChild('googleButton') private googleButton?: ElementRef<HTMLElement>;
 
   mode: 'login' | 'register' | 'verify' | 'forgot' | 'reset-verify' | 'reset-password' = 'login';
   isSubmitting = false;
@@ -29,6 +36,10 @@ export class AuthPageComponent implements OnInit {
   pendingVerificationEmail = '';
   pendingResetEmail = '';
   resetToken = '';
+  socialConfig: SocialProviderConfig | null = null;
+  googleReady = false;
+  facebookReady = false;
+  socialProviderInProgress: 'google' | 'facebook' | null = null;
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -66,12 +77,51 @@ export class AuthPageComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.auth.getSocialProviderConfig().subscribe({
+      next: (config) => {
+        this.socialConfig = config;
+        window.setTimeout(() => this.initializeSocialProviders(config));
+      },
+      error: () => {
+        this.socialConfig = null;
+      },
+    });
+  }
+
+  get socialProvidersVisible(): boolean {
+    return !!(this.socialConfig?.googleClientId || this.socialConfig?.facebookAppId);
+  }
+
   toggleMode(): void {
     this.mode = this.mode === 'login' ? 'register' : 'login';
     this.errorMessage = '';
     this.infoMessage = '';
     this.pendingVerificationEmail = '';
     this.verifyForm.reset();
+  }
+
+  async startFacebookAuth(): Promise<void> {
+    if (!this.facebookReady || this.isSubmitting) {
+      return;
+    }
+    this.socialProviderInProgress = 'facebook';
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    try {
+      const credential = await this.socialSdk.loginWithFacebook();
+      if (!credential) {
+        this.isSubmitting = false;
+        this.socialProviderInProgress = null;
+        return;
+      }
+      this.completeSocialAuth('facebook', credential);
+    } catch {
+      this.errorMessage = this.translate.instant('ERRORS.AUTH_SOCIAL_SDK_FAILED');
+      this.isSubmitting = false;
+      this.socialProviderInProgress = null;
+    }
   }
 
   submitLogin(): void {
@@ -324,6 +374,69 @@ export class AuthPageComponent implements OnInit {
       return detail.message;
     }
     return this.translate.instant(fallbackKey);
+  }
+
+  private initializeSocialProviders(config: SocialProviderConfig): void {
+    if (config.googleClientId && this.googleButton?.nativeElement) {
+      this.socialSdk
+        .renderGoogleButton(
+          this.googleButton.nativeElement,
+          config.googleClientId,
+          (credential) => this.completeSocialAuth('google', credential),
+        )
+        .then(() => {
+          this.googleReady = true;
+        })
+        .catch(() => {
+          this.googleReady = false;
+        });
+    }
+
+    if (config.facebookAppId) {
+      this.socialSdk
+        .initializeFacebook(config.facebookAppId, config.facebookApiVersion)
+        .then(() => {
+          this.facebookReady = true;
+        })
+        .catch(() => {
+          this.facebookReady = false;
+        });
+    }
+  }
+
+  private completeSocialAuth(provider: 'google' | 'facebook', credential: string): void {
+    if (this.mode !== 'login' && this.mode !== 'register') {
+      return;
+    }
+    const action = this.mode;
+    const isDoctor = action === 'register' && this.registerForm.getRawValue().role === 'DOCTOR';
+    this.socialProviderInProgress = provider;
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    this.auth.socialAuth({
+      provider,
+      credential,
+      action,
+      is_doctor: isDoctor,
+    }).subscribe({
+      next: ({ user, isNewUser }) => {
+        const isDoctorUser = user.role === 'DOCTOR' || user.is_doctor === true;
+        if (isNewUser && !isDoctorUser) {
+          sessionStorage.setItem(AuthPageComponent.TRIAL_WELCOME_KEY, 'true');
+        }
+        this.redirectAfterAuth(user);
+      },
+      error: (err) => {
+        this.errorMessage = this.getErrorMessage(err, 'ERRORS.AUTH_SOCIAL_FAILED');
+        this.isSubmitting = false;
+        this.socialProviderInProgress = null;
+      },
+      complete: () => {
+        this.isSubmitting = false;
+        this.socialProviderInProgress = null;
+      },
+    });
   }
 
   private redirectAfterAuth(user: User): void {

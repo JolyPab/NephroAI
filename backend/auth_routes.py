@@ -6,11 +6,18 @@ import hmac
 import logging
 import os
 import random
+import re
+import secrets
+from functools import lru_cache
+
+import jwt
+import requests
 from fastapi import APIRouter, HTTPException, Depends, status
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, ValidationError, field_validator
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from typing import Optional
-from backend.database import AuditLog, EmailVerificationCode, User, SessionLocal
+from typing import Literal, Optional
+from backend.database import AuditLog, EmailVerificationCode, OAuthIdentity, User, SessionLocal
 from backend.auth import (
     get_password_hash,
     verify_password,
@@ -79,6 +86,10 @@ class Token(BaseModel):
 class AuthResponse(BaseModel):
     accessToken: str  # camelCase for frontend
     user: "UserResponse"
+
+
+class SocialAuthResponse(AuthResponse):
+    isNewUser: bool = False
 
 
 class UserResponse(BaseModel):
@@ -151,6 +162,26 @@ class ResetTokenResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     status: str
+
+
+class SocialProviderConfig(BaseModel):
+    googleClientId: str | None = None
+    facebookAppId: str | None = None
+    facebookApiVersion: str = "v25.0"
+
+
+class SocialAuthRequest(BaseModel):
+    provider: Literal["google", "facebook"]
+    credential: str = Field(min_length=20, max_length=8192)
+    action: Literal["login", "register"] = "login"
+    is_doctor: bool = False
+
+
+class SocialProfile(BaseModel):
+    provider: Literal["google", "facebook"]
+    subject: str = Field(min_length=1, max_length=255)
+    email: EmailStr
+    full_name: str | None = None
 
 
 # Dependency
@@ -292,6 +323,320 @@ def _build_user_response(user: User) -> UserResponse:
         email_verified=user.email_verified_at is not None,
         role=role,
     )
+
+
+def _social_error(
+    status_code: int,
+    code: str,
+    message: str,
+) -> HTTPException:
+    return HTTPException(
+        status_code=status_code,
+        detail={"code": code, "message": message},
+    )
+
+
+def _google_client_id() -> str | None:
+    return (os.getenv("GOOGLE_OAUTH_CLIENT_ID") or "").strip() or None
+
+
+def _facebook_app_id() -> str | None:
+    return (os.getenv("FACEBOOK_APP_ID") or "").strip() or None
+
+
+def _facebook_app_secret() -> str | None:
+    return (os.getenv("FACEBOOK_APP_SECRET") or "").strip() or None
+
+
+def _facebook_api_version() -> str:
+    configured = (os.getenv("FACEBOOK_API_VERSION") or "v25.0").strip()
+    return configured if re.fullmatch(r"v\d+\.\d+", configured) else "v25.0"
+
+
+@lru_cache(maxsize=1)
+def _google_jwk_client() -> jwt.PyJWKClient:
+    return jwt.PyJWKClient(
+        "https://www.googleapis.com/oauth2/v3/certs",
+        cache_jwk_set=True,
+        lifespan=3600,
+    )
+
+
+def _verify_google_credential(credential: str) -> SocialProfile:
+    client_id = _google_client_id()
+    if not client_id:
+        raise _social_error(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "social_provider_unavailable",
+            "El acceso con Google no está configurado.",
+        )
+
+    try:
+        signing_key = _google_jwk_client().get_signing_key_from_jwt(credential).key
+        claims = jwt.decode(
+            credential,
+            signing_key,
+            algorithms=["RS256"],
+            audience=client_id,
+            issuer=["accounts.google.com", "https://accounts.google.com"],
+            options={"require": ["aud", "email", "exp", "iat", "iss", "sub"]},
+        )
+        email_verified = claims.get("email_verified")
+        if email_verified not in (True, "true"):
+            raise ValueError("Google email is not verified")
+        return SocialProfile(
+            provider="google",
+            subject=str(claims["sub"]),
+            email=claims["email"],
+            full_name=(claims.get("name") or "").strip() or None,
+        )
+    except (jwt.PyJWTError, KeyError, TypeError, ValueError, ValidationError):
+        raise _social_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "social_credential_invalid",
+            "No se pudo validar tu cuenta de Google. Inténtalo de nuevo.",
+        )
+
+
+def _facebook_graph_get(
+    path: str,
+    *,
+    access_token: str,
+    params: dict[str, str] | None = None,
+) -> dict:
+    response = requests.get(
+        f"https://graph.facebook.com/{_facebook_api_version()}/{path}",
+        params=params,
+        headers={"Authorization": f"Bearer {access_token}"},
+        timeout=8,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    if not isinstance(payload, dict):
+        raise ValueError("Unexpected Facebook response")
+    return payload
+
+
+def _verify_facebook_credential(credential: str) -> SocialProfile:
+    app_id = _facebook_app_id()
+    app_secret = _facebook_app_secret()
+    if not app_id or not app_secret:
+        raise _social_error(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "social_provider_unavailable",
+            "El acceso con Facebook no está configurado.",
+        )
+
+    try:
+        app_access_token = f"{app_id}|{app_secret}"
+        debug_payload = _facebook_graph_get(
+            "debug_token",
+            access_token=app_access_token,
+            params={"input_token": credential},
+        )
+        token_data = debug_payload.get("data")
+        if (
+            not isinstance(token_data, dict)
+            or token_data.get("is_valid") is not True
+            or str(token_data.get("app_id")) != app_id
+            or not token_data.get("user_id")
+        ):
+            raise ValueError("Invalid Facebook access token")
+
+        app_secret_proof = hmac.new(
+            app_secret.encode("utf-8"),
+            credential.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        profile_payload = _facebook_graph_get(
+            "me",
+            access_token=credential,
+            params={
+                "fields": "id,name,email",
+                "appsecret_proof": app_secret_proof,
+            },
+        )
+        if str(profile_payload.get("id")) != str(token_data["user_id"]):
+            raise ValueError("Facebook user mismatch")
+        if not profile_payload.get("email"):
+            raise _social_error(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "social_email_unavailable",
+                "Facebook no compartió tu correo. Autoriza el permiso de correo e inténtalo de nuevo.",
+            )
+        return SocialProfile(
+            provider="facebook",
+            subject=str(profile_payload["id"]),
+            email=profile_payload["email"],
+            full_name=(profile_payload.get("name") or "").strip() or None,
+        )
+    except HTTPException:
+        raise
+    except (requests.RequestException, KeyError, TypeError, ValueError, ValidationError):
+        raise _social_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "social_credential_invalid",
+            "No se pudo validar tu cuenta de Facebook. Inténtalo de nuevo.",
+        )
+
+
+def _verify_social_credential(provider: str, credential: str) -> SocialProfile:
+    if provider == "google":
+        return _verify_google_credential(credential)
+    if provider == "facebook":
+        return _verify_facebook_credential(credential)
+    raise _social_error(
+        status.HTTP_400_BAD_REQUEST,
+        "social_provider_invalid",
+        "Proveedor de acceso no compatible.",
+    )
+
+
+def _social_auth_response(user: User, *, is_new_user: bool) -> SocialAuthResponse:
+    return SocialAuthResponse(
+        accessToken=create_access_token(data={"sub": user.id}),
+        user=_build_user_response(user),
+        isNewUser=is_new_user,
+    )
+
+
+@router.get("/social/config", response_model=SocialProviderConfig)
+async def social_provider_config():
+    """Expose only public provider identifiers required by the browser SDKs."""
+    return SocialProviderConfig(
+        googleClientId=_google_client_id(),
+        facebookAppId=_facebook_app_id() if _facebook_app_secret() else None,
+        facebookApiVersion=_facebook_api_version(),
+    )
+
+
+@router.post("/social", response_model=SocialAuthResponse)
+async def social_auth(payload: SocialAuthRequest, db: Session = Depends(get_db)):
+    """Verify a provider credential, then create or restore a NephroAI session."""
+    profile = _verify_social_credential(payload.provider, payload.credential)
+    normalized_email = str(profile.email).strip().lower()
+    identity = (
+        db.query(OAuthIdentity)
+        .filter(
+            OAuthIdentity.provider == profile.provider,
+            OAuthIdentity.provider_subject == profile.subject,
+        )
+        .first()
+    )
+
+    if identity:
+        user = identity.user
+        if not user or not user.is_active:
+            _audit_auth_event(
+                db,
+                action="auth_social_login_failed",
+                email=normalized_email,
+                status_value="failure",
+                user=user,
+                metadata={"provider": profile.provider, "reason": "inactive"},
+            )
+            db.commit()
+            raise _social_error(
+                status.HTTP_403_FORBIDDEN,
+                "social_account_inactive",
+                "Esta cuenta está desactivada.",
+            )
+        _audit_auth_event(
+            db,
+            action="auth_social_login_success",
+            email=user.email,
+            status_value="success",
+            user=user,
+            metadata={"provider": profile.provider},
+        )
+        db.commit()
+        return _social_auth_response(user, is_new_user=False)
+
+    existing_user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
+    if existing_user and existing_user.email_verified_at is not None:
+        _audit_auth_event(
+            db,
+            action="auth_social_register_failed",
+            email=normalized_email,
+            status_value="failure",
+            user=existing_user,
+            metadata={"provider": profile.provider, "reason": "email_exists"},
+        )
+        db.commit()
+        raise _social_error(
+            status.HTTP_409_CONFLICT,
+            "social_email_exists",
+            "Este correo ya está registrado. Inicia sesión con tu contraseña.",
+        )
+
+    if payload.action == "login" and not existing_user:
+        _audit_auth_event(
+            db,
+            action="auth_social_login_failed",
+            email=normalized_email,
+            status_value="failure",
+            metadata={"provider": profile.provider, "reason": "not_found"},
+        )
+        db.commit()
+        raise _social_error(
+            status.HTTP_404_NOT_FOUND,
+            "social_account_not_found",
+            "No existe una cuenta con este acceso. Regístrate primero.",
+        )
+
+    is_new_user = existing_user is None
+    is_first_activation = is_new_user or existing_user.email_verified_at is None
+    user = existing_user or User(
+        email=normalized_email,
+        hashed_password=get_password_hash(secrets.token_urlsafe(48)),
+        full_name=profile.full_name or normalized_email.split("@")[0],
+        is_doctor=payload.is_doctor,
+        is_active=True,
+        email_verified_at=dt.datetime.utcnow(),
+    )
+    if existing_user:
+        user.email = normalized_email
+        user.is_active = True
+        user.email_verified_at = dt.datetime.utcnow()
+        user.is_doctor = payload.is_doctor
+        if not user.full_name and profile.full_name:
+            user.full_name = profile.full_name
+
+    try:
+        if is_new_user:
+            db.add(user)
+            db.flush()
+        db.add(
+            OAuthIdentity(
+                user_id=user.id,
+                provider=profile.provider,
+                provider_subject=profile.subject,
+            )
+        )
+        _audit_auth_event(
+            db,
+            action="auth_social_register_success",
+            email=user.email,
+            status_value="success",
+            user=user,
+            metadata={"provider": profile.provider, "new_user": is_new_user},
+        )
+        db.commit()
+        db.refresh(user)
+    except Exception:
+        db.rollback()
+        logger.exception(
+            "Social authentication persistence failed provider=%s email=%s",
+            profile.provider,
+            normalized_email,
+        )
+        raise _social_error(
+            status.HTTP_409_CONFLICT,
+            "social_account_conflict",
+            "No se pudo completar el acceso. Inténtalo de nuevo.",
+        )
+
+    return _social_auth_response(user, is_new_user=is_first_activation)
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)

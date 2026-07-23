@@ -50,6 +50,29 @@ class User(Base):
     
     # Relationships
     patients = relationship("Patient", back_populates="user", foreign_keys="Patient.user_id")
+    oauth_identities = relationship(
+        "OAuthIdentity",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
+class OAuthIdentity(Base):
+    """Verified external identity linked to a NephroAI user."""
+
+    __tablename__ = "oauth_identities"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_subject", name="uq_oauth_provider_subject"),
+        UniqueConstraint("user_id", "provider", name="uq_oauth_user_provider"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    provider = Column(String(32), nullable=False, index=True)
+    provider_subject = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="oauth_identities", foreign_keys=[user_id])
 
 
 class Patient(Base):

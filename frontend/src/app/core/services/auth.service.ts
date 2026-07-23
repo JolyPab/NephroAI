@@ -18,6 +18,17 @@ export interface RegisterInitResponse {
   message: string;
 }
 
+export interface SocialProviderConfig {
+  googleClientId: string | null;
+  facebookAppId: string | null;
+  facebookApiVersion: string;
+}
+
+export interface SocialAuthResult {
+  user: User;
+  isNewUser: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(ApiService);
@@ -45,6 +56,28 @@ export class AuthService {
       full_name: payload.full_name,
     };
     return this.api.post<RegisterInitResponse>('/auth/register', body);
+  }
+
+  getSocialProviderConfig(): Observable<SocialProviderConfig> {
+    return this.api.get<SocialProviderConfig>('/auth/social/config');
+  }
+
+  socialAuth(payload: {
+    provider: 'google' | 'facebook';
+    credential: string;
+    action: 'login' | 'register';
+    is_doctor: boolean;
+  }): Observable<SocialAuthResult> {
+    return this.api.post<AuthResponse & { isNewUser?: boolean }>('/auth/social', payload).pipe(
+      tap((response) => {
+        this.handleAuthSuccess(response);
+        this.userSignal.set(this.normalizeUser(response.user));
+      }),
+      map((response) => ({
+        user: this.normalizeUser(response.user),
+        isNewUser: response.isNewUser === true,
+      })),
+    );
   }
 
   verifyEmail(payload: { email: string; code: string }): Observable<User> {
