@@ -27,7 +27,15 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
-  @ViewChild('googleButton') private googleButton?: ElementRef<HTMLElement>;
+  private googleButtonHost?: HTMLElement;
+
+  @ViewChild('googleButton')
+  set googleButton(element: ElementRef<HTMLElement> | undefined) {
+    this.googleButtonHost = element?.nativeElement;
+    if (this.googleButtonHost && this.socialConfig?.googleClientId) {
+      this.initializeGoogleProvider(this.socialConfig.googleClientId);
+    }
+  }
 
   mode: 'login' | 'register' | 'verify' | 'forgot' | 'reset-verify' | 'reset-password' = 'login';
   isSubmitting = false;
@@ -81,7 +89,7 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
     this.auth.getSocialProviderConfig().subscribe({
       next: (config) => {
         this.socialConfig = config;
-        window.setTimeout(() => this.initializeSocialProviders(config));
+        this.initializeSocialProviders(config);
       },
       error: () => {
         this.socialConfig = null;
@@ -377,19 +385,8 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
   }
 
   private initializeSocialProviders(config: SocialProviderConfig): void {
-    if (config.googleClientId && this.googleButton?.nativeElement) {
-      this.socialSdk
-        .renderGoogleButton(
-          this.googleButton.nativeElement,
-          config.googleClientId,
-          (credential) => this.completeSocialAuth('google', credential),
-        )
-        .then(() => {
-          this.googleReady = true;
-        })
-        .catch(() => {
-          this.googleReady = false;
-        });
+    if (config.googleClientId) {
+      this.initializeGoogleProvider(config.googleClientId);
     }
 
     if (config.facebookAppId) {
@@ -402,6 +399,30 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
           this.facebookReady = false;
         });
     }
+  }
+
+  private initializeGoogleProvider(clientId: string): void {
+    const host = this.googleButtonHost;
+    if (!host || this.googleReady) {
+      return;
+    }
+
+    this.socialSdk
+      .renderGoogleButton(
+        host,
+        clientId,
+        (credential) => this.completeSocialAuth('google', credential),
+      )
+      .then(() => {
+        if (this.googleButtonHost === host) {
+          this.googleReady = true;
+        }
+      })
+      .catch(() => {
+        if (this.googleButtonHost === host) {
+          this.googleReady = false;
+        }
+      });
   }
 
   private completeSocialAuth(provider: 'google' | 'facebook', credential: string): void {
