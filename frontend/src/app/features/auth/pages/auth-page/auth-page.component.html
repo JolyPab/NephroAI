@@ -116,14 +116,6 @@
         </span>
       </button>
 
-      <button
-        type="button"
-        class="auth-back-link"
-        [disabled]="isSubmitting"
-        (click)="cancelSocialRegistration()">
-        <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
-        <span>{{ 'AUTH.BACK_TO_LOGIN' | translate }}</span>
-      </button>
     </form>
 
     <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="space-y-5">

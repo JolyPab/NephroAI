@@ -164,17 +164,6 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  cancelSocialRegistration(): void {
-    if (this.isSubmitting) {
-      return;
-    }
-    this.pendingSocialRegistration = null;
-    this.socialRegisterForm.reset({ role: 'PATIENT' });
-    this.mode = 'login';
-    this.errorMessage = '';
-    this.infoMessage = '';
-  }
-
   async startFacebookAuth(): Promise<void> {
     if (!this.facebookReady || this.isSubmitting) {
       return;
@@ -312,11 +301,13 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
 
   backToLogin(): void {
     this.mode = 'login';
+    this.pendingSocialRegistration = null;
     this.errorMessage = '';
     this.infoMessage = '';
     this.pendingResetEmail = '';
     this.resetToken = '';
     this.forgotForm.reset();
+    this.socialRegisterForm.reset({ role: 'PATIENT' });
     this.verifyForm.reset();
     this.resetPasswordForm.reset();
   }
