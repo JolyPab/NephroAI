@@ -110,6 +110,22 @@ def test_social_login_requires_prior_registration(monkeypatch):
     assert exc.value.detail["code"] == "social_account_not_found"
     assert db.query(User).count() == 0
     assert db.query(OAuthIdentity).count() == 0
+
+    register_response = asyncio.run(
+        social_auth(
+            SocialAuthRequest(
+                provider="facebook",
+                credential=_credential(),
+                action="register",
+                is_doctor=True,
+            ),
+            db=db,
+        )
+    )
+    assert register_response.isNewUser is True
+    assert register_response.user.is_doctor is True
+    assert db.query(User).one().is_doctor is True
+    assert db.query(OAuthIdentity).one().provider == "facebook"
     db.close()
 
 

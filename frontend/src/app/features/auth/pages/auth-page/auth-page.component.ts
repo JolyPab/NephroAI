@@ -11,6 +11,22 @@ import { SocialAuthSdkService } from '../../../../core/services/social-auth-sdk.
 import { AnalyticsService } from '../../../../core/services/analytics.service';
 import { User } from '../../../../core/models/user.model';
 
+type AuthMode =
+  | 'login'
+  | 'register'
+  | 'social-register'
+  | 'verify'
+  | 'forgot'
+  | 'reset-verify'
+  | 'reset-password';
+
+type SocialProvider = 'google' | 'facebook';
+
+interface PendingSocialRegistration {
+  provider: SocialProvider;
+  credential: string;
+}
+
 @Component({
   selector: 'app-auth-page',
   standalone: false,
@@ -32,12 +48,16 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
   @ViewChild('googleButton')
   set googleButton(element: ElementRef<HTMLElement> | undefined) {
     this.googleButtonHost = element?.nativeElement;
+    if (!this.googleButtonHost) {
+      this.googleReady = false;
+      return;
+    }
     if (this.googleButtonHost && this.socialConfig?.googleClientId) {
       this.initializeGoogleProvider(this.socialConfig.googleClientId);
     }
   }
 
-  mode: 'login' | 'register' | 'verify' | 'forgot' | 'reset-verify' | 'reset-password' = 'login';
+  mode: AuthMode = 'login';
   isSubmitting = false;
   errorMessage = '';
   infoMessage = '';
@@ -48,6 +68,7 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
   googleReady = false;
   facebookReady = false;
   socialProviderInProgress: 'google' | 'facebook' | null = null;
+  private pendingSocialRegistration: PendingSocialRegistration | null = null;
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -59,6 +80,10 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', [Validators.required]],
+    role: ['PATIENT'],
+  });
+
+  readonly socialRegisterForm = this.fb.nonNullable.group({
     role: ['PATIENT'],
   });
 
@@ -103,10 +128,51 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
 
   toggleMode(): void {
     this.mode = this.mode === 'login' ? 'register' : 'login';
+    this.pendingSocialRegistration = null;
     this.errorMessage = '';
     this.infoMessage = '';
     this.pendingVerificationEmail = '';
     this.verifyForm.reset();
+  }
+
+  submitSocialRegistration(): void {
+    const pending = this.pendingSocialRegistration;
+    if (!pending || this.isSubmitting) {
+      return;
+    }
+
+    this.socialProviderInProgress = pending.provider;
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.infoMessage = '';
+    this.auth.socialAuth({
+      provider: pending.provider,
+      credential: pending.credential,
+      action: 'register',
+      is_doctor: this.socialRegisterForm.getRawValue().role === 'DOCTOR',
+    }).subscribe({
+      next: ({ user, isNewUser }) => this.handleSocialAuthSuccess(user, isNewUser),
+      error: (err) => {
+        this.errorMessage = this.getErrorMessage(err, 'ERRORS.AUTH_SOCIAL_FAILED');
+        this.isSubmitting = false;
+        this.socialProviderInProgress = null;
+      },
+      complete: () => {
+        this.isSubmitting = false;
+        this.socialProviderInProgress = null;
+      },
+    });
+  }
+
+  cancelSocialRegistration(): void {
+    if (this.isSubmitting) {
+      return;
+    }
+    this.pendingSocialRegistration = null;
+    this.socialRegisterForm.reset({ role: 'PATIENT' });
+    this.mode = 'login';
+    this.errorMessage = '';
+    this.infoMessage = '';
   }
 
   async startFacebookAuth(): Promise<void> {
@@ -425,7 +491,7 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
       });
   }
 
-  private completeSocialAuth(provider: 'google' | 'facebook', credential: string): void {
+  private completeSocialAuth(provider: SocialProvider, credential: string): void {
     if (this.mode !== 'login' && this.mode !== 'register') {
       return;
     }
@@ -441,14 +507,23 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
       action,
       is_doctor: isDoctor,
     }).subscribe({
-      next: ({ user, isNewUser }) => {
-        const isDoctorUser = user.role === 'DOCTOR' || user.is_doctor === true;
-        if (isNewUser && !isDoctorUser) {
-          sessionStorage.setItem(AuthPageComponent.TRIAL_WELCOME_KEY, 'true');
-        }
-        this.redirectAfterAuth(user);
-      },
+      next: ({ user, isNewUser }) => this.handleSocialAuthSuccess(user, isNewUser),
       error: (err) => {
+        const detail = err?.error?.detail;
+        if (
+          action === 'login'
+          && err?.status === 404
+          && detail?.code === 'social_account_not_found'
+        ) {
+          this.pendingSocialRegistration = { provider, credential };
+          this.socialRegisterForm.reset({ role: 'PATIENT' });
+          this.mode = 'social-register';
+          this.errorMessage = '';
+          this.infoMessage = '';
+          this.isSubmitting = false;
+          this.socialProviderInProgress = null;
+          return;
+        }
         this.errorMessage = this.getErrorMessage(err, 'ERRORS.AUTH_SOCIAL_FAILED');
         this.isSubmitting = false;
         this.socialProviderInProgress = null;
@@ -458,6 +533,15 @@ export class AuthPageComponent implements OnInit, AfterViewInit {
         this.socialProviderInProgress = null;
       },
     });
+  }
+
+  private handleSocialAuthSuccess(user: User, isNewUser: boolean): void {
+    const isDoctorUser = user.role === 'DOCTOR' || user.is_doctor === true;
+    if (isNewUser && !isDoctorUser) {
+      sessionStorage.setItem(AuthPageComponent.TRIAL_WELCOME_KEY, 'true');
+    }
+    this.pendingSocialRegistration = null;
+    this.redirectAfterAuth(user);
   }
 
   private redirectAfterAuth(user: User): void {

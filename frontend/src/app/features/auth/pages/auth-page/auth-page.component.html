@@ -8,7 +8,9 @@
               ? ('AUTH.LOGIN_TITLE' | translate)
               : mode === 'register'
                 ? ('AUTH.REGISTER_TITLE' | translate)
-                : ('COMMON.APP_NAME' | translate)
+                : mode === 'social-register'
+                  ? ('AUTH.SOCIAL_REGISTER_TITLE' | translate)
+                  : ('COMMON.APP_NAME' | translate)
           }}
         </h1>
         <p class="text-sm text-[var(--text-dim)]">
@@ -17,13 +19,15 @@
               ? ('AUTH.WELCOME_LOGIN' | translate)
               : mode === 'register'
                 ? ('AUTH.WELCOME_REGISTER' | translate)
-                : mode === 'verify'
-                  ? ('AUTH.WELCOME_VERIFY' | translate)
-                  : mode === 'forgot'
-                    ? ('AUTH.WELCOME_FORGOT' | translate)
-                    : mode === 'reset-verify'
-                      ? ('AUTH.WELCOME_RESET_VERIFY' | translate)
-                      : ('AUTH.WELCOME_RESET_PASSWORD' | translate)
+                : mode === 'social-register'
+                  ? ('AUTH.WELCOME_SOCIAL_REGISTER' | translate)
+                  : mode === 'verify'
+                    ? ('AUTH.WELCOME_VERIFY' | translate)
+                    : mode === 'forgot'
+                      ? ('AUTH.WELCOME_FORGOT' | translate)
+                      : mode === 'reset-verify'
+                        ? ('AUTH.WELCOME_RESET_VERIFY' | translate)
+                        : ('AUTH.WELCOME_RESET_PASSWORD' | translate)
           }}
         </p>
       </div>
@@ -41,7 +45,7 @@
     </div>
 
     <section
-      *ngIf="socialProvidersVisible"
+      *ngIf="socialProvidersVisible && (mode === 'login' || mode === 'register')"
       class="social-auth"
       [attr.aria-label]="'AUTH.SOCIAL_OPTIONS' | translate">
       <div
@@ -72,6 +76,55 @@
     <div *ngIf="socialProvidersVisible && (mode === 'login' || mode === 'register')" class="auth-divider">
       <span>{{ 'AUTH.OR_WITH_EMAIL' | translate }}</span>
     </div>
+
+    <form
+      *ngIf="mode === 'social-register'"
+      [formGroup]="socialRegisterForm"
+      (ngSubmit)="submitSocialRegistration()"
+      class="social-onboarding space-y-5">
+      <div class="social-account-confirmed" role="status">
+        <span class="material-symbols-rounded" aria-hidden="true">verified</span>
+        <div>
+          <strong>{{ 'AUTH.SOCIAL_ACCOUNT_CONFIRMED' | translate }}</strong>
+          <span>{{ 'AUTH.SOCIAL_ROLE_HINT' | translate }}</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-xs uppercase tracking-[0.2em] text-[var(--text-dim)]">
+          {{ 'AUTH.ROLE' | translate }}
+        </label>
+        <select class="input-glass" formControlName="role">
+          <option value="PATIENT">{{ 'AUTH.PATIENT' | translate }}</option>
+          <option value="DOCTOR">{{ 'AUTH.DOCTOR' | translate }}</option>
+        </select>
+      </div>
+
+      <div *ngIf="errorMessage" class="toast-glass error" role="alert">
+        <span class="material-symbols-rounded">error</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <button type="submit" appGlassButton="accent" [glassBlock]="true" [disabled]="isSubmitting">
+        <span *ngIf="isSubmitting" class="loader-dot"></span>
+        <span>
+          {{
+            isSubmitting
+              ? ('AUTH.COMPLETING_SOCIAL_REGISTRATION' | translate)
+              : ('AUTH.COMPLETE_SOCIAL_REGISTRATION' | translate)
+          }}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="auth-back-link"
+        [disabled]="isSubmitting"
+        (click)="cancelSocialRegistration()">
+        <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+        <span>{{ 'AUTH.BACK_TO_LOGIN' | translate }}</span>
+      </button>
+    </form>
 
     <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="space-y-5">
       <app-glass-input
