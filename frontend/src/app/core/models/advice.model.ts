@@ -10,4 +10,8 @@ export interface AdviceResponseModel {
   usedMetrics: AdviceMetric[];
   disclaimer: boolean;
   session_id?: number | null;
+  ai_messages_limit?: number;
+  ai_messages_remaining?: number;
+  ai_messages_reset_at?: string | null;
+  scope_rejected?: boolean;
 }

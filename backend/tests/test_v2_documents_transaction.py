@@ -55,6 +55,13 @@ def _make_upload() -> UploadFile:
     return UploadFile(filename="tx-test.pdf", file=io.BytesIO(b"%PDF-1.4 fake"))
 
 
+def _make_distinct_upload(index: int) -> UploadFile:
+    return UploadFile(
+        filename=f"free-{index}.pdf",
+        file=io.BytesIO(f"%PDF-1.4 free-{index}".encode()),
+    )
+
+
 def _make_password_pdf(password: str = "cedula123") -> bytes:
     doc = fitz.open()
     page = doc.new_page()
@@ -156,4 +163,56 @@ def test_create_v2_document_rolls_back_and_recovers(monkeypatch):
     assert db.query(V2Document).count() == 1
     assert db.query(V2Metric).count() == 1
 
+    db.close()
+
+
+def test_inactive_user_gets_two_successful_unique_uploads(monkeypatch):
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    db = sessionmaker(autocommit=False, autoflush=False, bind=engine)()
+    user = User(email="free-upload@test.local", hashed_password="x", is_active=True, is_doctor=False)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    async def fake_extract_v2(_pdf_bytes: bytes) -> ImportV2:
+        return _build_payload()
+
+    monkeypatch.setattr("backend.v2_routes.extract_v2", fake_extract_v2)
+
+    first = asyncio.run(create_v2_document(file=_make_distinct_upload(1), user_id=user.id, db=db))
+    assert first["free_uploads_remaining"] == 1
+    duplicate = asyncio.run(create_v2_document(file=_make_distinct_upload(1), user_id=user.id, db=db))
+    assert duplicate["status"] == "duplicate"
+    assert duplicate["free_uploads_remaining"] == 1
+    second = asyncio.run(create_v2_document(file=_make_distinct_upload(2), user_id=user.id, db=db))
+    assert second["free_uploads_remaining"] == 0
+
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(create_v2_document(file=_make_distinct_upload(3), user_id=user.id, db=db))
+    assert exc.value.status_code == 403
+    assert exc.value.detail["code"] == "free_upload_limit_reached"
+    db.refresh(user)
+    assert user.free_uploads_used == 2
+    db.close()
+
+
+def test_failed_free_upload_refunds_credit(monkeypatch):
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    db = sessionmaker(autocommit=False, autoflush=False, bind=engine)()
+    user = User(email="refund-upload@test.local", hashed_password="x", is_active=True, is_doctor=False)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    async def failing_extract(_pdf_bytes: bytes):
+        raise RuntimeError("extract failed")
+
+    monkeypatch.setattr("backend.v2_routes.extract_v2", failing_extract)
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(create_v2_document(file=_make_distinct_upload(1), user_id=user.id, db=db))
+    assert exc.value.status_code == 500
+    db.refresh(user)
+    assert user.free_uploads_used == 0
     db.close()

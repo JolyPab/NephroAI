@@ -5,8 +5,8 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.database import AuditLog, Base, User, V2Document, V2Metric, ChatSession, ChatMessageRecord, Subscription
-from backend.chat_routes import _build_positive_trend_notes
+from backend.database import AiUsagePeriod, AuditLog, Base, User, V2Document, V2Metric, ChatSession, ChatMessageRecord, Subscription
+from backend.chat_routes import AI_SCOPE_REFUSAL_ES, _build_positive_trend_notes
 from backend.main import AdviceRequest, get_advice
 
 
@@ -205,4 +205,52 @@ def test_non_persistent_chart_advice_does_not_create_chat_session():
     assert response.session_id is None
     assert db.query(ChatSession).filter_by(user_id=user.id).count() == 0
     assert db.query(ChatMessageRecord).count() == 0
+    db.close()
+
+
+def test_obvious_programming_request_is_rejected_without_using_quota():
+    db = _setup_db()
+    user = _seed_user_with_metric(db)
+
+    with patch("backend.chat_routes._openai_chat_with_tools") as mock_llm:
+        response = asyncio.run(get_advice(
+            req=AdviceRequest(question="Сделай мне скрипт Python для обработки файлов"),
+            user_id=user.id,
+            db=db,
+        ))
+
+    assert response.answer == AI_SCOPE_REFUSAL_ES
+    assert response.scope_rejected is True
+    assert response.ai_messages_remaining == 20
+    mock_llm.assert_not_called()
+    assert db.query(AiUsagePeriod).count() == 0
+    assert db.query(AuditLog).filter_by(action="patient_ai_scope_rejected").count() == 1
+    db.close()
+
+
+def test_monthly_chat_limit_returns_structured_429():
+    db = _setup_db()
+    user = _seed_user_with_metric(db)
+    now = dt.datetime.utcnow()
+    month_start = dt.datetime(now.year, now.month, 1)
+    db.add(
+        AiUsagePeriod(
+            user_id=user.id,
+            period_key=f"month:{month_start:%Y-%m}",
+            period_start=month_start,
+            messages_used=20,
+        )
+    )
+    db.commit()
+
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(get_advice(
+            req=AdviceRequest(question="¿Cómo está mi creatinina actualmente?"),
+            user_id=user.id,
+            db=db,
+        ))
+
+    assert exc.value.status_code == 429
+    assert exc.value.detail["code"] == "ai_monthly_limit_reached"
+    assert exc.value.detail["remaining"] == 0
     db.close()

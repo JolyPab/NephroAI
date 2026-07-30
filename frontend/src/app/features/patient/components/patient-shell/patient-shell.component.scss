@@ -98,6 +98,26 @@ h2 {
   cursor: pointer;
 }
 
+.trial-welcome-secondary {
+  width: 100%;
+  min-height: 2.65rem;
+  border: 0;
+  background: transparent;
+  color: #41627a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trial-welcome-secondary:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .trial-welcome-primary {
   display: flex;
   min-height: 3.15rem;

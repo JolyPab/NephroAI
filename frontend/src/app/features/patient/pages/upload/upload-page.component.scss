@@ -14,6 +14,34 @@
   background: rgba(var(--accent-rgb), 0.035) !important;
 }
 
+.upload-allowance {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.8rem;
+  color: var(--text);
+  font-size: 0.84rem;
+  line-height: 1.4;
+
+  > .material-symbols-rounded {
+    color: var(--accent);
+    font-size: 1.15rem;
+  }
+
+  > span:nth-child(2) {
+    flex: 1;
+  }
+
+  button {
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
+
 .upload-title-row {
   display: flex;
   align-items: center;

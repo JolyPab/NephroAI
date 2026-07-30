@@ -52,6 +52,7 @@
           type="button"
           class="prompt"
           *ngFor="let prompt of quickPrompts"
+          [disabled]="composerDisabled"
           (click)="onPrompt(prompt)"
         >{{ prompt }}</button>
 
@@ -60,11 +61,16 @@
   </ng-template>
 
   <!-- Composer island -->
-  <form class="composer" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <form class="composer" [class.composer--disabled]="composerDisabled" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="composer-usage" *ngIf="usageLabel || scopeLabel">
+      <span *ngIf="usageLabel">{{ usageLabel }}</span>
+      <span *ngIf="scopeLabel">{{ scopeLabel }}</span>
+    </div>
     <textarea
       class="chat-textarea"
       rows="2"
       formControlName="question"
+      [readonly]="composerDisabled"
       [placeholder]="placeholderKey | translate"
     ></textarea>
     <div class="composer-bar">
@@ -73,6 +79,7 @@
           type="button"
           class="prompt"
           *ngFor="let prompt of quickPrompts"
+          [disabled]="composerDisabled"
           (click)="onPrompt(prompt)"
         >{{ prompt }}</button>
 
@@ -80,7 +87,7 @@
       <span class="hint" *ngIf="questionControl?.invalid && questionControl?.touched">
         {{ minCharsKey | translate }}
       </span>
-      <button type="submit" class="send-btn" [disabled]="isLoading || form.invalid">
+      <button type="submit" class="send-btn" [disabled]="isLoading || form.invalid || composerDisabled">
         <span *ngIf="isLoading" class="loader-dot"></span>
         <span *ngIf="!isLoading" class="material-symbols-rounded">arrow_upward</span>
       </button>

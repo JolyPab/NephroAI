@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from backend.auth import get_current_user_id
 from backend.database import Payment, SessionLocal, SubscriberWelcomeEmail, Subscription, User
 from backend.email_service import send_subscriber_welcome_email
+from backend.entitlements import get_ai_allowance, get_upload_allowance
 
 try:
     import stripe
@@ -42,6 +43,14 @@ class BillingSubscriptionResponse(BaseModel):
     current_period_end: str | None = None
     trial_end: str | None = None
     trial_available: bool = True
+    free_uploads_limit: int = 0
+    free_uploads_used: int = 0
+    free_uploads_remaining: int = 0
+    can_upload: bool = False
+    ai_messages_limit: int = 0
+    ai_messages_used: int = 0
+    ai_messages_remaining: int = 0
+    ai_messages_reset_at: str | None = None
 
 
 class CheckoutSessionRequest(BaseModel):
@@ -62,6 +71,44 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def _billing_subscription_response(
+    db: Session,
+    user_id: int,
+    subscription: Subscription | None,
+) -> BillingSubscriptionResponse:
+    uploads = get_upload_allowance(db, user_id)
+    ai = get_ai_allowance(db, user_id)
+    if subscription is None:
+        return BillingSubscriptionResponse(
+            status="inactive",
+            free_uploads_limit=uploads.limit,
+            free_uploads_used=uploads.used,
+            free_uploads_remaining=uploads.remaining,
+            can_upload=uploads.can_upload,
+        )
+    return BillingSubscriptionResponse(
+        status=subscription.status,
+        provider=(
+            "stripe"
+            if subscription.stripe_subscription_id
+            else "paypal"
+            if subscription.paypal_subscription_id
+            else None
+        ),
+        current_period_end=subscription.period_end.isoformat() if subscription.period_end else None,
+        trial_end=subscription.trial_end.isoformat() if subscription.trial_end else None,
+        trial_available=subscription.trial_used_at is None and not subscription.stripe_subscription_id,
+        free_uploads_limit=uploads.limit,
+        free_uploads_used=uploads.used,
+        free_uploads_remaining=uploads.remaining,
+        can_upload=uploads.can_upload,
+        ai_messages_limit=ai.limit,
+        ai_messages_used=ai.used,
+        ai_messages_remaining=ai.remaining,
+        ai_messages_reset_at=ai.reset_at.isoformat() if ai.reset_at else None,
+    )
 
 
 def _stripe_client():
@@ -285,15 +332,7 @@ async def get_subscription(
     db: Session = Depends(get_db),
 ):
     subscription = db.query(Subscription).filter(Subscription.user_id == user_id).order_by(Subscription.id.desc()).first()
-    if subscription is None:
-        return BillingSubscriptionResponse(status="inactive")
-    return BillingSubscriptionResponse(
-        status=subscription.status,
-        provider="stripe" if subscription.stripe_subscription_id else "paypal" if subscription.paypal_subscription_id else None,
-        current_period_end=subscription.period_end.isoformat() if subscription.period_end else None,
-        trial_end=subscription.trial_end.isoformat() if subscription.trial_end else None,
-        trial_available=subscription.trial_used_at is None and not subscription.stripe_subscription_id,
-    )
+    return _billing_subscription_response(db, user_id, subscription)
 
 
 @router.post("/checkout-session", response_model=CheckoutSessionResponse)

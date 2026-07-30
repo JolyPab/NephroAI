@@ -63,6 +63,11 @@ export class PatientShellComponent implements OnInit {
     });
   }
 
+  uploadFirstDocument(): void {
+    this.showTrialWelcome = false;
+    void this.router.navigate(['/patient/upload']);
+  }
+
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeTrialWelcome();

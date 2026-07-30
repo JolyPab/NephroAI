@@ -11,6 +11,12 @@
   </div>
 
   <section class="upload-card glass glass-strong">
+    <div class="upload-allowance glass glass-soft" role="status">
+      <span class="material-symbols-rounded">{{ hasSubscriptionAccess ? 'all_inclusive' : 'redeem' }}</span>
+      <span>{{ uploadAllowanceText }}</span>
+      <button *ngIf="!canUpload" type="button" (click)="goToSubscription()">Activar prueba</button>
+    </div>
+
     <div
       class="upload-dropzone"
       [class.upload-dropzone--active]="isDragging"
@@ -83,10 +89,10 @@
       <span>{{ uploadAccuracyHint }}</span>
     </div>
 
-    <button type="button" class="upload-submit" (click)="submit()" [disabled]="isUploading">
+    <button type="button" class="upload-submit" (click)="submit()" [disabled]="isUploading || !canUpload">
       <span *ngIf="isUploading" class="loader-dot"></span>
       <span class="material-symbols-rounded" *ngIf="!isUploading">auto_awesome</span>
-      <span>{{ isUploading ? ('UPLOAD.PROCESSING' | translate) : (passwordRequired ? 'Reintentar con contraseña' : ('UPLOAD.UPLOAD_PARSE' | translate)) }}</span>
+      <span>{{ !canUpload ? 'Límite gratuito alcanzado' : (isUploading ? ('UPLOAD.PROCESSING' | translate) : (passwordRequired ? 'Reintentar con contraseña' : ('UPLOAD.UPLOAD_PARSE' | translate))) }}</span>
     </button>
   </section>
 </div>

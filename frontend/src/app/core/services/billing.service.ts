@@ -9,6 +9,14 @@ export interface BillingSubscription {
   current_period_end?: string | null;
   trial_end?: string | null;
   trial_available?: boolean;
+  free_uploads_limit: number;
+  free_uploads_used: number;
+  free_uploads_remaining: number;
+  can_upload: boolean;
+  ai_messages_limit: number;
+  ai_messages_used: number;
+  ai_messages_remaining: number;
+  ai_messages_reset_at?: string | null;
 }
 
 export interface CheckoutSession {

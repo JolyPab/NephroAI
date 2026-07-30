@@ -117,6 +117,22 @@ def test_create_checkout_session_records_pending_subscription(monkeypatch):
     db.close()
 
 
+def test_inactive_subscription_exposes_two_free_uploads():
+    db = _setup_db()
+    db.add(User(id=1, email="patient@example.com", hashed_password="hash"))
+    db.commit()
+
+    response = asyncio.run(billing_routes.get_subscription(user_id=1, db=db))
+
+    assert response.status == "inactive"
+    assert response.free_uploads_limit == 2
+    assert response.free_uploads_used == 0
+    assert response.free_uploads_remaining == 2
+    assert response.can_upload is True
+    assert response.ai_messages_limit == 0
+    db.close()
+
+
 def test_webhook_checkout_completed_marks_subscription_trialing(monkeypatch):
     db = _setup_db()
     db.add(User(id=1, email="patient@example.com", hashed_password="hash", full_name="Paciente Uno"))

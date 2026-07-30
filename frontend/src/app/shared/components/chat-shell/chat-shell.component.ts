@@ -40,6 +40,9 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
   @Input() animateLastMessage = false;
   @Input() form!: FormGroup;
   @Input() quickPrompts: string[] = [];
+  @Input() composerDisabled = false;
+  @Input() usageLabel = '';
+  @Input() scopeLabel = '';
   displayedAnswers: string[] = [];
 
   @ViewChild('chatWindow') private chatWindowRef?: ElementRef<HTMLDivElement>;
@@ -85,6 +88,9 @@ export class ChatShellComponent implements OnChanges, OnDestroy {
     return trimmed;
   }
   onPrompt(prompt: string): void {
+    if (this.composerDisabled) {
+      return;
+    }
     this.selectPrompt.emit(prompt);
   }
 

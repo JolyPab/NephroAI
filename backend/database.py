@@ -46,6 +46,8 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     email_verified_at = Column(DateTime, nullable=True)
     is_doctor = Column(Boolean, default=False)
+    free_upload_limit = Column(Integer, nullable=False, default=2, server_default="2")
+    free_uploads_used = Column(Integer, nullable=False, default=0, server_default="0")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships
@@ -386,6 +388,26 @@ class ChatMessageRecord(Base):
     session = relationship("ChatSession", back_populates="messages")
 
 
+class AiUsagePeriod(Base):
+    """Atomic per-user AI chat usage counter for a subscription allowance period."""
+
+    __tablename__ = "ai_usage_periods"
+    __table_args__ = (
+        UniqueConstraint("user_id", "period_key", name="uq_ai_usage_user_period"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    period_key = Column(String(80), nullable=False)
+    period_start = Column(DateTime, nullable=False)
+    period_end = Column(DateTime, nullable=True)
+    messages_used = Column(Integer, nullable=False, default=0, server_default="0")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id])
+
+
 class PatientMemory(Base):
     __tablename__ = "patient_memory"
     id = Column(Integer, primary_key=True, index=True)
@@ -662,6 +684,10 @@ def ensure_users_columns(engine) -> list[str]:
         additions: list[tuple[str, str]] = []
         if "email_verified_at" not in existing:
             additions.append(("email_verified_at", "TIMESTAMP"))
+        if "free_upload_limit" not in existing:
+            additions.append(("free_upload_limit", "INTEGER NOT NULL DEFAULT 2"))
+        if "free_uploads_used" not in existing:
+            additions.append(("free_uploads_used", "INTEGER NOT NULL DEFAULT 0"))
 
         if not additions:
             return []
@@ -669,6 +695,18 @@ def ensure_users_columns(engine) -> list[str]:
         with engine.begin() as conn:
             for name, col_type in additions:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN {name} {col_type}"))
+            if (
+                "free_uploads_used" not in existing
+                and "v2_documents" in inspector.get_table_names()
+            ):
+                document_count = "(SELECT COUNT(*) FROM v2_documents WHERE v2_documents.user_id = users.id)"
+                conn.execute(
+                    text(
+                        "UPDATE users SET free_uploads_used = "
+                        f"CASE WHEN {document_count} >= free_upload_limit "
+                        f"THEN free_upload_limit ELSE {document_count} END"
+                    )
+                )
         return [name for name, _ in additions]
     except Exception as exc:
         print(f"[WARN] Could not ensure users columns: {exc}")

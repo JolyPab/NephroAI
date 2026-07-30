@@ -65,6 +65,12 @@
         <span class="empty-text" *ngIf="subscription?.status !== 'trialing' && subscription?.current_period_end">
           Renueva el {{ subscription?.current_period_end | date: 'd MMM yyyy' }}
         </span>
+        <span class="empty-text" *ngIf="hasSubscriptionAccess() && subscription?.ai_messages_limit">
+          {{ subscription?.ai_messages_remaining }} de {{ subscription?.ai_messages_limit }} consultas de IA disponibles
+        </span>
+        <span class="empty-text" *ngIf="!hasSubscriptionAccess() && subscription">
+          {{ subscription.free_uploads_remaining }} de {{ subscription.free_uploads_limit }} cargas gratuitas disponibles
+        </span>
       </div>
       <div class="form-message form-message--error" *ngIf="subscriptionError">{{ subscriptionError }}</div>
       <p style="font-size: 0.75rem; color: var(--text-muted); margin: 1rem 0 0; padding-top: 0.85rem; border-top: 1px solid rgba(255,255,255,0.06);" *ngIf="!hasSubscriptionAccess()">

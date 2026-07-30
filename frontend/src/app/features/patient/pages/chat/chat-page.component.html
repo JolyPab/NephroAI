@@ -76,6 +76,9 @@
       [isLoading]="isLoading"
       [form]="chatForm"
       [quickPrompts]="quickPrompts"
+      [composerDisabled]="quotaReached"
+      [usageLabel]="chatUsageLabel"
+      [scopeLabel]="'Solo sobre tus análisis, salud renal, nutrición y signos vitales.'"
       (submitMessage)="submit()"
       (selectPrompt)="setPrompt($event)"
     ></app-chat-shell>

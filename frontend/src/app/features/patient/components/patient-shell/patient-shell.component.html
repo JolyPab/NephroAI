@@ -22,18 +22,22 @@
       <span class="material-symbols-rounded" aria-hidden="true">close</span>
     </button>
 
-    <h2 id="trial-welcome-title">¡Felicidades! Tu cuenta está casi lista</h2>
+    <h2 id="trial-welcome-title">Tu cuenta está lista</h2>
 
     <div id="trial-welcome-description" class="trial-welcome-offer">
       <span class="material-symbols-rounded" aria-hidden="true">verified</span>
-      <p>Para activar tus 7 días, <strong>suscríbete aquí.</strong></p>
+      <p><strong>Carga 2 análisis gratis</strong>, sin tarjeta. Después podrás activar 7 días de prueba.</p>
     </div>
 
     <p *ngIf="checkoutError" class="trial-welcome-error" role="alert">{{ checkoutError }}</p>
 
-    <button type="button" class="trial-welcome-primary" [disabled]="checkoutBusy" (click)="startTrial()">
+    <button type="button" class="trial-welcome-primary" [disabled]="checkoutBusy" (click)="uploadFirstDocument()">
+      <span>Subir mi primer análisis gratis</span>
+      <span class="material-symbols-rounded" aria-hidden="true">upload_file</span>
+    </button>
+    <button type="button" class="trial-welcome-secondary" [disabled]="checkoutBusy" (click)="startTrial()">
       <span *ngIf="checkoutBusy" class="trial-welcome-spinner" aria-hidden="true"></span>
-      <span>{{ checkoutBusy ? 'Abriendo pago seguro…' : 'Activar mis 7 días gratis' }}</span>
+      <span>{{ checkoutBusy ? 'Abriendo pago seguro…' : 'Prefiero activar 7 días gratis' }}</span>
       <span *ngIf="!checkoutBusy" class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
     </button>
   </article>

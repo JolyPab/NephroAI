@@ -34,6 +34,17 @@ export class PatientChatPageComponent implements OnInit {
   language: V2DashboardLang = 'es';
   billingLoading = true;
   chatLocked = true;
+  quotaReached = false;
+  aiMessagesLimit = 0;
+  aiMessagesRemaining = 0;
+  aiMessagesResetAt: string | null = null;
+
+  get chatUsageLabel(): string {
+    if (!this.aiMessagesLimit) {
+      return "";
+    }
+    return `${this.aiMessagesRemaining} de ${this.aiMessagesLimit} consultas disponibles`;
+  }
 
   // ── Session state ──────────────────────────────────────────────────────
   sessions: ChatSessionSummary[] = [];
@@ -74,6 +85,10 @@ export class PatientChatPageComponent implements OnInit {
       next: (subscription) => {
         this.billingLoading = false;
         this.chatLocked = !['active', 'trialing'].includes(subscription?.status ?? '');
+        this.aiMessagesLimit = subscription.ai_messages_limit;
+        this.aiMessagesRemaining = subscription.ai_messages_remaining;
+        this.aiMessagesResetAt = subscription.ai_messages_reset_at ?? null;
+        this.quotaReached = !this.chatLocked && this.aiMessagesRemaining <= 0;
         if (!this.chatLocked) {
           this.loadSessions();
           this.loadAnalytes();
@@ -180,7 +195,7 @@ export class PatientChatPageComponent implements OnInit {
 
   // ── Quick prompts ──────────────────────────────────────────────────────
   setPrompt(prompt: string): void {
-    if (this.chatLocked) {
+    if (this.chatLocked || this.quotaReached) {
       return;
     }
     this.chatForm.patchValue({ question: prompt });
@@ -189,7 +204,7 @@ export class PatientChatPageComponent implements OnInit {
 
   // ── Submit ─────────────────────────────────────────────────────────────
   submit(): void {
-    if (this.chatLocked) {
+    if (this.chatLocked || this.quotaReached) {
       return;
     }
     if (this.chatForm.invalid) {
@@ -215,13 +230,29 @@ export class PatientChatPageComponent implements OnInit {
             this.activeSessionId = response.session_id;
             this.loadSessions();
           }
+          if (typeof response.ai_messages_remaining === 'number') {
+            this.aiMessagesRemaining = response.ai_messages_remaining;
+            this.aiMessagesLimit = response.ai_messages_limit ?? this.aiMessagesLimit;
+            this.aiMessagesResetAt = response.ai_messages_reset_at ?? this.aiMessagesResetAt;
+            this.quotaReached = this.aiMessagesRemaining <= 0;
+          }
           this.handleResponse(question, response, pendingIndex);
         },
         error: (err) => {
           this.removePendingMessage(pendingIndex);
-          this.errorMessage = err?.error?.detail ?? 'No se pudo obtener la respuesta. Intentalo de nuevo.';
+          const detail = err?.error?.detail;
+          this.errorMessage =
+            (typeof detail === 'object' && detail?.message) ||
+            (typeof detail === 'string' ? detail : 'No se pudo obtener la respuesta. Inténtalo de nuevo.');
           if (err?.status === 403 && this.isSubscriptionError(this.errorMessage)) {
             this.chatLocked = true;
+          }
+          if (
+            err?.status === 429 &&
+            ['ai_monthly_limit_reached', 'ai_trial_limit_reached'].includes(detail?.code)
+          ) {
+            this.aiMessagesRemaining = 0;
+            this.quotaReached = true;
           }
         },
       });

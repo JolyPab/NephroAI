@@ -161,6 +161,7 @@ class V2CreateDocumentResponse(BaseModel):
     document_id: str
     analysis_date: str | None
     num_metrics: int
+    free_uploads_remaining: int | None = None
 
 
 class V2CreateDocumentDuplicateResponse(BaseModel):
@@ -168,6 +169,7 @@ class V2CreateDocumentDuplicateResponse(BaseModel):
     document_id: str
     analysis_date: str | None
     num_metrics: int
+    free_uploads_remaining: int | None = None
 
 
 class V2AnalyteItemResponse(BaseModel):

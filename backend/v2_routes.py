@@ -72,6 +72,12 @@ from backend.database import (
 )
 from backend.auth import decode_token, get_current_user_id
 from backend.encryption import encrypt_file_data
+from backend.entitlements import (
+    active_subscription_for_user,
+    get_upload_allowance,
+    refund_free_upload,
+    reserve_free_upload,
+)
 from backend.auth_routes import router as auth_router, UserResponse as AuthUserResponse
 from backend.patient_routes import router as patient_router
 import datetime as dt
@@ -196,18 +202,13 @@ async def create_v2_document(
     if not pdf_bytes:
         raise HTTPException(status_code=400, detail="Empty file")
 
-    # Hard paywall check
     user = db.query(User).filter(User.id == user_id).first()
-    if user and not user.is_doctor:
-        sub = db.query(Subscription).filter(
-            Subscription.user_id == user_id,
-            Subscription.status.in_(("active", "trialing")),
-        ).first()
-        if not sub:
-            raise HTTPException(status_code=403, detail="Se requiere una suscripción activa para subir documentos.")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
     document_hash = hashlib.sha256(pdf_bytes).hexdigest()
-    extraction_pdf_bytes = _prepare_pdf_bytes_for_extraction(pdf_bytes, pdf_password)
+    free_credit_reserved = False
+    document_committed = False
     try:
         existing_doc = (
             db.query(V2Document)
@@ -239,7 +240,31 @@ async def create_v2_document(
                 "document_id": existing_doc.id,
                 "analysis_date": _iso_or_none(existing_doc.analysis_date),
                 "num_metrics": int(num_metrics),
+                "free_uploads_remaining": get_upload_allowance(db, user_id).remaining,
             }
+
+        extraction_pdf_bytes = _prepare_pdf_bytes_for_extraction(pdf_bytes, pdf_password)
+        if not user.is_doctor and active_subscription_for_user(db, user_id) is None:
+            allowance = reserve_free_upload(db, user_id)
+            if allowance is None:
+                write_audit_log(
+                    db,
+                    actor_user_id=user_id,
+                    actor_role="patient",
+                    action="v2_free_upload_limit_reached",
+                    resource_type="v2_document",
+                    metadata={"free_uploads_remaining": 0},
+                )
+                db.commit()
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "code": "free_upload_limit_reached",
+                        "message": "Ya usaste tus 2 cargas gratuitas. Activa tu prueba para subir más documentos.",
+                        "free_uploads_remaining": 0,
+                    },
+                )
+            free_credit_reserved = True
 
         try:
             payload = await extract_v2(extraction_pdf_bytes)
@@ -280,9 +305,13 @@ async def create_v2_document(
             action="v2_document_created",
             resource_type="v2_document",
             resource_id=doc.id,
-            metadata={"num_metrics": len(payload.metrics)},
+            metadata={
+                "num_metrics": len(payload.metrics),
+                "access_mode": "free" if free_credit_reserved else "subscription",
+            },
         )
         db.commit()
+        document_committed = True
         r = _get_redis()
         if r:
             try:
@@ -294,12 +323,17 @@ async def create_v2_document(
             "document_id": doc.id,
             "analysis_date": _iso_or_none(doc.analysis_date),
             "num_metrics": len(payload.metrics),
+            "free_uploads_remaining": get_upload_allowance(db, user_id).remaining,
         }
     except HTTPException:
         db.rollback()
+        if free_credit_reserved and not document_committed:
+            refund_free_upload(db, user_id)
         raise
     except IntegrityError:
         db.rollback()
+        if free_credit_reserved and not document_committed:
+            refund_free_upload(db, user_id)
         existing = (
             db.query(V2Document)
             .filter(
@@ -311,13 +345,17 @@ async def create_v2_document(
         if existing:
             num_metrics = db.query(V2Metric).filter(V2Metric.document_id == existing.id).count()
             return {
+                "status": "duplicate",
                 "document_id": existing.id,
                 "analysis_date": _iso_or_none(existing.analysis_date),
                 "num_metrics": num_metrics,
+                "free_uploads_remaining": get_upload_allowance(db, user_id).remaining,
             }
         raise HTTPException(status_code=500, detail="Failed to persist V2 document: IntegrityError")
     except Exception as e:
         db.rollback()
+        if free_credit_reserved and not document_committed:
+            refund_free_upload(db, user_id)
         logger.exception(
             "Failed to persist V2 document user_id=%s filename=%s document_hash=%s",
             user_id,

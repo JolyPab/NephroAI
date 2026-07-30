@@ -2,6 +2,7 @@ export interface V2CreateDocumentResponse {
   document_id: string;
   analysis_date: string | null;
   num_metrics: number;
+  free_uploads_remaining?: number | null;
 }
 
 export interface V2CreateDocumentDuplicateResponse {
@@ -9,6 +10,7 @@ export interface V2CreateDocumentDuplicateResponse {
   document_id: string;
   analysis_date: string | null;
   num_metrics: number;
+  free_uploads_remaining?: number | null;
 }
 
 export interface V2DocumentListItemResponse {
