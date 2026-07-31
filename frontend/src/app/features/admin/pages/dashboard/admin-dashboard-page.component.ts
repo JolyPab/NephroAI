@@ -21,12 +21,14 @@ export class AdminDashboardPageComponent implements OnInit {
   private readonly auth = inject(AuthService);
 
   readonly today = this.toDateInput(new Date());
+  readonly earliestDate = this.toDateInput(new Date(Date.now() - 90 * 86_400_000));
   dateTo = this.today;
   dateFrom = this.toDateInput(new Date(Date.now() - 7 * 86_400_000));
   overview: AdminOverview | null = null;
   loading = true;
   error = '';
   navOpen = false;
+  private pendingSectionId: string | null = null;
 
   readonly funnelLabels: Array<{ key: keyof AdminFunnel; label: string }> = [
     { key: 'visitors', label: 'Visitantes' },
@@ -43,8 +45,14 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   load(): void {
-    if (!this.dateFrom || !this.dateTo || this.dateFrom > this.dateTo) {
-      this.error = 'Selecciona un periodo válido.';
+    if (
+      !this.dateFrom ||
+      !this.dateTo ||
+      this.dateFrom > this.dateTo ||
+      this.dateTo > this.today ||
+      this.dateFrom < this.earliestDate
+    ) {
+      this.error = 'Selecciona un periodo válido de hasta 90 días.';
       return;
     }
     this.loading = true;
@@ -53,6 +61,11 @@ export class AdminDashboardPageComponent implements OnInit {
       next: (overview) => {
         this.overview = overview;
         this.loading = false;
+        if (this.pendingSectionId) {
+          const sectionId = this.pendingSectionId;
+          this.pendingSectionId = null;
+          window.requestAnimationFrame(() => this.scrollSectionIntoView(sectionId));
+        }
       },
       error: () => {
         this.error = 'No se pudieron actualizar los datos.';
@@ -63,6 +76,29 @@ export class AdminDashboardPageComponent implements OnInit {
 
   logout(): void {
     this.auth.logout().subscribe({ complete: () => location.assign('/auth') });
+  }
+
+  scrollTo(sectionId: string): void {
+    this.navOpen = false;
+    if (!this.scrollSectionIntoView(sectionId)) {
+      this.pendingSectionId = sectionId;
+    }
+  }
+
+  revenueEntries(revenue: Record<string, number>): Array<[string, number]> {
+    return Object.entries(revenue).sort(([left], [right]) => left.localeCompare(right));
+  }
+
+  formatMoney(amount: number, currency: string): string {
+    try {
+      return new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    } catch {
+      return `${amount.toFixed(2)} ${currency}`;
+    }
   }
 
   funnelWidth(key: keyof AdminFunnel): number {
@@ -126,6 +162,15 @@ export class AdminDashboardPageComponent implements OnInit {
 
   private chartMax(series: AdminSeriesPoint[]): number {
     return Math.max(1, ...series.flatMap((point) => [point.registered, point.verified, point.activated]));
+  }
+
+  private scrollSectionIntoView(sectionId: string): boolean {
+    const section = document.getElementById(sectionId);
+    if (!section) {
+      return false;
+    }
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return true;
   }
 
   private toDateInput(date: Date): string {

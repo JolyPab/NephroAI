@@ -1,29 +1,36 @@
 <div class="admin-shell" [class.nav-open]="navOpen">
+  <button
+    *ngIf="navOpen"
+    type="button"
+    class="nav-backdrop"
+    aria-label="Cerrar menú"
+    (click)="navOpen = false"
+  ></button>
   <aside class="admin-nav">
     <div class="brand">
       <img src="assets/brand/logoWhite.png" alt="NephroAI" />
     </div>
     <nav aria-label="Navegación de administración">
-      <a class="active" href="#resumen">
+      <button type="button" class="active" (click)="scrollTo('resumen')">
         <span class="material-symbols-rounded">dashboard</span>
         Resumen
-      </a>
-      <a href="#usuarios">
+      </button>
+      <button type="button" (click)="scrollTo('usuarios')">
         <span class="material-symbols-rounded">group</span>
         Usuarios
-      </a>
-      <a href="#adquisicion">
+      </button>
+      <button type="button" (click)="scrollTo('adquisicion')">
         <span class="material-symbols-rounded">monitoring</span>
         Adquisición
-      </a>
-      <a href="#suscripciones">
+      </button>
+      <button type="button" (click)="scrollTo('suscripciones')">
         <span class="material-symbols-rounded">credit_card</span>
         Suscripciones
-      </a>
-      <a href="#sistema">
+      </button>
+      <button type="button" (click)="scrollTo('sistema')">
         <span class="material-symbols-rounded">settings</span>
         Sistema
-      </a>
+      </button>
     </nav>
     <button type="button" class="logout" (click)="logout()">
       <span class="material-symbols-rounded">logout</span>
@@ -40,7 +47,12 @@
       <div class="period-controls">
         <label>
           <span>Desde</span>
-          <input type="date" [(ngModel)]="dateFrom" [max]="dateTo" />
+          <input
+            type="date"
+            [(ngModel)]="dateFrom"
+            [min]="earliestDate"
+            [max]="dateTo"
+          />
         </label>
         <label>
           <span>Hasta</span>
@@ -154,6 +166,37 @@
             </dl>
           </aside>
         </div>
+
+        <section class="subscriptions-section" id="suscripciones">
+          <div class="section-heading">
+            <div>
+              <h2>Suscripciones e ingresos</h2>
+              <p>Estado actual y pagos completados durante el periodo seleccionado</p>
+            </div>
+          </div>
+          <div class="subscription-cards">
+            <article>
+              <span>Suscripciones activas</span>
+              <strong>{{ data.totals.activeSubscriptions | number }}</strong>
+              <small>Incluye periodos de prueba</small>
+            </article>
+            <article>
+              <span>Nuevas suscripciones</span>
+              <strong>{{ data.funnel.subscriptions | number }}</strong>
+              <small>Durante el periodo</small>
+            </article>
+            <article *ngFor="let revenue of revenueEntries(data.totals.revenue)">
+              <span>Ingresos completados · {{ revenue[0] }}</span>
+              <strong>{{ formatMoney(revenue[1], revenue[0]) }}</strong>
+              <small>Durante el periodo</small>
+            </article>
+            <article *ngIf="revenueEntries(data.totals.revenue).length === 0">
+              <span>Ingresos completados</span>
+              <strong>—</strong>
+              <small>Sin pagos completados en el periodo</small>
+            </article>
+          </div>
+        </section>
 
         <section class="users-section" id="usuarios">
           <div class="section-heading">

@@ -39,7 +39,7 @@
 
 .admin-nav nav { display: grid; gap: 5px; padding: 16px 12px; }
 
-.admin-nav nav a,
+.admin-nav nav button,
 .logout {
   min-height: 44px;
   display: flex;
@@ -55,14 +55,15 @@
   cursor: pointer;
 }
 
-.admin-nav nav a:hover,
-.admin-nav nav a.active { color: #0d55c5; background: #eef5ff; }
-.admin-nav nav a.active { box-shadow: inset 3px 0 var(--admin-blue); }
+.admin-nav nav button:hover,
+.admin-nav nav button.active { color: #0d55c5; background: #eef5ff; }
+.admin-nav nav button.active { box-shadow: inset 3px 0 var(--admin-blue); }
 .material-symbols-rounded { font-size: 20px; }
 .logout { margin: auto 12px 18px; color: #687b95; }
 .logout:hover { color: #c43232; background: #fff2f2; }
 
 .admin-main { min-width: 0; }
+.nav-backdrop { display: none; }
 
 .admin-header {
   min-height: 68px;
@@ -171,8 +172,20 @@ main { padding: 0 30px 36px; }
 .system-stats dt { color: var(--admin-muted); font-size: 11px; }
 .system-stats dd { margin: 0; font-size: 12px; font-weight: 750; }
 
-.users-section { margin-top: 24px; border: 1px solid var(--admin-border); border-radius: 12px; background: #fff; overflow: hidden; }
+.subscriptions-section,
+.users-section { margin-top: 24px; border: 1px solid var(--admin-border); border-radius: 12px; background: #fff; overflow: hidden; scroll-margin-top: 84px; }
+.subscriptions-section > .section-heading,
 .users-section > .section-heading { padding: 18px 20px; }
+.subscription-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); border-top: 1px solid var(--admin-border); }
+.subscription-cards article { min-height: 116px; padding: 18px 20px; border-right: 1px solid var(--admin-border); }
+.subscription-cards span,
+.subscription-cards small { display: block; color: var(--admin-muted); }
+.subscription-cards span { font-size: 12px; font-weight: 700; }
+.subscription-cards strong { display: block; margin: 7px 0 4px; color: #0d55c5; font-size: 25px; letter-spacing: -0.03em; }
+.subscription-cards small { font-size: 11px; }
+#resumen,
+#adquisicion,
+#sistema { scroll-margin-top: 84px; }
 .row-count { color: var(--admin-muted); font-size: 12px; }
 .table-scroll { overflow-x: auto; border-top: 1px solid var(--admin-border); }
 table { width: 100%; border-collapse: collapse; min-width: 900px; }
@@ -209,6 +222,7 @@ tbody tr:hover { background: #f8fbff; }
   .admin-shell { grid-template-columns: 1fr; }
   .admin-nav { position: fixed; left: 0; transform: translateX(-100%); width: 224px; transition: transform 180ms ease; box-shadow: 18px 0 48px rgba(16, 33, 61, 0.18); }
   .nav-open .admin-nav { transform: translateX(0); }
+  .nav-backdrop { position: fixed; inset: 0; display: block; border: 0; background: rgba(16, 33, 61, 0.34); z-index: 19; }
   .menu-button { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--admin-border); border-radius: 8px; background: #fff; }
   .admin-header { align-items: flex-start; flex-wrap: wrap; padding: 12px 16px; }
   .admin-header h1 { margin-top: 8px; }

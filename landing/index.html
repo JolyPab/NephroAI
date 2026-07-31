@@ -33,6 +33,27 @@
       gtag("js", new Date());
       gtag("config", "G-PE953W5PFE");
     </script>
+    <!-- Meta Pixel: public acquisition pages only. Do not load it in the authenticated medical app. -->
+    <script>
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = true;
+        n.version = "2.0";
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = true;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+      fbq("init", "1943313847055189");
+      fbq("track", "PageView");
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -1196,6 +1217,15 @@
     </style>
   </head>
   <body>
+    <noscript>
+      <img
+        height="1"
+        width="1"
+        style="display: none"
+        alt=""
+        src="https://www.facebook.com/tr?id=1943313847055189&ev=PageView&noscript=1"
+      />
+    </noscript>
     <header class="site-header">
       <div class="wrap nav">
         <a class="brand" href="/"

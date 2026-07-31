@@ -18,7 +18,7 @@
             class="glass-toolbar__logo"
             [src]="resolvedLogoSrc"
             [attr.alt]="(brandTextKey | translate) + ' logo'"
-            loading="lazy"
+            loading="eager"
             (error)="handleLogoError()"
           />
         </span>
